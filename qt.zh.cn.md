@@ -1,0 +1,18 @@
+# Qt 使用笔记
+- Windows 平台尽量使用`JOM`编译，速度快很多，远远不是`NMAKE`或者`mingw32-make`能比得上的。
+- 不知道什么原因，在 Windows 平台上交叉编译 Qt 时不能使用`JOM`，否则会报错
+- Qt 国内镜像站：http://mirrors.ustc.edu.cn/qtproject/
+- 在 Windows 平台上编译 Qt 时，编译`ANGLE`时需要一个叫`WindowsSdkVerBinPath`的环境变量，其路径指向`fxc.exe`(Microsoft Direct3D Shader Compiler)所在的文件夹，常见路径为`C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0`
+- 在 Windows 平台上，如果要编译`ANGLE`，需要安装[`DirectX SDK`](http://www.microsoft.com/en-us/download/details.aspx?id=6812)，新版 DX SDK 已经与[`Windows SDK`](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk)合并了。同时还需要[`Win flex-bison`](https://sourceforge.net/projects/winflexbison/)
+- 最新版`ANGLE`下载：https://circleci.com/gh/wang-bin/build_angle
+- `ANGLE`（`libEGL.dll`和`libGLESv2.dll`）要搭配`d3dcompiler_XX.dll`一起使用，其中的`XX`一般为`47`，此文件位于`DirectX SDK`文件夹中，常见路径为`C:\Program Files (x86)\Windows Kits\10\Redist\D3D`
+- 最新版`Mesa 3D Library`（`opengl32sw.dll`）下载：https://github.com/pal1000/mesa-dist-win/releases
+- 在 Linux 平台进行 Qt 开发需要安装额外的库：https://doc.qt.io/qt-5/linux.html
+- 在 Linux 平台编译 Qt 需要安装额外的库：https://doc.qt.io/qt-5/linux-requirements.html
+- `QWebEngine`模块不支持静态编译
+- 在 Windows 平台上，`QWebEngine`模块只能使用最新版的`Visual Studio`编译，不支持其他一切编译器（目前，2019-03-27）
+- 不要将 Qt 项目放在有非英文字符的路径下，否则会无法编译
+- 添加删除源文件后，要重启执行`qmake`，否则会有链接错误
+- 编译器选项与 Qt 的`CONFIG`如何对应：`O3/O2`->`optimize_full`，`O1/Os/Oz`->`optimize_size`，`LTCG/LTO`->`ltcg`，`Qt Quick Compiler`->`qtquickcompiler`（Qt Quick 编译器在 5.11 后默认开启）
+- `opengl32sw.dll`这个文件是软件模拟的显卡驱动，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件
+- 发布 Windows 平台的 Qt 程序时可以使用 Qt 官方提供的`windeployqt`程序，这个小程序会自动检测并复制相关的 dll 到你的程序文件夹，非常方便。但它无法检测第三方库，必须自行查找并复制。而且这个工具会复制一些多余的 Qt 的 dll，但极难判断究竟哪些是真的无用，因此就不要管了。

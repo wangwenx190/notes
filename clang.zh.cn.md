@@ -1,0 +1,14 @@
+# Clang 使用笔记
+- Clang 在 Windows 平台上默认目标为`x86_64-pc-windows-msvc`，因此要依赖 MSVC 的头文件和库文件。如果不想依赖 MSVC，可以指定目标为`x86_64-pc-windows-gnu`（或`x86_64-w64-mingw32`），具体的参数为`-target x86_64-pc-windows-gnu`或`--target=x86_64-pc-windows-gnu`，此参数也适用于 Linux 平台。修改`clang(++).exe`为`x86_64-w64-mingw32-clang(++).exe`也是可以的，因为 Clang 会通过判断它自己的文件名来自动切换目标。也可以通过修改这个参数实现不同平台交叉编译，前提是先要安装好对应的头文件和库文件。
+- 在 Windows 平台上，启用 LTO 后，二进制文件反而会增大
+- 在 Windows 平台上，`clang-cl`编译得到的二进制文件一般比`cl`编译得到的二进制文件大，而且很可能会大很多
+- Thin LTO(`-flto=thin`) 远比 Full LTO(`-flto`) 快，因此建议使用前者而不是后者
+- 在 Linux 平台上，同时启用`-Oz`和`-flto(=thin)`会报错，但只要这二者中至少一个添加了`-Xclang`前缀，就可以解决。例如：`-Xclang -Oz -flto=thin`。
+- LLD 在 Windows 平台上的版本为`lld-link.exe`，在 Linux 平台上的版本为`ld.lld`，在 macOS 平台上的版本为`ld64.lld`，不要直接调用`lld(.exe)`。
+- Ubuntu 平台如何安装官方最新版：http://apt.llvm.org/
+- Windows 平台如何下载官方最新版：http://releases.llvm.org/
+- Clang 没有自己的运行时依赖，但要依赖目标的运行时，在 Windows 平台上默认依赖 MSVC 的运行时，但也可以通过修改目标取消对其的依赖，但相应的会依赖别的运行时，例如 MinGW 的运行时。
+- 优化级别最高是`O3`，但生成的文件很大，非特殊情况不推荐此优化级别。一般推荐使用`Oz`优化，此级别为 Clang 独有，相当于`O2`级别的优化，但关闭了对大小影响较大的优化选项，因此可以以较小的文件大小实现尽量高的性能。
+- Linux 平台上可以通过把`-fuse-ld=lld`参数传给`clang(++)`来更改默认链接器为 LLD
+- 优化级别的参数要同时传给编译器和链接器。对链接器而言，一般情况下直接传参数就可以了，特殊情况下可以使用`-Wl`或`-Xlinker`来强制传给链接器
+- 在使用 LLD 作为链接器时，如果启用了 LTO，可以不把 LTO 相关参数传给链接器，但编译器还是要传递相关参数的。
