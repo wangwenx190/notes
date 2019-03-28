@@ -47,9 +47,9 @@
    example.path = $$DESTDIR #这个只要没有真实的输出文件就随便填，但不能没有或者空着，否则报错
    example.commands = do_something.bat #这里写具体要执行的操作，为了方便，可以写到一个批处理里，然后在这里运行那个批处理
    #下面是把所有操作都写在.pro文件里的方法
-   #example.commands += $$quote(copy /y a.dll b.dll) #这一句要用“+=”，并且“$$quote()”这个东西不能少
-   #example.commands += $$quote(move b.dll c.dat) #命令直接写在括号里就可以了，但一个括号里只能写一句，不止一句就分行写
-   #example.commands = $$join(example.commands,$$escape_expand(\\n\\t)) #这一句必须要用“=”，不能再用“+=”了，而且这一句不可缺少，否则报错
+   #example.commands += $$quote(copy /y a.dll b.dll) #这一句要用“+=”，并且“$$quote()”这个东西不能少，下面同理
+   #example.commands += $$quote(move b.dll c.dat) #命令直接写在括号里就可以了，但一个括号里只能写一句，不止一句就分多行写
+   #example.commands = $$join(example.commands,$$escape_expand(\\n\\t)) #这一句必须要用“=”，而且这一句不可缺少，否则报错
    QMAKE_EXTRA_TARGETS += example #这一句不能少，否则不会添加到 Makefile 里
    POST_TARGETDEPS += example #有了这一句才会在编译完成后自动调用
    #使用“PRE_TARGETDEPS”可以使命令在编译之前执行
