@@ -116,7 +116,7 @@
 - 在 Windows 平台上如果想要嵌入 Manifest 文件，可以插入到资源文件中，但我试过几次，效果都不理想，可能是方法有问题
 - 编译 Qt 时常用的参数：
    ```text
-   -opensource：选择开源版 Qt，许可协议为 LGPLv3
+   -opensource：选择开源版 Qt，许可协议为 LGPLv3/GPLv3
    -confirm-license：同意许可协议
    -debug：生成调试版本
    -release：生成发布版本
