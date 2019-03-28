@@ -1,6 +1,5 @@
 # Qt 使用笔记
-- Windows 平台尽量使用`JOM`编译，速度快很多，远远不是`NMAKE`或者`mingw32-make`能比得上的。
-- 不知道什么原因，在 Windows 平台上交叉编译 Qt 时不能使用`JOM`，否则会报错
+- Windows 平台尽量使用[`JOM`](http://download.qt.io/official_releases/jom/)编译，速度快很多，远远不是`NMAKE`或者`mingw32-make`能比得上的。
 - Qt 国内镜像站：http://mirrors.ustc.edu.cn/qtproject/
 - 在 Windows 平台上编译 Qt 时，编译`ANGLE`时需要一个叫`WindowsSdkVerBinPath`的环境变量，其路径指向`fxc.exe`(Microsoft Direct3D Shader Compiler)所在的文件夹，常见路径为`C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0`
 - 在 Windows 平台上，如果要编译`ANGLE`，需要安装[`DirectX SDK`](http://www.microsoft.com/en-us/download/details.aspx?id=6812)，新版 DX SDK 已经与[`Windows SDK`](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk)合并了。同时还需要[`Win flex-bison`](https://sourceforge.net/projects/winflexbison/)
@@ -29,7 +28,7 @@
    ```bash
    VERSION = 1.2.3 #设置版本，这个是全平台通用的。其中，只有 Windows 平台上的版本号是4位的，其他平台都是3位
    RC_ICONS = "../res/icon.ico" #设置图标
-   RC_FILE = "../res/eg.rc" #设置资源文件。其中，只要设置了这个文件，其他任何设置图标或版本信息的语句就失效了，因此这一句与其他语句是互斥的关系。
+   RC_FILE = "../res/eg.rc" #设置资源文件。如果这个资源文件中包含图标或版本信息，会与此处其他语句冲突，请注意
    QMAKE_TARGET_PRODUCT = "My app name" #设置产品名称
    QMAKE_TARGET_DESCRIPTION = "My app description" #设置文件说明
    QMAKE_TARGET_COPYRIGHT = "My copyright info" #设置版权
@@ -113,3 +112,27 @@
    #bin_dir: C:\Qt\Qt5.14.0\5.14.0\msvc2019_64\bin
    ```
    摘自：https://doc.qt.io/qt-5/qmake-environment-reference.html
+- 在 Windows 平台上使用`MinGW`编译 Qt 时不能使用`JOM`，也不能开启 LTO，否则会报错，不清楚具体的原因
+- 在 Windows 平台上如果想要嵌入 Manifest 文件，可以插入到资源文件中，但我试过几次，效果都不理想，可能是方法有问题
+- 编译 Qt 时常用的参数：
+   ```text
+   -opensource：选择开源版 Qt，许可协议为 LGPLv3
+   -confirm-license：同意许可协议
+   -debug：生成调试版本
+   -release：生成发布版本
+   -debug-and-release：同时生成调试版本和发布版本
+   -shared：生成动态库（.dll/.so）
+   -static：生成静态库（.lib/.o）
+   -static-runtime：静态链接运行时（仅限 MSVC，相当于 -MT/-MTd）
+   -platform：选择目标平台
+   -xplatform：选择目标平台（交叉编译时）
+   -optimize-size：为大小优化（MSVC: O1，GCC: Os，Clang: Oz）
+   -ltcg：启用 LTCG/LTO
+   -silent：隐藏不必要的信息，仅输出警告和错误
+   -nomake：不构建某部分，仅可在 libs，examples 和 tests 这三者中选择
+   -skip：跳过某模块的构建，例如 qt3d，qtactiveqt 和 qtandroidextras 等
+   -prefix：指定安装目录
+   -linker：指定链接器，仅可在 bfd，gold 和 lld 这三者中选择（仅限 Linux 平台）
+   -pch：启用预编译头
+   -warnings-are-errors：把警告视为错误
+   ```
