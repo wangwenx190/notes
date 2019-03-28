@@ -122,7 +122,7 @@
    -release：生成发布版本
    -debug-and-release：同时生成调试版本和发布版本
    -shared：生成动态库（.dll/.so）（默认）
-   -static：生成静态库（.lib/.o）
+   -static：生成静态库（.lib/.a）
    -static-runtime：静态链接运行时（仅限 MSVC，相当于 -MT/-MTd）
    -platform：选择目标平台
    -xplatform：选择目标平台（交叉编译时）
