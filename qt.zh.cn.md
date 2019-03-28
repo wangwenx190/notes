@@ -126,7 +126,7 @@
    -static-runtime：静态链接运行时（仅限 MSVC，相当于 -MT/-MTd）
    -platform：选择目标平台
    -xplatform：选择目标平台（交叉编译时）
-   -optimize-size：为大小优化（MSVC: O1，GCC: Os，Clang: Oz）
+   -optimize-size：为大小优化（MSVC：O1，GCC：Os，Clang：Oz）
    -ltcg：启用 LTCG/LTO
    -silent：隐藏不必要的信息，仅输出警告和错误
    -nomake：不构建某部分，仅可在 libs，examples 和 tests 这三者中选择
