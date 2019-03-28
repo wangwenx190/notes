@@ -10,7 +10,7 @@
 - `QWebEngine`模块不支持静态编译
 - 在 Windows 平台上，`QWebEngine`模块只能使用最新版的`Visual Studio`编译，不支持其他一切编译器（目前，2019-03-27）
 - 不要将 Qt 项目放在有非英文字符的路径下，否则会无法编译
-- 添加删除源文件后，要重启执行`qmake`，否则会有链接错误
+- 添加删除源文件或者源文件改名后，要重新执行`qmake`然后重新构建，否则会有链接错误
 - 编译器选项与 Qt 的`CONFIG`如何对应：`O3/O2`->`optimize_full`，`O1/Os/Oz`->`optimize_size`，`LTCG/LTO`->`ltcg`，`Qt Quick Compiler`->`qtquickcompiler`（Qt Quick 编译器在 5.11 后默认开启），`-MT/-MTd`->`static_runtime`
 - `opengl32sw.dll`这个文件是软件模拟的显卡驱动，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件
 - 发布 Windows 平台的 Qt 程序时可以使用 Qt 官方提供的`windeployqt`程序，这个小程序会自动检测并复制相关的 dll 到你的程序文件夹，非常方便。但它无法检测第三方库，必须自行查找并复制。而且这个工具会复制一些多余的 Qt 的 dll，但极难判断究竟哪些是真的无用，因此就不要管了。
