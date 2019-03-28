@@ -121,7 +121,7 @@
    -debug：生成调试版本
    -release：生成发布版本
    -debug-and-release：同时生成调试版本和发布版本
-   -shared：生成动态库（.dll/.so）
+   -shared：生成动态库（.dll/.so）（默认）
    -static：生成静态库（.lib/.o）
    -static-runtime：静态链接运行时（仅限 MSVC，相当于 -MT/-MTd）
    -platform：选择目标平台
@@ -133,6 +133,8 @@
    -skip：跳过某模块的构建，例如 qt3d，qtactiveqt 和 qtandroidextras 等
    -prefix：指定安装目录
    -linker：指定链接器，仅可在 bfd，gold 和 lld 这三者中选择（仅限 Linux 平台）
-   -pch：启用预编译头
+   -pch：启用预编译头（自动）
    -warnings-are-errors：把警告视为错误
+   -opengl：仅可在 es2，desktop 和 dynamic 这三者中选择，其中，Windows 平台默认为 dynamic，Linux 平台默认为 desktop
    ```
+- 在 Linux 平台上交叉编译 Windows 版 Qt 时，需要安装`libc`。Ubuntu 平台上的包名为`libc6-dev-i386`，`libc6-dev-amd64`，`libc6-dev-i386-cross`，`libc6-dev-amd64-cross`，`libc6-dev-i386-amd64-cross`和`libc6-dev-amd64-i386-cross`。
