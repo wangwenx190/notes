@@ -138,3 +138,4 @@
    -opengl：仅可在 es2，desktop 和 dynamic 这三者中选择，其中，Windows 平台默认为 dynamic，Linux 平台默认为 desktop
    ```
 - 在 Linux 平台上交叉编译 Windows 版 Qt 时，需要安装`libc`。Ubuntu 平台上的包名为`libc6-dev-i386`，`libc6-dev-amd64`，`libc6-dev-i386-cross`，`libc6-dev-amd64-cross`，`libc6-dev-i386-amd64-cross`和`libc6-dev-amd64-i386-cross`（写了这么多是因为我不知道具体是哪（几）个，只好都列出来）。
+- 在 Linux 平台上交叉编译 Windows 版 Qt 时，如果报找不到`<EGL/egl.h>`的错误，需要安装额外的包。Ubuntu 平台上的包名为`freeglut3-dev`，`libgl1-mesa-glx`，`libglu1-mesa`，`libgles2-mesa`，`libgl1-mesa-dev`，`libglu1-mesa-dev`和`libgles2-mesa-dev`（写了这么多是因为我不知道具体是哪（几）个，只好都列出来）。
