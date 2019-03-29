@@ -2,7 +2,7 @@
 - Windows 平台尽量使用[`JOM`](http://download.qt.io/official_releases/jom/)编译，速度快很多，远远不是`NMAKE`或者`mingw32-make`能比得上的。
 - Qt 国内镜像站：http://mirrors.ustc.edu.cn/qtproject/
 - 在 Windows 平台上编译 Qt 时，编译`ANGLE`时需要一个叫`WindowsSdkVerBinPath`的环境变量，其路径指向`fxc.exe`(Microsoft Direct3D Shader Compiler)所在的文件夹，常见路径为`C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0`
-- 在 Windows 平台上，如果要编译`ANGLE`，需要安装[`DirectX SDK`](http://www.microsoft.com/en-us/download/details.aspx?id=6812)，新版 DX SDK 已经与[`Windows SDK`](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk)合并了。同时还需要[`Win flex-bison`](https://sourceforge.net/projects/winflexbison/)
+- 在 Windows 平台上，如果要编译`ANGLE`，需要安装[`DirectX SDK`](http://www.microsoft.com/en-us/download/details.aspx?id=6812)，新版 DX SDK 已经与[`Windows SDK`](https://developer.microsoft.com/en-us/windows/downloads/sdk-archive)合并了。同时还需要[`Win flex-bison`](https://sourceforge.net/projects/winflexbison/)
 - 最新版`Mesa 3D Library`（`opengl32sw.dll`）下载：https://github.com/pal1000/mesa-dist-win/releases
 - 在 Linux 平台进行 Qt 开发需要安装额外的库：https://doc.qt.io/qt-5/linux.html 。其中，在 Ubuntu 平台上进行开发的官方 Wiki：https://wiki.qt.io/Install_Qt_5_on_Ubuntu
 - 在 Linux 平台编译 Qt 需要安装额外的库：https://doc.qt.io/qt-5/linux-requirements.html
