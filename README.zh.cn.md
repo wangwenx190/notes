@@ -7,4 +7,5 @@
 - MinGW -> [简体中文](/mingw.zh.cn.md), 英文
 - MSVC -> [简体中文](/msvc.zh.cn.md), 英文
 - Qt -> [简体中文](/qt.zh.cn.md), 英文
+- Ubuntu -> [简体中文](/ubuntu.zh.cn.md), 英文
 - Win32 -> [简体中文](/win32.zh.cn.md), 英文

@@ -7,4 +7,5 @@ A record of problems encountered during programming and their solutions
 - MinGW -> [zh-CN](/mingw.zh.cn.md), en-US
 - MSVC -> [zh-CN](/msvc.zh.cn.md), en-US
 - Qt -> [zh-CN](/qt.zh.cn.md), en-US
+- Ubuntu -> [zh-CN](/ubuntu.zh.cn.md), en-US
 - Win32 -> [zh-CN](/win32.zh.cn.md), en-US
