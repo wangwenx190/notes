@@ -109,7 +109,7 @@
    - 美化工具和通知栏：包名为`gnome-tweak-tool`和`libindicator`
    - Wine：安装深度移植的软件必须要安装这个：http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-helper/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-helper64/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-plugin/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-plugin-virtual/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-uninstaller/
 - 安装专业软件：
-   - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`
+   - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`，`binutils`
    - VSCode：到官方网站 https://code.visualstudio.com/Download 下载合适的安装包安装
    - Qt Creator：包名为`qtcreator`，如果官方版本较老，新版本可在 http://mirrors.ustc.edu.cn/qtproject/official_releases/qtcreator/ 下载安装
    - VirtualBox：包名为`virtualbox`，如果官方版本较老，新版本可按照官方网站 https://www.virtualbox.org/wiki/Linux_Downloads 的指导来安装
@@ -135,3 +135,11 @@
     3. 设置系统代理，**IP地址**均为`127.0.0.1`，**端口**均为`1080`
     4. 设置浏览器代理，IP地址与端口的设置与上一步的相同（所有协议都要这样设置）
     5. 软件里点击Connect
+- 常用分区方案：
+   | 挂载点 | 文件系统 | 推荐大小 | 分区介绍 |
+   | ----- | -------- | ------- | ------- |
+   | / | ext4 | 15~20GB | 根目录，相当于 Windows 的 C 盘，用于存放系统文件。此外，所有软件也都会安装到这个分区，如果你可能安装很多软件，要适当调整这个分区的大小 |
+   | /home | ext4 | 个人桌面用户建议此分区尽可能的大 | 主目录，用户的所有个人文件均存放在这个分区 |
+   | /boot | ext4 | 用不着太大，但也不能太小，建议1GB | 引导分区，系统存放内核的地方 |
+   | /swap | swap | 当你的物理内存<8GB时建议为物理内存的两倍，否则为物理内存的大小 | 交换空间，相当于 Windows 的虚拟内存 |
+   注：如果你只有一块硬盘，并且也不用考虑与其他操作系统（比如 Windows）共存的问题，可以只创建一个根分区。
