@@ -117,6 +117,8 @@
    - MinGW-w64：包名为`mingw-w64`，`mingw-w64-common`，`mingw-w64-i686-dev`，`mingw-w64-tools`，`mingw-w64-x86-64-dev`。具体请查看官方网站 https://launchpad.net/ubuntu/+source/mingw-w64
    - glibc：包名为`libc6-dev`，`libc6-dev-amd64`，`libc6-dev-amd64-cross`，`libc6-dev-amd64-i386-cross`，`libc6-dev-i386`，`libc6-dev-i386-amd64-cross`，`libc6-dev-i386-cross`（不知道具体哪个有用，我就都写下来了）
    - Linux headers：
+   - GCC/G++：包`build-essential`自带
+   - ICC：按照官方网站 https://software.intel.com/en-us/qualify-for-free-software/opensourcecontributor 的指导下载安装
 - 安装使用代理：
    1. 安装`shadowsocks-qt5`：
       ```bash
