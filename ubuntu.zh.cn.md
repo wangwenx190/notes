@@ -96,10 +96,10 @@
    - WPS：到官方网站 http://www.wps.cn/product/wpslinux 下载安装包后安装。字体到这里下载安装：http://mirrors.ustc.edu.cn/deepin/pool/non-free/t/ttf-wps-fonts/
    - TIM：http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin.com.qq.office/
    - 微信：http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin.com.wechat/ 和 http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin.com.weixin.work/
-   - Telegram：包名为`telegram-desktop`
+   - Telegram：包名为`telegram-desktop`，如果官方版本较老，新版本可在 https://desktop.telegram.org/ 下载安装
    - 迅雷极速版：http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin.com.thunderspeed/
    - 百度网盘：http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin.com.baidu.pan/
-   - qBittorrent：包名为`qbittorrent`
+   - qBittorrent：包名为`qbittorrent`，如果官方版本较老，新版本可在 https://www.qbittorrent.org/download.php 下载安装
    - Steam：包名为`steam`
    - VLC Media Player：包名为`vlc`
    - screenfetch：包名为`screenfetch`
@@ -111,9 +111,9 @@
 - 安装专业软件：
    - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`
    - VSCode：到官方网站 https://code.visualstudio.com/Download 下载合适的安装包安装
-   - Qt Creator：包名为`qtcreator`，但官方版本较老，新版本可在 http://mirrors.ustc.edu.cn/qtproject/official_releases/qtcreator/ 下载安装
-   - VirtualBox：包名为`virtualbox`，但官方版本较老，新版本可按照官方网站 https://www.virtualbox.org/wiki/Linux_Downloads 的指导来安装
-   - Clang：包名为`clang`，`clang-tools`，`lldb`，`lld`，`libfuzzer-N-dev`，`libc++-dev`，`libc++abi-dev`，`libomp-dev`（`N`为具体的主版本号，例如：7、8和9等），但官方版本较老，新版本可按照官方网站 http://apt.llvm.org/ 的指导来安装
+   - Qt Creator：包名为`qtcreator`，如果官方版本较老，新版本可在 http://mirrors.ustc.edu.cn/qtproject/official_releases/qtcreator/ 下载安装
+   - VirtualBox：包名为`virtualbox`，如果官方版本较老，新版本可按照官方网站 https://www.virtualbox.org/wiki/Linux_Downloads 的指导来安装
+   - Clang：包名为`clang`，`clang-tools`，`lldb`，`lld`，`libfuzzer-N-dev`，`libc++-dev`，`libc++abi-dev`，`libomp-dev`（`N`为具体的主版本号，例如：7、8和9等），如果官方版本较老，新版本可按照官方网站 http://apt.llvm.org/ 的指导来安装
    - MinGW-w64：包名为`mingw-w64`，`mingw-w64-common`，`mingw-w64-i686-dev`，`mingw-w64-tools`，`mingw-w64-x86-64-dev`。具体请查看官方网站 https://launchpad.net/ubuntu/+source/mingw-w64
    - glibc：包名为`libc6-dev`，`libc6-dev-amd64`，`libc6-dev-amd64-cross`，`libc6-dev-amd64-i386-cross`，`libc6-dev-i386`，`libc6-dev-i386-amd64-cross`，`libc6-dev-i386-cross`（不知道具体哪个有用，我就都写下来了）
    - Linux headers：
