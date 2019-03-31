@@ -129,7 +129,7 @@
    -optimize-size：为大小优化（MSVC：O1，GCC：Os，Clang：Oz）
    -ltcg：启用 LTCG/LTO
    -silent：隐藏不必要的信息，仅输出警告和错误
-   -nomake：不构建某部分，仅可在 libs，examples 和 tests 这三者中选择
+   -nomake：不构建某部分，仅可在 libs，tools，examples 和 tests 这四者中选择
    -skip：跳过某模块的构建，例如 qt3d，qtactiveqt 和 qtandroidextras 等
    -prefix：指定安装目录
    -linker：指定链接器，仅可在 bfd，gold 和 lld 这三者中选择（仅限 Linux 平台）
