@@ -40,6 +40,7 @@
    apt remove：删除软件包，但保留其配置文件
    apt autoclean：删除“/var/cache/apt/archives”文件夹下过期的安装包（清除过久的缓存）
    apt clean：删除“/var/cache/apt/archives”文件夹下所有的安装包（清除全部缓存）
+   apt --fix-broken install：安装软件时出现任何依赖错误，都尝试使用此命令解决
    ```
 - 修改默认程序：修改`/etc/gnome/defaults.list`文件。
 - `PPA`的添加和删除：
