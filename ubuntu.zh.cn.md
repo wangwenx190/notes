@@ -88,7 +88,7 @@
     7. 重启
 - 安装常用软件：
    - 搜狗拼音输入法：
-      1. 先通过`sudo apt install fcitx`安装`fcitx`
+      1. 先安装`fcitx`，`fcitx-libs-qt`，`libfcitx-qt0`，`libopencc2`和`libqtwebkit4`
       2. 到官方网站 https://pinyin.sogou.com/linux/ 下载安装包后安装
       3. Region & Language -> Manage Installed Languages -> Keyboard input method system -> fcitx -> Apply System-Wide
       4. 去右上角系统托盘里找到键盘图标，右击打开菜单，Configure Current Input Method -> Input Method -> + -> Sogou Pinyin
@@ -126,6 +126,7 @@
       sudo apt update
       sudo apt install shadowsocks-qt5
       ```
+      经过我的测试，用这个方法成功的次数太少，可以直接去作者的 GitHub 下载 snap 版本：https://github.com/shadowsocks/shadowsocks-qt5/releases
     2. 设置节点：
        ```text
        Local Address：127.0.0.1
