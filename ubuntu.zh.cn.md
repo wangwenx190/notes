@@ -110,6 +110,10 @@
    - 美化工具和通知栏：包名为`gnome-tweak-tool`和`libindicator`
    - Wine：安装深度移植的软件必须要安装这个：http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-helper/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-helper64/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-plugin/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-plugin-virtual/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-uninstaller/
    - 邮件客户端 Thunderbird：包名为`thunderbird`，如果官方版本较老，新版本可在 https://www.thunderbird.net/zh-CN/ 下载安装
+   - 火狐浏览器：`firefox`
+   - 谷歌浏览器：`chromium-browser`
+   - Rhythmbox?
+   - Brasero?
 - 安装专业软件：
    - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`，`binutils`
    - VSCode：到官方网站 https://code.visualstudio.com/Download 下载合适的安装包安装
@@ -167,3 +171,4 @@
    | 按键 | 作用 |
    | ---- | ---- |
    | Ctrl + L | 显示地址栏（可直接复制路径） |
+- 命令行刻录U盘：
