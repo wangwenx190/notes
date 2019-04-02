@@ -101,14 +101,15 @@
    - 迅雷极速版：http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin.com.thunderspeed/
    - 百度网盘：http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin.com.baidu.pan/
    - qBittorrent：包名为`qbittorrent`，如果官方版本较老，新版本可在 https://www.qbittorrent.org/download.php 下载安装
-   - Steam：包名为`steam`
-   - VLC Media Player：包名为`vlc`
+   - Steam：包名为`steam`，如果官方版本较老，新版本可在 https://store.steampowered.com/about/ 下载安装
+   - VLC Media Player：包名为`vlc`，如果官方版本较老，新版本可在 https://www.videolan.org/vlc/#download 下载安装
    - screenfetch：包名为`screenfetch`
    - Free Download Manager：https://www.freedownloadmanager.org/board/viewtopic.php?f=1&t=17900
    - 7-Zip：包名为`p7zip-rar`，`p7zip-full`和`p7zip`（都要安装）
    - 有道词典：http://mirrors.ustc.edu.cn/deepin/pool/non-free/y/youdao-dict/
    - 美化工具和通知栏：包名为`gnome-tweak-tool`和`libindicator`
    - Wine：安装深度移植的软件必须要安装这个：http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-helper/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-helper64/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-plugin/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-plugin-virtual/ http://mirrors.ustc.edu.cn/deepin/pool/non-free/d/deepin-wine-uninstaller/
+   - 邮件客户端 Thunderbird：包名为`thunderbird`，如果官方版本较老，新版本可在 https://www.thunderbird.net/zh-CN/ 下载安装
 - 安装专业软件：
    - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`，`binutils`
    - VSCode：到官方网站 https://code.visualstudio.com/Download 下载合适的安装包安装
