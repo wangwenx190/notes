@@ -89,7 +89,7 @@
     7. 重启
 - 安装常用软件：
    - 搜狗拼音输入法：
-      1. 先安装`fcitx`，`fcitx-libs-qt`，`libfcitx-qt0`，`libopencc2`和`libqtwebkit4`
+      1. <del>先安装`fcitx`，`fcitx-libs-qt`，`libfcitx-qt0`，`libopencc2`和`libqtwebkit4`</del>（依赖关系不满足时使用`sudo apt --fix-broken install`修复）
       2. 到官方网站 https://pinyin.sogou.com/linux/ 下载安装包后安装
       3. Region & Language -> Manage Installed Languages -> Keyboard input method system -> fcitx -> Apply System-Wide
       4. 去右上角系统托盘里找到键盘图标，右击打开菜单，Configure Current Input Method -> Input Method -> + -> Sogou Pinyin
