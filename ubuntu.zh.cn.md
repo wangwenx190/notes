@@ -104,7 +104,7 @@
    - Steam：包名为`steam`
    - VLC Media Player：包名为`vlc`
    - screenfetch：包名为`screenfetch`
-   - Free Download Manager：目前暂无 Linux 版，但我很期待这个软件出 Linux 版
+   - Free Download Manager：https://www.freedownloadmanager.org/board/viewtopic.php?f=1&t=17900
    - 7-Zip：包名为`p7zip-rar`，`p7zip-full`和`p7zip`（都要安装）
    - 有道词典：http://mirrors.ustc.edu.cn/deepin/pool/non-free/y/youdao-dict/
    - 美化工具和通知栏：包名为`gnome-tweak-tool`和`libindicator`
