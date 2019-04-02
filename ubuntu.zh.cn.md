@@ -14,14 +14,14 @@
    l：显示压缩包内容。例如：7z l ./test.7z
    -m：设置压缩选项。“-mx -myx -m0=LZMA2:d=1g:fb=273”为极限压缩，“-ms=on”为启用固实压缩（默认），“-mmt=on”为启用多线程压缩（默认）。例如：7z a test.7z ./data/* -mx -myx -ms=on -mmt=on -m0=LZMA2:d=1g:fb=273
    ```
-- 创建快捷方式：`ln ORIGINAL NEW`。`-s`参数意为创建软链接，`-f`参数意为删除已经存在的软链接。例如：`sudo ln -s /usr/bin/clang /usr/bin/x86_64-w64-mingw32-clang`
+- 创建快捷方式：`ln ORIGINAL NEW`。`-s`参数意为创建软链接，`-f`参数意为删除已经存在的软链接（即覆盖同名的软链接）。例如：`sudo ln -sf /usr/bin/clang /usr/bin/x86_64-w64-mingw32-clang`
 - 搜索文件：`find PATH -name "NAME"`。例如：`find /usr/bin -name "*clang"`
 - 删除文件和文件夹：`rm PATH`。`-f`参数意为强制删除，`-r`参数意为递归删除（即删除文件夹）。例如：`rm -rf ./test/build`
 - 创建文件夹：`mkdir NAME`。例如：`mkdir build`
 - 下载文件：
    - `wget URL`：`-O`参数意为指定保存文件名，`-c`参数意为继续下载。例如：`wget -O test.zip https://www.ex.com/abc?=down`
    - `curl URL`：`-o`参数意为指定保存文件名，`--progress`参数意为显示进度条。例如：`curl -o test.zip --progress https://file.abc.com/down.asp`
-- 列出文件：`ls PATH`。`-l`参数意为显示详细信息，`-h`参数意为显示人类易读的大小，`-s`参数意为在每个文件名后输出该文件的大小，`-A`参数意为显示除了“.”和“..”以外的所有文件，`-L`参数意为列出链接文件名而不是链接到的文件，`-N`参数意为不限制文件长度，`-Q`参数意为把输出的文件名用双引号括起来，`-R`参数意为列出所有子目录下的文件，`-d`参数意为将目录像文件一样显示，而不是显示其下的文件。例如：`ls -l -h /usr/bin`
+- 列出文件：`ls PATH`。`-l`参数意为显示详细信息，`-h`参数意为显示人类易读的大小，`-a`参数意为显示所有文件和文件夹（包括“.”和“..”），`-A`参数意为显示除了“.”和“..”以外的所有文件和文件夹，`-L`参数意为列出链接文件名而不是链接到的文件，`-N`参数意为不限制文件长度，`-Q`参数意为把输出的文件名用双引号括起来，`-R`参数意为列出所有子目录下的文件，`-d`参数意为将目录像文件一样显示，而不是显示其下的文件。例如：`ls -lhA /usr/bin`
 - 设置环境变量：`export A=b:C=d`。不同变量之间以英文半角冒号`:`分隔，以英文半角美元符号`$`引用其他变量。例如：`export PATH=./eg1/bin:./eg2/bin:$PATH`
 - 挂载和卸载：`mount SOURCE MOUNT_POINT`和`umount MOUNT_POINT`。`-r`参数意为只读挂载，`-w`参数意为读写挂载（默认）。例如：`mount -o loop ./test/soft.iso /mnt/iso1` -> `umount /mnt/iso1`
 - 安装`.DEB`文件：`dpkg -i FILE`。例如：`sudo dpkg -i example.deb`
@@ -121,6 +121,9 @@
    - Linux headers：
    - GCC/G++：包`build-essential`自带
    - ICC：按照官方网站 https://software.intel.com/en-us/qualify-for-free-software/opensourcecontributor 的指导下载安装
+   - Unity3D：https://forum.unity.com/threads/unity-hub-v-1-3-2-is-now-available.594139/ 或 https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/
+   - GIMP/Krita?
+   - UnrealEngine：https://docs.unrealengine.com/en-US/Platforms/Linux/BeginnerLinuxDeveloper/SettingUpAnUnrealWorkflow
 - 安装使用代理：
    1. 安装`shadowsocks-qt5`：
       ```bash
