@@ -14,7 +14,7 @@
    l：显示压缩包内容。例如：7z l ./test.7z
    -m：设置压缩选项。“-mx -myx -m0=LZMA2:d=1g:fb=273”为极限压缩，“-ms=on”为启用固实压缩（默认），“-mmt=on”为启用多线程压缩（默认）。例如：7z a test.7z ./data/* -mx -myx -ms=on -mmt=on -m0=LZMA2:d=1g:fb=273
    ```
-- 创建快捷方式：`ln ORIGINAL NEW`。`-s`参数意为创建软链接，`-f`参数意为删除已经存在的软链接（即覆盖同名的软链接）。例如：`sudo ln -sf /usr/bin/clang /usr/bin/x86_64-w64-mingw32-clang`
+- 创建软链接：`ln ORIGINAL NEW`。`-s`参数意为创建软链接，`-f`参数意为删除已经存在的软链接（即覆盖同名的软链接）。例如：`sudo ln -sf /usr/bin/clang /usr/bin/x86_64-w64-mingw32-clang`
 - 搜索文件：`find PATH -name "NAME"`。例如：`find /usr/bin -name "*clang"`
 - 删除文件和文件夹：`rm PATH`。`-f`参数意为强制删除，`-r`参数意为递归删除（即删除文件夹）。例如：`rm -rf ./test/build`
 - 创建文件夹：`mkdir NAME`。例如：`mkdir build`
