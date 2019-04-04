@@ -55,7 +55,7 @@
    sudo apt update
    sudo apt full-upgrade
    ```
-- <del>安装、更换和删除内核</del>没必要，系统会自动更新内核。更新完再用`sudo apt autoremove`清理一下就可以了。
+- <del>安装、更换和删除内核</del>（没必要，系统会自动更新内核。更新完再用`sudo apt autoremove`清理一下就可以了）
 - 双显卡笔记本防止开机卡住安装方法+安装英伟达独显驱动：
    1. 安装系统之前先关闭`Security Boot`（安全启动，去`BIOS`里找）
    2. 屏蔽`Nouveau`开源显卡驱动：在`grub`界面，选中`Install Ubuntu`，按`e`进入命令行模式，在`quiet splash --`后面（也可能没有`-`），添加`acpi_osi=linux nomodeset`，然后按`F10`重新引导
@@ -88,7 +88,7 @@
       ```
     7. 重启
 - 安装常用软件：
-   - 搜狗拼音输入法（新版Ubuntu已经自带中文输入法了，没必要再装搜狗了）：
+   - <del>搜狗拼音输入法</del>（新版Ubuntu已经自带中文输入法了，没必要再装搜狗了）：
       1. <del>先安装`fcitx`，`fcitx-libs-qt`，`libfcitx-qt0`，`libopencc2`和`libqtwebkit4`</del>（依赖关系不满足时使用`sudo apt --fix-broken install`修复）
       2. 到官方网站 https://pinyin.sogou.com/linux/ 下载安装包后安装
       3. Region & Language -> Manage Installed Languages -> Keyboard input method system -> fcitx -> Apply System-Wide
