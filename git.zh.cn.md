@@ -1,5 +1,5 @@
 # Git
-- 通用命令
+- 常用命令
 
    | 命令 | 作用 | 参数 | 示例 |
    | --- | ---- | ---- | ---- |
@@ -21,6 +21,8 @@
    | **cherry-pick** [options] <some_commits> | 将某一个或某几个已经存在的提交合并到当前分支 | --continue：（冲突解决后）继续被中断的操作；--abort：中断当前操作并恢复到之前的状态 | - |
    | **rebase** [options] | 变基 | - | - |
    | **revert** [options] <commid_id> | 回退某次提交 | --continue；--abort | - |
+
+   注：大多数命令都支持`--progress`参数。
 - 设置代理：
    ```bash
    git config --global http.proxy http://127.0.0.1:1080
@@ -35,7 +37,7 @@
    ```
 - 设置全局用户名：`git config --global user.name "Your Name"`
 - 设置全局电子邮件：`git config --global user.email "me@example.com"`
-- 初始设置：
+- 换行符设置：
    ```bash
    git config --global core.autocrlf true # Windows
    git config --global core.autocrlf input # Unix

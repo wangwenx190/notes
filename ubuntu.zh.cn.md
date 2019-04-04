@@ -55,7 +55,7 @@
    sudo apt update
    sudo apt full-upgrade
    ```
-- 安装、更换和删除内核：
+- <del>安装、更换和删除内核</del>没必要，系统会自动更新内核。更新完再用`sudo apt autoremove`清理一下就可以了。
 - 双显卡笔记本防止开机卡住安装方法+安装英伟达独显驱动：
    1. 安装系统之前先关闭`Security Boot`（安全启动，去`BIOS`里找）
    2. 屏蔽`Nouveau`开源显卡驱动：在`grub`界面，选中`Install Ubuntu`，按`e`进入命令行模式，在`quiet splash --`后面（也可能没有`-`），添加`acpi_osi=linux nomodeset`，然后按`F10`重新引导
@@ -88,7 +88,7 @@
       ```
     7. 重启
 - 安装常用软件：
-   - 搜狗拼音输入法：
+   - 搜狗拼音输入法（新版Ubuntu已经自带中文输入法了，没必要再装搜狗了）：
       1. <del>先安装`fcitx`，`fcitx-libs-qt`，`libfcitx-qt0`，`libopencc2`和`libqtwebkit4`</del>（依赖关系不满足时使用`sudo apt --fix-broken install`修复）
       2. 到官方网站 https://pinyin.sogou.com/linux/ 下载安装包后安装
       3. Region & Language -> Manage Installed Languages -> Keyboard input method system -> fcitx -> Apply System-Wide
@@ -113,7 +113,7 @@
    - 火狐浏览器：`firefox`
    - 谷歌浏览器：`chromium-browser`
    - Rhythmbox?
-   - Brasero?
+   - Brasero：包名为`brasero`（有必要安装吗？）
 - 安装专业软件：
    - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`，`binutils`
    - VSCode：到官方网站 https://code.visualstudio.com/Download 下载合适的安装包安装
@@ -122,11 +122,10 @@
    - Clang：包名为`clang`，`clang-tools`，`lldb`，`lld`，`libfuzzer-N-dev`，`libc++-dev`，`libc++abi-dev`，`libomp-dev`（`N`为具体的主版本号，例如：7、8和9等），如果官方版本较老，新版本可按照官方网站 http://apt.llvm.org/ 的指导来安装
    - MinGW-w64：包名为`mingw-w64`，`mingw-w64-common`，`mingw-w64-i686-dev`，`mingw-w64-tools`，`mingw-w64-x86-64-dev`。具体请查看官方网站 https://launchpad.net/ubuntu/+source/mingw-w64
    - glibc：包名为`libc6-dev`，`libc6-dev-amd64`，`libc6-dev-amd64-cross`，`libc6-dev-amd64-i386-cross`，`libc6-dev-i386`，`libc6-dev-i386-amd64-cross`，`libc6-dev-i386-cross`（不知道具体哪个有用，我就都写下来了）
-   - Linux headers：
    - GCC/G++：包`build-essential`自带
    - ICC：按照官方网站 https://software.intel.com/en-us/qualify-for-free-software/opensourcecontributor 的指导下载安装
    - Unity3D：https://forum.unity.com/threads/unity-hub-v-1-3-2-is-now-available.594139/ 或 https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/
-   - GIMP/Krita?
+   - Krita：包名为`krita`
    - UnrealEngine：https://docs.unrealengine.com/en-US/Platforms/Linux/BeginnerLinuxDeveloper/SettingUpAnUnrealWorkflow
 - 安装使用代理：
    1. 安装`shadowsocks-qt5`：
@@ -172,3 +171,8 @@
    | ---- | ---- |
    | Ctrl + L | 显示地址栏（可直接复制路径） |
 - 命令行刻录U盘：
+   ```bash
+   sudo fdisk -l #找到你的U盘
+   umount /dev/sdb #卸载你的U盘
+   sudo dd if=~/Downloads/ubuntu.iso of=/dev/sdb bs=4M #等待刻录结束，期间不会有任何输出或提示
+   ```
