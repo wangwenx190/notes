@@ -115,7 +115,7 @@
    - Rhythmbox?
    - Brasero：包名为`brasero`（有必要安装吗？）
 - 安装专业软件：
-   - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`，`binutils`
+   - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`，`binutils`，`upx-ucl`
    - VSCode：到官方网站 https://code.visualstudio.com/Download 下载合适的安装包安装
    - Qt Creator：包名为`qtcreator`，如果官方版本较老，新版本可在 http://mirrors.ustc.edu.cn/qtproject/official_releases/qtcreator/ 下载安装
    - VirtualBox：包名为`virtualbox`，如果官方版本较老，新版本可按照官方网站 https://www.virtualbox.org/wiki/Linux_Downloads 的指导来安装
