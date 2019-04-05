@@ -5,7 +5,7 @@
    | --- | ---- | ---- | ---- |
    | **clone** [options] <repo_url> [path_to_save] | 将远端代码仓库克隆到本地文件夹 | --progress：显示进度；-b <branch_name>：切换到<branch_name>分支；--depth <log_depth>：将提交记录删减到<log_depth>（使用“--depth 1”可以单纯下载代码，不下载提交记录）；--shallow-submodules：针对所有子模块启用“--depth 1”；--recursive：将所有子模块一起克隆下来（默认没有这个参数，即不会自动下载子模块，需要显式的指定） | git clone --progress -b dev --recursive https://example.git D:\code\my_proj |
    | **add** <files_to_add> | 将被修改的文件添加到当前提交中 | “.”代表添加所有改动的文件，不用“.”就要把所有被修改的文件路径都作为参数放到命令后面 | git add . |
-   | **diff** <original_commit> <new_commit> | 显示两个提交之间的差异 | 使用“>”可以将差异输出到文件中，即创建补丁文件；1 | git diff abcdef ghijk>mypatch.patch |
+   | **diff** <original_commit> <new_commit> | 显示两个提交之间的差异 | 使用“>”可以将差异输出到文件中，即创建补丁文件 | git diff abcdef ghijk>mypatch.patch |
    | **commit** [options] | 将当前提交合入本地仓库或修改提交 | -a：自动添加所有被修改的文件（就不用专门add了）；--author=<new_author>：覆盖原始作者；--date=<new_date>：覆盖原始日期；-m <commit_message>：设置提交信息，不添加这个参数的话git会启动默认文本编辑器，让你输入提交信息；--amend：修改提交 | git commit -a -m "What have I done?" |
    | **branch** [options] [branch_name] | 查看或修改分支 | -D <branch_name>：删除本地分支；-r：列出或删除（如果与“-d”一起使用）远端分支；-a：列出远端和本地的所有分支；-m：移动或重命名一个分支；-c：复制一个分支；-l：列出所有本地分支 | git branch -d -r origin/test |
    | **checkout** [options] <branch_name> | 切换或新建分支 | 不加任何参数意为切换到<branch_name>分支；使用“-b <branch_name> --track <remote_name>/<remote_branch_name>”可以创建并切换到一个新的分支 | git checkout -b patch-fix --track origin/master |
