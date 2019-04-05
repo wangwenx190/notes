@@ -2,16 +2,15 @@
 ## 常用内部变量
 | 变量 | 作用 |
 | --- | ---- |
-| CMAKE_C_COMPILER | 指定C编译器 |
-| CMAKE_CXX_COMPILER | 指定C++编译器 |
-| CMAKE_C_FLAGS | 编译C文件时的选项 |
-| CMAKE_CXX_FLAGS | 编译C++文件时的选项 |
-| EXECUTABLE_OUTPUT_PATH | 可执行文件的存放路径 |
-| LIBRARY_OUTPUT_PATH | 库文件路径 |
-| CMAKE_BUILD_TYPE | 构建类型（Debug和Release等） |
+| CMAKE_C_COMPILER | 设置C编译器 |
+| CMAKE_CXX_COMPILER | 设置C++编译器 |
+| CMAKE_C_FLAGS | 设置编译C文件时的选项 |
+| CMAKE_CXX_FLAGS | 设置编译C++文件时的选项 |
+| CMAKE_BUILD_TYPE | 设置构建类型（Debug和Release等） |
 | BUILD_SHARED_LIBS | 更改库默认构建类型为动态库 |
 | PROJECT_SOURCE_DIR | 项目源文件路径 |
 | PROJECT_BINARY_DIR | 项目二进制文件路径 |
+| CMAKE_INSTALL_PREFIX | 设置项目安装路径 |
 
 如何使用：
   1. 在CMakeLists.txt中指定，使用`set`命令
