@@ -42,3 +42,31 @@
    git config --global core.autocrlf true # Windows
    git config --global core.autocrlf input # Unix
    ```
+- 设置默认文本编辑器：
+   ```bash
+   git config --global core.editor "'D:\Notepad++\notepad++.exe' -multiInst -notabbar -nosession -noPlugin '$*'"
+   # 路径必须用双引号包裹起来，里面有特殊字符的话要用单引号再包裹一层
+   # 如果编辑器位于环境变量中，也可以不写完整路径，例如：
+   # git config --global core.editor notepad++
+   ```
+   取消默认文本编辑器的设置：`git config --unset --global core.editor`
+- 推荐初始设置：
+   ```bash
+   # A common mistake is forgetting to add new files to a commit. Therefore it is recommended to set up git to always show them in git stat and git commit, even if this is somewhat slower (especially on Windows):
+   git config --global status.showuntrackedfiles all
+   # Pre-2.0 git has a somewhat stupid default that git push will push all branches to the upstream repository, which is almost never what you want. To fix this, use:
+   git config --global push.default tracking
+   # Sometimes it is necessary to resolve the same conflicts multiple times. Git has the ability to record and replay conflict resolutions automatically, but - surprise surprise - it is not enabled by default. To fix it, run:
+   git config --global rerere.enabled true
+   git config --global rerere.autoupdate true # this saves you the git add, but you should verify the result with git diff --staged
+   # git pull will show a nice diffstat, so you get an overview of the changes from upstream. git pull --rebase does not do that by default. But you want it:
+   git config --global rebase.stat true
+   # To get nicely colored patches (from git diff, git log -p, git show, etc.), use this:
+   git config --global color.ui auto
+   git config --global core.pager "less -FRSX"
+   ```
+- 如果在克隆仓库时无法下载或更新某一个或某几个子模块，或在克隆完成后的某一时间想自行更新子模块，可以用下面的命令：
+   ```bash
+   git submodule foreach --recursive git fetch --tags
+   git submodule update --init --recursive
+   ```
