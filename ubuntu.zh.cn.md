@@ -115,7 +115,7 @@
    - Rhythmbox?
    - Brasero：包名为`brasero`（有必要安装吗？）
 - 安装专业软件：
-   - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`，`binutils`，`upx-ucl`，`ninja-build`
+   - 基本：包名为`build-essential`，`gdb`，`git`，`cmake`，`pkg-config`，`autoconf`，`automake`，`python`，`python3`，`perl`，`ruby`，`flex`，`bison`，`yasm`，`nasm`，`binutils`，`upx-ucl`，`ninja-build`，`autotools-dev`，`libtool`
    - VSCode：到官方网站 https://code.visualstudio.com/Download 下载合适的安装包安装
    - Qt Creator：包名为`qtcreator`，如果官方版本较老，新版本可在 http://mirrors.ustc.edu.cn/qtproject/official_releases/qtcreator/ 下载安装
    - VirtualBox：包名为`virtualbox`，如果官方版本较老，新版本可按照官方网站 https://www.virtualbox.org/wiki/Linux_Downloads 的指导来安装
@@ -128,24 +128,32 @@
    - Krita：包名为`krita`
    - UnrealEngine：https://docs.unrealengine.com/en-US/Platforms/Linux/BeginnerLinuxDeveloper/SettingUpAnUnrealWorkflow
 - 安装使用代理：
-   1. 安装`shadowsocks-qt5`：
-      ```bash
-      sudo add-apt-repository ppa:hzwhuang/ss-qt5
-      sudo apt update
-      sudo apt install shadowsocks-qt5
-      ```
-      经过我的测试，用这个方法成功的次数太少，可以直接去作者的 GitHub 下载 snap 版本：https://github.com/shadowsocks/shadowsocks-qt5/releases
-    2. 设置节点：
-       ```text
-       Local Address：127.0.0.1
-       Local Port：1080
-       Local Server Type：HTTP(S)
-       Automation：Auto connect on application start
-       #其他选项按你的节点来
-       ```
-    3. 设置系统代理，**IP地址**均为`127.0.0.1`，**端口**均为`1080`
-    4. 设置浏览器代理，IP地址与端口的设置与上一步的相同（所有协议都要这样设置）
-    5. 软件里点击Connect
+   1. **SS**节点：
+      1. 安装`shadowsocks-qt5`：
+         1. 【推荐】直接去作者的 GitHub 下载 snap 版本：https://github.com/shadowsocks/shadowsocks-qt5/releases
+         2. 使用命令行安装（**不推荐**，因为我试了很多次，都安装不上）
+            ```bash
+            sudo add-apt-repository ppa:hzwhuang/ss-qt5
+            sudo apt update
+            sudo apt install shadowsocks-qt5
+            ```
+      2. 设置节点：
+         ```text
+         Local Address：127.0.0.1
+         Local Port：1080
+         Local Server Type：HTTP(S)
+         Automation：Auto connect on application start
+         #其他选项按你的节点来
+         ```
+      3. 设置系统代理，**IP地址**均为`127.0.0.1`，**端口**均为`1080`
+      4. 设置浏览器代理，IP地址与端口的设置与上一步的相同（所有协议都要这样设置）
+      5. 软件里点击Connect
+   2. **SSR**节点：
+      1. 安装`electron-ssr`：直接去官网下载AppImage版本 https://github.com/erguotou520/electron-ssr/releases
+      2. 运行软件后添加节点。如果运行后看不到软件主界面，按**CTRL + SHIFT + W**显示。
+      3. 在软件主界面按**CTRL + SHIFT + B**调出菜单，系统代理模式->**全局代理**。
+      4. 系统设置->网络->网络代理->自动，浏览器设置->代理->使用系统代理（所有协议）
+      5. 如果要使用 Git ，可以直接开始用了，不用给它再单独设置代理了，因为已经开启了全局代理
 - 常用分区方案：
 
    | 挂载点 | 文件系统 | 推荐大小 | 分区介绍 |

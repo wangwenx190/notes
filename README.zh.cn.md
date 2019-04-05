@@ -7,6 +7,7 @@
 - C/C++ -> [简体中文](/cpp.zh.cn.md), 英文
 - Git -> [简体中文](/git.zh.cn.md), 英文
 - MinGW -> [简体中文](/mingw.zh.cn.md), 英文
+- mpv -> [简体中文](/mpv.zh.cn.md), 英文
 - MSVC -> [简体中文](/msvc.zh.cn.md), 英文
 - Qt -> [简体中文](/qt.zh.cn.md), 英文
 - Ubuntu -> [简体中文](/ubuntu.zh.cn.md), 英文
