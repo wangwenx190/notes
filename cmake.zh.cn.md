@@ -28,7 +28,7 @@
 | **target_link_libraries** (目标名 链接库1 链接库2 ...) | 添加链接库，相当于`-l`参数 | - |
 | **add_library** (库名 [STATIC\|SHARED] 源文件1 源文件2 ...) | 编译库，默认为静态库 | - |
 | **find_package** (包名 [版本] [REQUIRED]) | 查找包。如果指定了`REQUIRED`，会在找不到包时报错并中断编译。如果找到了对应的包，会自动添加`包名_FOUND`的宏定义 | - |
-| **message** ([无\|STATUS\|WARNING\|AUTHOR_WARNING\|SEND_ERROR\|FATAL_ERROR\|DEPRECATION] "待输出信息") | 输出信息 | - |
+| **message** ([模式] "待输出信息") | 输出信息。模式可取的值为`STATUS`，`WARNING`，`AUTHOR_WARNING`，`SEND_ERROR`，`FATAL_ERROR`，`DEPRECATION` | - |
 | **option** (变量名 "帮助文本" [默认值]) | 给用户提供一个可以选择`OFF/ON`的选项，默认值为`OFF` |
 | **configure_file** (输入文件 输出文件 [@ONLY]) | 根据输入文件输出一个新的文件，其中的`@变量名@`会自动被替换为cmake中变量的值。建议使用`#cmakedefine`代替`#define`。`@ONLY`参数可以使cmake跳过输入文件中`${变量名}`这种变量的替换，防止破坏原来的文件 |
 | **include** (路径) | 包含一个外部的cmake脚本 |
