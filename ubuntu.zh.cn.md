@@ -176,3 +176,15 @@
    umount /dev/sdb #卸载你的U盘
    sudo dd if=~/Downloads/ubuntu.iso of=/dev/sdb bs=4M #等待刻录结束，期间不会有任何输出或提示
    ```
+- 验证文件哈希值：
+   ```bash
+   md5sum myfile.dat #计算文件的MD5值
+   sha1sum myfile.dat #计算文件的SHA-1值
+   sha256sum myfile.dat #计算文件的SHA-256值
+   sha512sum myfile.dat #计算文件的SHA-512值
+   md5sum -c md5sum.txt #计算md5sum.txt中给定文件的MD5值并与记录的值比对
+   sha1sum -c sha1sum.txt #计算sha1sum.txt中给定文件的SHA-1值并与记录的值比对
+   sha256sum -c sha256sum.txt #计算sha256sum.txt中给定文件的SHA-256值并与记录的值比对
+   sha512sum -c sha512sum.txt #计算sha512sum.txt中给定文件的SHA-512值并与记录的值比对
+   #注：文本文件中可以有不止一个文件的哈希值
+   ```
