@@ -50,18 +50,30 @@
    ```
 - 编译Qt程序：
    ```cmake
-   cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
-   project(qtdemo)
+   cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
+   project(qtdemo VERSION 1.2.3)
    set(CMAKE_INCLUDE_CURRENT_DIR ON)
    set(CMAKE_AUTOMOC ON)
    set(CMAKE_AUTOUIC ON)
    set(CMAKE_AUTORCC ON)
    find_package(Qt5 COMPONENTS Core Gui Widgets CONFIG REQUIRED)
-   set(helloworld_SRCS
-       mainwindow.ui
+   set(HEADERS
+       mainwindow.h
+   )
+   set(SOURCES
        mainwindow.cpp
        main.cpp
    )
-   add_executable(helloworld WIN32 ${helloworld_SRCS})
-   target_link_libraries(helloworld Qt5::Core Qt5::Gui Qt5::Widgets)
+   set(RESOURCES
+       demo.qrc
+   )
+   set(FORMS
+       mainwindow.ui
+   )
+   add_executable(demo WIN32 ${HEADERS} ${SOURCES} ${FORMS} ${RESOURCES}) #不是Windows程序就不要加WIN32
+   target_link_libraries(demo Qt5::Core Qt5::Gui Qt5::Widgets)
+   install(TARGETS demo DESTINATION bin) #可以使用“CMAKE_INSTALL_PREFIX”改变安装路径
+   install(DIRECTORY ${PROJECT_SOURCE_DIR}/themes DESTINATION bin/themes)
+   install(FILES ${PROJECT_SOURCE_DIR}/i18n/*.qm DESTINATION bin/translations)
    ```
+   注：如果想使用自己构建的Qt套件，可以使用`CMAKE_PREFIX_PATH`指定Qt套件的路径，例如：`cmake -DCMAKE_PREFIX_PATH=~/qt/clang64 ..`
