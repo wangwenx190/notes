@@ -142,3 +142,5 @@
 - 在 Linux 平台上使用 MinGW 交叉编译 Windows 版 Qt 时，可以启用 LTO，但`-fno-fat-lto-objects`参数会导致报错（原因未知），因此要修改特定的`mkspec`的部分条目，去掉这个参数
 - 使用 MinGW 编译 Qt 时，可以把`qtbase\config.tests\x86_simd\main.cpp`文件中的第148行`#error "AVX support is broken in 64-bit MinGW - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=49001"`注释掉。因为经过我的测试，虽然这个 bug 目前仍然处于“UNCONFIRMED”的状态，但实际上 MinGW-w64 是支持 AVX 的，可能是新版 GCC 改善了相关的地方
 - `QNetworkReply`可能无法处理`redirection`（重定向），原因未知
+- 在Ubuntu系统上用Clang为Windows平台交叉编译（mkpsec：win32-clang-g++）时，如果编译静态版Qt，配置时不要添加`-static-runtime`，但编译自己的Qt工程时`CONFIG`条目要添加`static_runtime`（或在`QMAKE_LFLAGS`里添加`-static`），否则会提示找不到符号，原因暂时未知
+- 在Ubuntu系统上，使用`win32-clang-g++`这个`mkspec`时，编译静态版Qt可以同时开启`-optimize-size`和`-ltcg`，编译动态版Qt不能开启LTO，原因暂时未知
