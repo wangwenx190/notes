@@ -49,7 +49,7 @@
 | **add_link_options**(选项1 选项2 ...) | 添加链接选项。此为全局指令，针对不同的目标，可以使用`target_link_options` | - |
 | **install**(类型 路径 [CONFIGURATIONS Debug\|Release] 路径) | 安装文件和文件夹，即将指定的文件及文件夹复制到指定的位置。类型可取的值为`TARGETS`，`FILES`和`DIRECTORY`（常用），其中`TARGETS`用于脚本中已经存在的target，其后的路径可以直接用target的名字，`FILES`即一般文件，`DIRECTORY`为文件夹。在使用`Ninja`作为构建工具时，还必须开启`CMAKE_INSTALL_WITH_RPATH`，即`set(CMAKE_INSTALL_WITH_RPATH ON)`，否则构建会失败 | - |
 ## 杂项
-- cmake支持的编译器的名称为`AppleClang`，`Clang`，`GNU`，`MSVC`，`SunPro`和`Intel`，可以通过`CMAKE_CXX_COMPILER_ID`这个变量获取到，并可以通过`STREQUAL`这个函数来进行字符串的比较，大小写敏感。编译器版本号可以通过`CMAKE_CXX_COMPILER_VERSION`这个变量获取到，可以使用`VERSION_LESS`和`VERSION_GREATER`来比较版本号。示例：
+- cmake支持的编译器的名称为`AppleClang`，`Clang`，`GNU`，`MSVC`，`SunPro`和`Intel`，可以通过`CMAKE_CXX_COMPILER_ID`这个变量获取到，并可以通过`STREQUAL`这个函数来进行字符串的比较，**大小写敏感**。编译器版本号可以通过`CMAKE_CXX_COMPILER_VERSION`这个变量获取到，可以使用`VERSION_LESS`和`VERSION_GREATER`来比较版本号。示例：
    ```cmake
    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8.0)
