@@ -1,20 +1,26 @@
 # CMake
 ## 常用内部变量
-| 变量 | 作用 |
-| --- | ---- |
-| CMAKE_C_COMPILER | 设置C编译器 |
-| CMAKE_CXX_COMPILER | 设置C++编译器 |
-| CMAKE_C_FLAGS | 设置编译C文件时的选项 |
-| CMAKE_CXX_FLAGS | 设置编译C++文件时的选项 |
-| CMAKE_BUILD_TYPE | 设置构建类型（Debug和Release等） |
-| BUILD_SHARED_LIBS | 更改库默认构建类型为动态库 |
-| PROJECT_SOURCE_DIR | 项目源文件路径 |
-| PROJECT_BINARY_DIR | 项目二进制文件路径 |
-| CMAKE_INSTALL_PREFIX | 设置项目安装路径 |
+| 变量 | 作用 | 示例 |
+| --- | ---- | ---- |
+| CMAKE_C_STANDARD | C标准 | set(CMAKE_CXX_STANDARD 14) |
+| CMAKE_CXX_STANDARD | C++标准 | set(CMAKE_CXX_STANDARD 14) |
+| CMAKE_C_COMPILER | C编译器 | set(CMAKE_C_COMPILER clang) |
+| CMAKE_CXX_COMPILER | C++编译器 | set(CMAKE_CXX_COMPILER clang++) |
+| CMAKE_C_LINKER | C链接器？ | set(CMAKE_C_LINKER ld.lld) |
+| CMAKE_CXX_LINKER | C++链接器？ | set(CMAKE_CXX_LINKER ld.lld) |
+| CMAKE_LINKER | 链接器？ | set(CMAKE_LINKER ld.lld) |
+| CMAKE_C_FLAGS | 编译C文件时的选项 | - |
+| CMAKE_CXX_FLAGS | 编译C++文件时的选项 | - |
+| CMAKE_CXX_LINK_FLAGS | 链接C++文件时的选项 | - |
+| CMAKE_BUILD_TYPE | 构建类型 | set(CMAKE_BUILD_TYPE Release) |
+| BUILD_SHARED_LIBS | 更改库默认构建类型为动态库 | - |
+| PROJECT_SOURCE_DIR | 项目源文件路径 | - |
+| PROJECT_BINARY_DIR | 项目二进制文件路径 | - |
+| CMAKE_INSTALL_PREFIX | 项目安装路径 | - |
 
-如何使用：
-  1. 在CMakeLists.txt中指定，使用`set`命令
-  2. 在cmake命令中使用，如`cmake -DCMAKE_BUILD_TYPE=Release`
+注：
+1. 如何设置这些变量：除了使用`set`命令，也可以在cmake命令中使用，如`cmake -DCMAKE_BUILD_TYPE=Release`，此举可覆盖CMakeLists.txt中的设置
+2. 如何获取这些变量：使用`${变量名}`的方式获取，例如`${CMAKE_CXX_COMPILER}`可以获取到默认的C++编译器
 ## 常用命令
 | 命令 | 作用 | 示例 |
 | --- | ---- | ---- |
@@ -36,13 +42,24 @@
 | **add_link_options** (选项1 选项2 ...) | 添加链接选项。此为全局指令，针对不同的目标，可以使用`target_link_options` |
 | **install** (TARGETS\|FILES\|DIRECTORY [CONFIGURATIONS Debug\|Release] [RUNTIME\|LIBRARY] 路径)
 ## 杂项
-- cmake中编译器的名称：`AppleClang`，`Clang`，`GNU`，`MSVC`，`SunPro`，`Intel`
+- cmake支持的编译器的名称为`AppleClang`，`Clang`，`GNU`，`MSVC`，`SunPro`和`Intel`，可以通过`CMAKE_CXX_COMPILER_ID`这个变量获取到，并可以通过`STREQUAL`这个函数来进行字符串的比较，大小写敏感。编译器版本号可以通过`CMAKE_CXX_COMPILER_VERSION`这个变量获取到，可以使用`VERSION_LESS`和`VERSION_GREATER`来比较版本号。示例：
+   ```cmake
+   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+       if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8.0)
+           message(FATAL_ERROR "GCC 4.8 or higher required!")
+       endif()
+   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+       if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.3.0)
+           message(FATAL_ERROR "Clang 3.3 or higher required!")
+       endif()
+   endif()
+   ```
 - 为 VS 生成：`cmake -G"Visual Studio 16 2019" -AWin32/x64 [-Thost=x86/x64]`
 - 交叉编译（以Clang为例）：
    ```cmake
-   set(CMAKE_SYSTEM_NAME Linux) #设置目标系统
-   set(CMAKE_SYSTEM_PROCESSOR arm) #设置目标架构
-   set(triple arm-linux-gnueabihf) #设置目标triple
+   set(CMAKE_SYSTEM_NAME Windows) #设置目标系统
+   set(CMAKE_SYSTEM_PROCESSOR x86_64) #设置目标架构
+   set(triple ${CMAKE_SYSTEM_PROCESSOR}-pc-windows-gnu) #设置目标triple
    set(CMAKE_C_COMPILER clang) #设置C编译器
    set(CMAKE_C_COMPILER_TARGET ${triple}) #设置C编译器triple
    set(CMAKE_CXX_COMPILER clang++) #设置C++编译器
