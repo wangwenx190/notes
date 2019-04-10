@@ -70,3 +70,11 @@
    git submodule foreach --recursive git fetch --tags
    git submodule update --init --recursive
    ```
+- 如何拉取并合并子模块上游的更新：
+  1. 分别进入每个子模块的根目录，均执行`git pull`（或fetch+merge）
+  2. 在仓库根目录执行`git submodule update --remote`，Git会尝试更新所有子模块
+
+  注：更新完子模块以后记得push到远端
+- 如何修改子模块的设置：
+  - 修改子模块远端仓库网址：`git config submodule.子模块名.url 新URL`
+  - 修改子模块默认分支：`git config -f .gitmodules submodule.子模块名.branch 分支名`
