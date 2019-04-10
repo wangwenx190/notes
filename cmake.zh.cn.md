@@ -24,6 +24,7 @@
 | CMAKE_MODULE_LINKER_FLAGS | - | - |
 | CMAKE_SHARED_LINKER_FLAGS | - | - |
 | CMAKE_STATIC_LINKER_FLAGS | - | - |
+| EXECUTABLE_OUTPUT_PATH | 可执行程序输出路径 | set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin) |
 
 注：
 1. 如何设置这些变量：除了使用`set`命令，也可以在cmake命令中使用，如`cmake -DCMAKE_BUILD_TYPE=Release`，此举可覆盖CMakeLists.txt中的设置
