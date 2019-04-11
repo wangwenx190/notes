@@ -25,6 +25,9 @@
 | CMAKE_SHARED_LINKER_FLAGS | - | - |
 | CMAKE_STATIC_LINKER_FLAGS | - | - |
 | EXECUTABLE_OUTPUT_PATH | 可执行程序输出路径 | set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin) |
+| CMAKE_GENERATOR | 生成器名称（cmake参数：-G） | set(CMAKE_GENERATOR Ninja) |
+| CMAKE_GENERATOR_PLATFORM | 生成器架构（cmake参数：-A） | set(CMAKE_GENERATOR_PLATFORM Win32) |
+| CMAKE_GENERATOR_TOOLSET | 生成器工具链（cmake参数：-T） | set(CMAKE_GENERATOR_TOOLSET x64) |
 
 注：
 1. 如何设置这些变量：除了使用`set`命令，也可以在cmake命令中使用，如`cmake -DCMAKE_BUILD_TYPE=Release`，此举可覆盖CMakeLists.txt中的设置
@@ -102,3 +105,5 @@
    install(FILES ${PROJECT_SOURCE_DIR}/i18n/*.qm DESTINATION bin/translations)
    ```
    注：如果想使用自己构建的Qt套件，可以使用`CMAKE_PREFIX_PATH`指定Qt套件的路径，例如：`cmake -DCMAKE_PREFIX_PATH=~/qt/clang64 ..`
+- CMake中支持的生成器的名称为`Borland Makefiles`，`MSYS Makefiles`，`MinGW Makefiles`，`NMake Makefiles`，`NMake Makefiles JOM`，`Unix Makefiles`，`Watcom WMake`，`Ninja`，`Visual Studio 10 2010`，`Visual Studio 11 2012`，`Visual Studio 12 2013`，`Visual Studio 14 2015`，`Visual Studio 15 2017`，`Visual Studio 16 2019`，`Green Hills MULTI`和`Xcode`等
+- CMake支持的架构的名称为`Win32`，`x64`，`ARM`和`ARM64`等（以VS为例）
