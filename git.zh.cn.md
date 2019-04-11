@@ -21,6 +21,9 @@
    | **cherry-pick** [options] <some_commits> | 将某一个或某几个已经存在的提交合并到当前分支 | --continue：（冲突解决后）继续被中断的操作；--abort：中断当前操作并恢复到之前的状态 | - |
    | **rebase** [options] | 变基 | - | - |
    | **revert** [options] <commid_id> | 回退某次提交 | --continue；--abort | - |
+   | **status** | 查看当前工作树状态 | - | git status |
+   | **clean** [options] | 从当前工作树移除未跟踪文件，即将所有未被提交到本地仓库的文件都删除，从仓库根目录开始，递归清理所有子文件夹 | -d：未被跟踪的文件夹也一起删除；-f：强制删除，建议添加此参数，因为Git会在很多情况下不执行此类型的命令；-x：不忽略`.gitignore`里的文件，将忽略文件也一起删除（建议添加此参数） | git clean -fdx |
+   | **stash** [options] [stash_name] | 暂存当前的修改 | push：待写；list：列出所有暂存的提交；show [stash_name]：显示某次暂存的差异；apply [stash_name]：在当前工作树应用某次暂存的提交，但不要将其从暂存列表中移除；pop [stash_name]：在当前工作树应用某次暂存的提交，并将其从暂存列表中移除；clear：从暂存列表中移除所有暂存的提交；drop [stash_name]：从暂存列表中移除某次暂存的提交 | - |
 
    注：大多数命令都支持`--progress`参数。
 - 设置代理：
@@ -72,9 +75,14 @@
    ```
 - 如何拉取并合并子模块上游的更新：
   1. 分别进入每个子模块的根目录，均执行`git pull`（或fetch+merge）
-  2. 在仓库根目录执行`git submodule update --remote`，Git会尝试更新所有子模块
+  2. 在仓库根目录执行`git submodule update --remote`，Git会尝试更新所有子模块（不确定会不会自动merge，如果没有就手动合并）
 
-  注：更新完子模块以后记得push到远端
+  注：更新完子模块以后记得commit后push到远端
 - 如何修改子模块的设置：
   - 修改子模块远端仓库网址：`git config submodule.子模块名.url 新URL`
   - 修改子模块默认分支：`git config -f .gitmodules submodule.子模块名.branch 分支名`
+- 如何删除已经被跟踪的文件：
+  1. 本地已经不再需要该文件：`git rm 路径`
+  2. 本地仍然需要该文件，仅从版本控制系统中移除：`git rm --cached 路径`
+
+  注：进行这种修改后记得commit后push到远端
