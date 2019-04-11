@@ -2,8 +2,8 @@
 ## 常用内部变量
 | 变量 | 作用 | 示例 |
 | --- | ---- | ---- |
-| CMAKE_C_STANDARD | C标准 | set(CMAKE_C_STANDARD 99) |
-| CMAKE_CXX_STANDARD | C++标准 | set(CMAKE_CXX_STANDARD 14) |
+| CMAKE_C_STANDARD | C标准，可取的值为`90`，`99`和`11` | set(CMAKE_C_STANDARD 11) |
+| CMAKE_CXX_STANDARD | C++标准，可取的值为`98`，`11`，`14`，`17`和`20` | set(CMAKE_CXX_STANDARD 14) |
 | CMAKE_C_COMPILER | C编译器（具体的程序名） | set(CMAKE_C_COMPILER clang) |
 | CMAKE_CXX_COMPILER | C++编译器（具体的程序名） | set(CMAKE_CXX_COMPILER clang++) |
 | CMAKE_C_LINKER | C链接器（具体的程序名） | set(CMAKE_C_LINKER ld.lld) |
@@ -107,3 +107,25 @@
    注：如果想使用自己构建的Qt套件，可以使用`CMAKE_PREFIX_PATH`指定Qt套件的路径，例如：`cmake -DCMAKE_PREFIX_PATH=~/qt/clang64 ..`
 - CMake中支持的生成器的名称为`Borland Makefiles`，`MSYS Makefiles`，`MinGW Makefiles`，`NMake Makefiles`，`NMake Makefiles JOM`，`Unix Makefiles`，`Watcom WMake`，`Ninja`，`Visual Studio 10 2010`，`Visual Studio 11 2012`，`Visual Studio 12 2013`，`Visual Studio 14 2015`，`Visual Studio 15 2017`，`Visual Studio 16 2019`，`Green Hills MULTI`和`Xcode`等
 - CMake支持的架构的名称为`Win32`，`x64`，`ARM`和`ARM64`等（以VS为例）
+- 如何判断平台：
+   ```cmake
+   #方法一：
+   message("Current operating system is ${CMAKE_SYSTEM}")
+   if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+       message("Current platform: Linux")
+   elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
+       message("Current platform: Windows")
+   elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+       message("Current platform: FreeBSD")
+   else()
+       message("Other platform: ${CMAKE_SYSTEM_NAME}")
+   endif()
+   #方法二：
+   if(WIN32)
+       message("Now is Windows.")
+   elseif(APPLE)
+       message("Now is macOS.")
+   elseif(UNIX)
+       message("Now is UNIX-like OS.")
+   endif()
+   ```
