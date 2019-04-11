@@ -23,7 +23,7 @@
    | **revert** [options] <commid_id> | 回退某次提交 | --continue；--abort | - |
    | **status** | 查看当前工作树状态 | - | git status |
    | **clean** [options] | 从当前工作树移除未跟踪文件，即将所有未被提交到本地仓库的文件都删除，从仓库根目录开始，递归清理所有子文件夹 | -d：未被跟踪的文件夹也一起删除；-f：强制删除，建议添加此参数，因为Git会在很多情况下不执行此类型的命令；-x：不忽略`.gitignore`里的文件，将忽略文件也一起删除（建议添加此参数） | git clean -fdx |
-   | **stash** [options] [stash_name] | 暂存当前的修改 | push：待写；list：列出所有暂存的提交；show [stash_name]：显示某次暂存的差异；apply [stash_name]：在当前工作树应用某次暂存的提交，但不要将其从暂存列表中移除；pop [stash_name]：在当前工作树应用某次暂存的提交，并将其从暂存列表中移除；clear：从暂存列表中移除所有暂存的提交；drop [stash_name]：从暂存列表中移除某次暂存的提交 | - |
+   | **stash** [options] [stash_name] | 暂存当前的修改 | push：`git stash push`=`git stash`，不推荐使用`git stash save`；list：列出所有暂存的提交；show [stash_name]：显示某次暂存的差异；apply [stash_name]：在当前工作树应用某次暂存的提交，但不要将其从暂存列表中移除；pop [stash_name]：在当前工作树应用某次暂存的提交，并将其从暂存列表中移除；clear：从暂存列表中移除所有暂存的提交；drop [stash_name]：从暂存列表中移除某次暂存的提交 | - |
 
    注：大多数命令都支持`--progress`参数。
 - 设置代理：
