@@ -17,17 +17,26 @@
 | CMAKE_CXX_LINK_FLAGS | 链接C++文件时的选项 | - |
 | CMAKE_BUILD_TYPE | 构建类型 | set(CMAKE_BUILD_TYPE Release) |
 | BUILD_SHARED_LIBS | 更改库默认构建类型为动态库 | - |
-| PROJECT_SOURCE_DIR | 项目源文件路径 | - |
-| PROJECT_BINARY_DIR | 项目二进制文件路径 | - |
-| CMAKE_INSTALL_PREFIX | 项目安装路径 | - |
+| PROJECT_SOURCE_DIR | 项目顶级CMakeLists.txt所在目录，即项目根目录 | - |
+| PROJECT_BINARY_DIR | 项目构建目录，即build文件夹 | - |
+| CMAKE_INSTALL_PREFIX | 项目安装路径前缀 | - |
 | CMAKE_EXE_LINKER_FLAGS | exe链接选项 | - |
 | CMAKE_MODULE_LINKER_FLAGS | - | - |
 | CMAKE_SHARED_LINKER_FLAGS | - | - |
 | CMAKE_STATIC_LINKER_FLAGS | - | - |
 | EXECUTABLE_OUTPUT_PATH | 可执行程序输出路径 | set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin) |
+| LIBRARY_OUTPUT_PATH | 链接库输出路径 | set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib) |
 | CMAKE_GENERATOR | 生成器名称（cmake参数：-G） | set(CMAKE_GENERATOR Ninja) |
 | CMAKE_GENERATOR_PLATFORM | 生成器架构（cmake参数：-A） | set(CMAKE_GENERATOR_PLATFORM Win32) |
 | CMAKE_GENERATOR_TOOLSET | 生成器工具链（cmake参数：-T） | set(CMAKE_GENERATOR_TOOLSET x64) |
+| CMAKE_CURRENT_SOURCE_DIR | 当前CMakeLists.txt所在目录 | - |
+| CMAKE_CURRENT_BINARY_DIR | 当前target的构建目录 | - |
+| CMAKE_CURRENT_LIST_FILE | 调用这个变量的CMakeLists.txt的完整路径 | - |
+| PROJECT_NAME | 项目名 | - |
+| CMAKE_SYSTEM | 系统名称（带版本号） | - |
+| CAMKE_SYSTEM_NAME | 系统名称（不带版本号） | - |
+| CMAKE_SYSTEM_VERSION | 系统版本 | - |
+| CMAKE_SYSTEM_PROCESSOR | 处理器名称，如`i686` | - |
 
 注：
 1. 如何设置这些变量：除了使用`set`命令，也可以在cmake命令中使用，如`cmake -DCMAKE_BUILD_TYPE=Release`，此举可覆盖CMakeLists.txt中的设置
