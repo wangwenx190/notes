@@ -7,24 +7,22 @@
 | CMAKE_C_COMPILER | C编译器（具体的程序名） | set(CMAKE_C_COMPILER clang) |
 | CMAKE_CXX_COMPILER | C++编译器（具体的程序名） | set(CMAKE_CXX_COMPILER clang++) |
 | CMAKE_LINKER | 链接器（具体的程序名） | set(CMAKE_LINKER ld.lld) |
-| CMAKE_C_LINK_EXECUTABLE | C链接器（具体的程序名） | set(CMAKE_C_LINK_EXECUTABLE ld.lld) |
-| CMAKE_CXX_LINK_EXECUTABLE | C++链接器（具体的程序名） | set(CMAKE_CXX_LINK_EXECUTABLE ld.lld) |
-| CMAKE_C_FLAGS | 编译C文件时的选项 | - |
-| CMAKE_CXX_FLAGS | 编译C++文件时的选项 | - |
-| CMAKE_C_LINK_FLAGS | 链接C文件时的选项 | - |
-| CMAKE_CXX_LINK_FLAGS | 链接C++文件时的选项 | - |
+| CMAKE_C_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 编译C文件时的选项 | - |
+| CMAKE_CXX_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 编译C++文件时的选项 | - |
+| CMAKE_C_LINK_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 链接C文件时的选项 | - |
+| CMAKE_CXX_LINK_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 链接C++文件时的选项 | - |
 | CMAKE_BUILD_TYPE | 构建类型 | set(CMAKE_BUILD_TYPE Release) |
 | BUILD_SHARED_LIBS | 更改库默认构建类型为动态库 | - |
 | CMAKE_SOURCE_DIR,PROJECT_SOURCE_DIR | 项目顶级CMakeLists.txt所在目录，即项目根目录 | - |
 | CMAKE_BINARY_DIR,PROJECT_BINARY_DIR | 项目构建目录，即build文件夹 | - |
 | CMAKE_INSTALL_PREFIX | 项目安装路径前缀 | - |
-| CMAKE_EXE_LINKER_FLAGS | exe链接选项 | - |
-| CMAKE_MODULE_LINKER_FLAGS | - | - |
-| CMAKE_SHARED_LINKER_FLAGS | - | - |
-| CMAKE_STATIC_LINKER_FLAGS | - | - |
-| CMAKE_RUNTIME_OUTPUT_DIRECTORY | 可执行程序输出路径 | set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin) |
-| CMAKE_LIBRARY_OUTPUT_DIRECTORY | 链接库（.dll/.so）输出路径 | set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin) |
-| CMAKE_ARCHIVE_OUTPUT_DIRECTORY | 链接库（.lib/.a）输出路径 | set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib) |
+| CMAKE_EXE_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | exe链接选项 | - |
+| CMAKE_MODULE_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | - | - |
+| CMAKE_SHARED_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | - | - |
+| CMAKE_STATIC_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | - | - |
+| CMAKE_RUNTIME_OUTPUT_DIRECTORY[_DEBUG/_MINSIZEREL/_RELEASE] | 可执行程序输出路径 | set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin) |
+| CMAKE_LIBRARY_OUTPUT_DIRECTORY[_DEBUG/_MINSIZEREL/_RELEASE] | 链接库（.dll/.so）输出路径 | set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin) |
+| CMAKE_ARCHIVE_OUTPUT_DIRECTORY[_DEBUG/_MINSIZEREL/_RELEASE] | 链接库（.lib/.a）输出路径 | set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib) |
 | CMAKE_GENERATOR | 生成器名称（cmake参数：-G） | set(CMAKE_GENERATOR Ninja) |
 | CMAKE_GENERATOR_PLATFORM | 生成器架构（cmake参数：-A） | set(CMAKE_GENERATOR_PLATFORM Win32) |
 | CMAKE_GENERATOR_TOOLSET | 生成器工具链（cmake参数：-T） | set(CMAKE_GENERATOR_TOOLSET x64) |
@@ -36,6 +34,8 @@
 | CAMKE_SYSTEM_NAME | 系统名称（不带版本号） | - |
 | CMAKE_SYSTEM_VERSION | 系统版本 | - |
 | CMAKE_SYSTEM_PROCESSOR | 处理器名称，如`i686` | - |
+| CMAKE_DEBUG_POSTFIX | 调试版本库文件后缀 | set(CMAKE_DEBUG_POSTFIX "_d") |
+| CMAKE_RELEASE_POSTFIX | 发布版本库文件后缀 | set(CMAKE_RELEASE_POSTFIX "_r") |
 
 注：
 1. 如何设置这些变量：除了使用`set`命令，也可以在cmake命令中使用，如`cmake -DCMAKE_BUILD_TYPE=Release`，此举可覆盖CMakeLists.txt中的设置
@@ -136,4 +136,9 @@
    elseif(UNIX)
        message("Now is UNIX-like OS.")
    endif()
+   ```
+- 如何为调试版本和发布版本的可执行程序设置不同后缀：
+   ```cmake
+   set_target_properties(${TARGET_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+   set_target_properties(${TARGET_NAME} PROPERTIES RELEASE_POSTFIX "_r")
    ```
