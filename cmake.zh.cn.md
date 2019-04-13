@@ -9,8 +9,6 @@
 | CMAKE_LINKER | 链接器（具体的程序名） | set(CMAKE_LINKER ld.lld) |
 | CMAKE_C_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 编译C文件时的选项 | - |
 | CMAKE_CXX_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 编译C++文件时的选项 | - |
-| CMAKE_C_LINK_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 链接C文件时的选项 | - |
-| CMAKE_CXX_LINK_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 链接C++文件时的选项 | - |
 | CMAKE_BUILD_TYPE | 构建类型 | set(CMAKE_BUILD_TYPE Release) |
 | BUILD_SHARED_LIBS | 更改库默认构建类型为动态库 | - |
 | CMAKE_SOURCE_DIR,PROJECT_SOURCE_DIR | 项目顶级CMakeLists.txt所在目录，即项目根目录 | - |
