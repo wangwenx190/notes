@@ -4,6 +4,7 @@
 - ANGLE -> [简体中文](/angle.zh.cn.md), 英文
 - Clang -> [简体中文](/clang.zh.cn.md), 英文
 - CMake -> [简体中文](/cmake.zh.cn.md), 英文
+- Console -> [简体中文](/console.zh.cn.md), 英文
 - C/C++ -> [简体中文](/cpp.zh.cn.md), 英文
 - Git -> [简体中文](/git.zh.cn.md), 英文
 - MinGW -> [简体中文](/mingw.zh.cn.md), 英文

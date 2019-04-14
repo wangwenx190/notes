@@ -4,6 +4,7 @@ A record of problems encountered during programming and their solutions
 - ANGLE -> [zh-CN](/angle.zh.cn.md), en-US
 - Clang -> [zh-CN](/clang.zh.cn.md), en-US
 - CMake -> [zh-CN](/cmake.zh.cn.md), en-US
+- Console -> [zh-CN](/console.zh.cn.md), en-US
 - C/C++ -> [zh-CN](/cpp.zh.cn.md), en-US
 - Git -> [zh-CN](/git.zh.cn.md), en-US
 - MinGW -> [zh-CN](/mingw.zh.cn.md), en-US
