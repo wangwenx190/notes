@@ -141,10 +141,5 @@
    set_target_properties(${TARGET_NAME} PROPERTIES RELEASE_POSTFIX "_r")
    ```
 - 注释：
-   ```cmake
-   # 这是单行注释
-   #[[这是多行注释
-   行2
-   行3
-   行N]]
-   ```
+  - 单行注释：`#`开头
+  - 多行注释：使用`#[[`开头，`]]`结尾
