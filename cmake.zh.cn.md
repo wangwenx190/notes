@@ -140,3 +140,11 @@
    set_target_properties(${TARGET_NAME} PROPERTIES DEBUG_POSTFIX "_d")
    set_target_properties(${TARGET_NAME} PROPERTIES RELEASE_POSTFIX "_r")
    ```
+- 注释：
+   ```cmake
+   # 这是单行注释
+   #[[这是多行注释
+   行2
+   行3
+   行N]]
+   ```
