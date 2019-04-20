@@ -46,7 +46,7 @@
 | **include_directories**(路径1 路径2 ...) | 添加头文件的搜索路径，相当于`-I`参数。此为全局指令，针对不同的目标，可以使用`target_include_directories` | - |
 | **link_directories**(路径) | 添加库的搜索路径，相当于`-L`参数。此为全局指令，针对不同的目标，可以使用`target_link_directories` | - |
 | **add_subdirectory**(路径) | 包含子目录。这个子目录的顶层也必须有CMakeLists.txt文件 | - |
-| **add_executable**(目标名 [WIN32] [MACOSX_BUNDLE] 源文件1 源文件2 ...) | 编译可执行程序 | - |
+| **add_executable**(目标名 [WIN32] [MACOSX_BUNDLE] 源文件1 源文件2 ...) | 编译可执行程序。如果给定`WIN32`选项，程序必须使用`(w)WinMain`作为入口点。 | - |
 | **link_libraries**(目标名 链接库1 链接库2 ...) | 添加链接库，相当于`-l`参数。此为全局指令，针对不同的目标，可以使用`target_link_libraries` | - |
 | **add_library**(库名 [STATIC\|SHARED] 源文件1 源文件2 ...) | 编译库，默认为静态库 | - |
 | **find_package**(包名 [版本] [COMPONENTS 组件1 组件2 ...] [CONFIG] [REQUIRED]) | 查找包。如果指定了`REQUIRED`，会在找不到包时报错并中断编译。如果找到了对应的包，会自动添加`包名_FOUND`的宏定义 | find_package(Qt5 COMPONENTS Core Gui Widgets CONFIG REQUIRED) |

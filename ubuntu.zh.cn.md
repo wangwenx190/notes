@@ -50,15 +50,23 @@
    #如果要删除PPA以及用它安装的软件包，要使用“ppa-purge”这个工具，要单独安装
    #ppa-purge ppa:NAME：删除名为“NAME”的PPA，同时删除此PPA安装的所有软件包
    ```
-- 更新软件和系统：
+- 更新软件：
    ```bash
    sudo apt update
    sudo apt full-upgrade
    ```
+- 更新系统（摘自Ubuntu官方Wiki）：
+   - Open the "Software & Updates" application.
+   - Select the 3rd Tab called "Updates".
+   - Set the "Notify me of a new Ubuntu version" dropdown menu to "For any new version".
+   - Press Alt+F2 and type in "update-manager -c" (without the quotes) into the command box.
+   - Update Manager should open up and tell you: New distribution release '19.04' is available.
+      - If not you can also use "/usr/lib/ubuntu-release-upgrader/check-new-release-gtk"
+   - Click Upgrade and follow the on-screen instructions.
 - <del>安装、更换和删除内核</del>（没必要，系统会自动更新内核。更新完再用`sudo apt autoremove`清理一下就可以了）
 - 双显卡笔记本防止开机卡住安装方法+安装英伟达独显驱动：
    1. 安装系统之前先关闭`Security Boot`（安全启动，去`BIOS`里找）
-   2. 屏蔽`Nouveau`开源显卡驱动：在`grub`界面，选中`Install Ubuntu`，按`e`进入命令行模式，在`quiet splash --`后面（也可能没有`-`），添加`acpi_osi=linux nomodeset`，然后按`F10`重新引导
+   2. <del>屏蔽`Nouveau`开源显卡驱动：在`grub`界面，选中`Install Ubuntu`，按`e`进入命令行模式，在`quiet splash --`后面（也可能没有`-`），添加`acpi_osi=linux nomodeset`，然后按`F10`重新引导</del>★从**19.04**开始，Ubuntu官方已经增加了**Safe Graphics Mode**启动模式，此模式会自动添加此参数，不用再手动修改了，在GRUB界面直接选择即可。
    3. 重新引导之后，安装程序的窗口可能有一部分在屏幕下方，导致部分按钮无法点击。按下`Alt+F7`，鼠标会变成手指形状，此时将窗口向上拖动即可
    4. 安装完成，重启。在电脑重启黑屏的时候，拔出U盘（重启的时候也可能卡在 logo，所以在要求选择引导选项的时候，重复上述操作）
    5. 永久屏蔽`Nouveau`开源显卡驱动：
