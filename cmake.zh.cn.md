@@ -143,3 +143,20 @@
 - 注释：
   - 单行注释：`#`开头
   - 多行注释：使用`#[[`开头，`]]`结尾
+- Qt添加翻译文件：
+  ```cmake
+  find_package(Qt5 COMPONENTS LinguistTools)
+  set(CMAKE_AUTOMOC ON)
+  set(CMAKE_AUTOUIC ON)
+  set(CMAKE_AUTORCC ON)
+  # qt5_add_translation：只运行lrelease工具，要求ts文件已经存在（不会自动创建）且不能给lrelease传参数
+  # qt5_add_translation(QM_FILES ts文件（可以不止一个）)
+  # qt5_create_translation：如果ts文件不存在会自动创建，如果存在就更新。源文件可以是.ui或.cpp或其他任何lupdate支持的格式
+  # qt5_create_translation(QM_FILES 待翻译的源文件或源文件所在的文件夹（可以不止一个） ts文件（可以不止一个） [OPTIONS 可选项，要传给lupdate工具的命令行参数])
+  qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} english.ts french.ts)
+  # qm文件是在构建目录生成的，但qrc文件里是相对路径，因此要将qrc文件复制到构建目录中（也可以在qrc文件中使用绝对路径，使用CMake变量替换）
+  configure_file(translations.qrc ${CMAKE_BINARY_DIR} COPYONLY)
+  # 这里把${QM_FILES}添加为可执行程序的依赖项，可以在翻译更新后强制CMake重新构建
+  add_executable(demo main.cpp ${CMAKE_BINARY_DIR}/translations.qrc ${QM_FILES})
+  target_link_libraries(demo Qt5::XXX)
+  ```
