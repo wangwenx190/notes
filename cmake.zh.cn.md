@@ -149,6 +149,8 @@
   set(CMAKE_AUTOMOC ON)
   set(CMAKE_AUTOUIC ON)
   set(CMAKE_AUTORCC ON)
+  # 如果CMake找到了Qt Linguist，会自动添加Qt5LinguistTools_FOUND这个宏
+  if(Qt5LinguistTools_FOUND)
   # qt5_add_translation：只运行lrelease工具，要求ts文件已经存在（不会自动创建）且不能给lrelease传参数
   # qt5_add_translation(QM_FILES ts文件（可以不止一个）)
   # qt5_create_translation：如果ts文件不存在会自动创建，如果存在就更新。源文件可以是.ui或.cpp或其他任何lupdate支持的格式
@@ -159,4 +161,5 @@
   # 这里把${QM_FILES}添加为可执行程序的依赖项，可以在翻译更新后强制CMake重新构建
   add_executable(demo main.cpp ${CMAKE_BINARY_DIR}/translations.qrc ${QM_FILES})
   target_link_libraries(demo Qt5::XXX)
+  endif()
   ```
