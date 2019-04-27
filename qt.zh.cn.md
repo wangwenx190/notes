@@ -151,4 +151,4 @@
    ```
    在Qt中使用`qSetMessagePattern()`也可以设置输出模式，但要注意以下几点：
    - 经过我在 Ubuntu 19.04 上的测试，`$(echo ...)`不是必要的，不加它仍然可以改变控制台字体的颜色，加不加完全不影响，加了它反而会在控制台把它作为文字输出
-   - 如果使用`qSetMessagePattern()`设置消息模式，要直接使用`Raw String`，不要使用`QStringLiteral`或者`QLatin1String`包裹，否则那几个转义字符会被转换成一般的文字而被输出而不是作为控制字符起作用
+   - **？？？**在 Ubuntu 19.04 上测试，【如果使用`qSetMessagePattern()`设置消息模式，要直接使用`Raw String`，不要使用`QStringLiteral`或者`QLatin1String`包裹，否则那几个转义字符会被转换成一般的文字而被输出而不是作为控制字符起作用】，但第二次测试时又不会被`QStringLiteral`和`QLatin1String`影响了，以后自己使用时多加注意
