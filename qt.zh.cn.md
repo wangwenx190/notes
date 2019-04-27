@@ -144,3 +144,11 @@
 - `QNetworkReply`可能无法处理`redirection`（重定向），原因未知
 - 在Ubuntu系统上用Clang为Windows平台交叉编译（mkpsec：win32-clang-g++）时，如果编译静态版Qt，配置时不要添加`-static-runtime`，但编译自己的Qt工程时`CONFIG`条目要添加`static_runtime`（或在`QMAKE_LFLAGS`里添加`-static`），否则会提示找不到符号，原因暂时未知
 - 在Ubuntu系统上，使用`win32-clang-g++`这个`mkspec`时，编译静态版Qt可以同时开启`-optimize-size`和`-ltcg`，编译动态版Qt不能开启LTO，原因暂时未知
+- 如何使控制台输出的调试信息着色：
+   ```bash
+   # https://bugreports.qt.io/browse/QTBUG-75415
+   export QT_MESSAGE_PATTERN="$(echo '[%{time boot}] %{if-warning}\e[1;33m%{endif}%{if-fatal}\e[31m%{endif}%{if-critical}\e[31m%{endif}%{appname}(%{pid} %{threadid})(%{function})\e[0m:%{if-category} %{category}:%{endif}\t%{message}')"
+   ```
+   在Qt中使用`qSetMessagePattern()`也可以设置输出模式，但要注意以下几点：
+   - 经过我在 Ubuntu 19.04 上的测试，`$(echo ...)`不是必要的，不加它仍然可以改变控制台字体的颜色，加不加完全不影响，加了它反而会在控制台把它作为文字输出
+   - 如果使用`qSetMessagePattern()`设置消息模式，要直接使用`Raw String`，不要使用`QStringLiteral`或者`QLatin1String`包裹，否则那几个转义字符会被转换成一般的文字而被输出而不是作为控制字符起作用
