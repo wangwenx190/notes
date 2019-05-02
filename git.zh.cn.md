@@ -18,7 +18,7 @@
    | **remote** | 查看或修改远端仓库的设置 | add <remote_name> <repo_url>：添加远端仓库；rename <old_name> <new_name>：重命名远端仓库；remove <remote_name>：删除远端仓库；什么参数也不加意为列出所有远端仓库 | git remote add staging git://git.kernel.org/.../gregkh/staging.git |
    | **submodule** | 查看或修改子模块 | add <repo_url> [path_to_save]：添加子模块；init [path]：初始化子模块；update [--init] [--recursive] [path]：更新子模块 | - |
    | **apply** <patch_file> | 应用补丁 | - | git apply mypatch.patch |
-   | **cherry-pick** [options] <some_commits> | 将某一个或某几个已经存在的提交合并到当前分支 | --continue：（冲突解决后）继续被中断的操作；--abort：中断当前操作并恢复到之前的状态 | - |
+   | **cherry-pick** [options] <some_commits> | 将某一个或某几个**已经存在**的提交合并到当前分支。可以用*fetch*命令刷新提交历史，获取最新的提交记录 | --continue：（冲突解决后）继续被中断的操作；--abort：中断当前操作并恢复到之前的状态 | - |
    | **rebase** [options] | 变基 | - | - |
    | **revert** [options] <commid_id> | 回退某次提交 | --continue；--abort | - |
    | **status** | 查看当前工作树状态 | - | git status |
@@ -86,3 +86,8 @@
   2. 本地仍然需要该文件，仅从版本控制系统中移除：`git rm --cached 路径`
 
   注：进行这种修改后记得commit后push到远端
+- 如何拉取别人的pull request到本地仓库：
+  1. 使用`git remote add <remote_name> <remote_url>`添加对方的远端仓库
+  2. 使用`git fetch --all`获取新远端的提交记录
+  3. 使用`git checkout -b <branch_name>`新建并切换分支（防止污染当前分支）
+  4. 使用`git cherry-pick <commit_id>`拉取你想要的提交
