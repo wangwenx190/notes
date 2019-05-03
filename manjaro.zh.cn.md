@@ -40,8 +40,9 @@
      Include = /etc/pacman.d/archlinuxcn
      ```
      此操作**需要管理员权限**。
-  3. 安装`archlinuxcn-keyring`这个软件包
-  4. `sudo pacman -Syyu`
+  3. `sudo pacman -Syyu`
+  4. 安装`archlinuxcn-keyring`这个软件包
+  5. 更新系统并安装软件包
 - 安装专业软件：
   - 基本：`base-devel`，`cmake`，`ninja`，`gdb`，`git`，`pkg-config`
   - Clang：`clang`，`clang-tools`，`lld`，`lldb`，`llvm`
