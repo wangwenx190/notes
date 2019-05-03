@@ -29,9 +29,22 @@
 - 更新系统（即更新所有软件）
   ```bash
   pacman -Syu
+  pacman -Su
   ```
+- 添加中文社区加速镜像源：
+  1. 所有有效的加速服务器列表：https://github.com/archlinuxcn/mirrorlist-repo 。可将 https://github.com/archlinuxcn/mirrorlist-repo/blob/master/archlinuxcn-mirrorlist 中所有的服务器信息都写入到一个叫`archlinuxcn`（没有后缀名）的文本文件中，保存到`/etc/pacman.d/`，此操作**需要管理员权限**。
+  2. 打开`/etc/pacman.conf`，在文件结尾添加一下内容：
+     ```text
+     [archlinuxcn]
+     SigLevel = Optional TrustedOnly
+     Include = /etc/pacman.d/archlinuxcn
+     ```
+     此操作**需要管理员权限**。
+  3. 安装`archlinuxcn-keyring`这个软件包
+  4. `sudo pacman -Syyu`
 - 安装专业软件：
-  - 基本：`base-devel`，`cmake`，`ninja`
+  - 基本：`base-devel`，`cmake`，`ninja`，`gdb`，`git`，`pkg-config`
+  - Clang：`clang`，`clang-tools`，`lld`，`lldb`，`llvm`
 - 为bash脚本添加可执行权限：
   ```bash
   chmod 777 ./test.sh
