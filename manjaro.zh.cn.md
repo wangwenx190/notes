@@ -40,12 +40,12 @@
      Include = /etc/pacman.d/archlinuxcn
      ```
      此操作**需要管理员权限**。
-  3. `sudo pacman -Syyu`
+  3. `sudo pacman -Syy`
   4. 安装`archlinuxcn-keyring`这个软件包
-  5. 更新系统并安装软件包
 - 安装专业软件：
-  - 基本：`base-devel`，`cmake`，`ninja`，`gdb`，`git`，`pkg-config`
+  - 基本：`base-devel`，`cmake`，`ninja`，`gdb`，`git`，`pkgconf`
   - Clang：`clang`，`clang-tools`，`lld`，`lldb`，`llvm`
+  - MinGW-w64：`mingw-w64-toolchain`
 - 为bash脚本添加可执行权限：
   ```bash
   chmod 777 ./test.sh
