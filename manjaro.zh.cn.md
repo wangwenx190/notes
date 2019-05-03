@@ -31,4 +31,4 @@
   pacman -Syu
   ```
 - 安装专业软件：
-  - 基本：`base-devel`
+  - 基本：`base-devel`，`cmake`，`ninja`
