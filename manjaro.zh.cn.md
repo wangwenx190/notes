@@ -32,3 +32,7 @@
   ```
 - 安装专业软件：
   - 基本：`base-devel`，`cmake`，`ninja`
+- 为bash脚本添加可执行权限：
+  ```bash
+  chmod 777 ./test.sh
+  ```
