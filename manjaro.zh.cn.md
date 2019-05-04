@@ -1,4 +1,5 @@
 ## Manjaro
+- 先安装`plasma-wayland-session`这个包，注销，左下角切换桌面会话为**Wayland**，重新登录。
 - 包管理
   ```text
   pacman -S <package_name>：安装指定软件包
@@ -43,9 +44,13 @@
   3. `sudo pacman -Syy`
   4. 安装`archlinuxcn-keyring`这个软件包
 - 安装专业软件：
-  - 基本：`base-devel`，`cmake`，`ninja`，`gdb`，`git`，`pkgconf`
-  - Clang：`clang`，`clang-tools`，`lld`，`lldb`，`llvm`
+  - 基本：`base-devel`，`cmake`，`ninja`，`gdb`，`git`，`python2`，`python`，`perl`，`ruby`，`yasm`，`nasm`，`upx`
+  - Clang：`clang`，`lld`，`lldb`，`llvm`
   - MinGW-w64：`mingw-w64-toolchain`
+  - Visual Studio Code：`visual-studio-code-bin`（中文镜像源里）
+  - Qt Creator：`qtcreator`
+  - Virtual Box：`virtualbox`
+  - GCC/G++：`base-devel`自带
 - 为bash脚本添加可执行权限：
   ```bash
   chmod 777 ./test.sh
