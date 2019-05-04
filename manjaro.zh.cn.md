@@ -2,7 +2,7 @@
 - 先安装`plasma-wayland-session`这个包，注销，左下角切换桌面会话为**Wayland**，重新登录。
 - 包管理
   ```text
-  pacman -S <package_name>：安装指定软件包
+  pacman -S [options] <package_name>：安装指定软件包。常用的可选的选项为，“--needed”，不重新安装已经为最新的软件包，和“--noconfirm”，不询问确认。
   pacman -R <package_name>：删除指定软件包，但保留其全部已经安装的依赖关系
   pacman -Rs <package_name>：删除指定软件包，及其所有没有被其他已安装软件包使用的依赖关系
   pacman -Rsc <package_name>：删除软件包和所有依赖这个软件包的程序。警告: 此操作是递归的，请小心检查，可能会一次删除大量的软件包。
