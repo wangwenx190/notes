@@ -158,3 +158,5 @@
    bool QFile::link(const QString &linkName);
    // Note: To create a valid link on Windows, linkName must have a .lnk file extension.
    ```
+- QML使用C++方法
+- C++使用QML方法
