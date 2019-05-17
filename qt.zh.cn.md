@@ -160,3 +160,4 @@
    ```
 - QML使用C++方法
 - C++使用QML方法
+- 包含`QScopedPointer`的类不能使其析构函数内联，例如`~MyClass() override = default;`或`~MyClass() override { ...; }`之类的，否则会无法编译。这也是Qt文档中所提到的。
