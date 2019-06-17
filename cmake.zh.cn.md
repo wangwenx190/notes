@@ -137,6 +137,7 @@
    ```
 - 如何为调试版本和发布版本的可执行程序设置不同后缀：
    ```cmake
+   # 设置 CMAKE_DEBUG_POSTFIX 或 CMAKE_RELEASE_POSTFIX 也可
    set_target_properties(${TARGET_NAME} PROPERTIES DEBUG_POSTFIX "_d")
    set_target_properties(${TARGET_NAME} PROPERTIES RELEASE_POSTFIX "_r")
    ```
