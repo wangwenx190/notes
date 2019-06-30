@@ -5,8 +5,8 @@
    | --- | ---- | ---- | ---- |
    | **clone** [options] <repo_url> [path_to_save] | 将远端代码仓库克隆到本地文件夹 | --progress：显示进度；-b <branch_name>：切换到<branch_name>分支；--depth <log_depth>：将提交记录删减到<log_depth>（使用“--depth 1”可以单纯下载代码，不下载提交记录）；--shallow-submodules：针对所有子模块启用“--depth 1”；--recursive：将所有子模块一起克隆下来（默认没有这个参数，即不会自动下载子模块，需要显式的指定） | git clone --progress -b dev --recursive https://example.git D:\code\my_proj |
    | **add** <files_to_add> | 将被修改的文件添加到当前提交中 | “.”代表添加所有改动的文件，不用“.”就要把所有被修改的文件路径都作为参数放到命令后面 | git add . |
-   | **diff** <original_commit> <new_commit> | 显示两个提交之间的差异 | 使用“>”可以将差异输出到文件中，即创建补丁文件 | git diff abcdef ghijk>mypatch.patch |
-   | **commit** [options] | 将当前提交合入本地仓库或修改提交 | -a：自动添加所有被修改的文件（就不用专门add了）；--author=<new_author>：覆盖原始作者；--date=<new_date>：覆盖原始日期；-m <commit_message>：设置提交信息，不添加这个参数的话git会启动默认文本编辑器，让你输入提交信息；--amend：修改提交 | git commit -a -m "What have I done?" |
+   | **diff** <original_commit> <new_commit> | 显示两个提交之间的差异。如果修改已经提交，则需要将所比较的两个或两个以上的提交ID作为参数传给此命令。如果修改尚未提交，则可以不带参数执行此命令，显示待提交的修改与上次提交之间的差异。 | 使用“>”可以将差异输出到文件中，即创建补丁文件（注：此方法已过时，请使用`git format-patch`命令创建补丁） | git diff abcdef ghijk>mypatch.patch |
+   | **commit** [options] | 将当前提交合入本地仓库或修改提交 | -a：自动添加所有被修改的文件（就不用专门add了）；--author=<new_author>：覆盖原始作者；--date=<new_date>：覆盖原始日期；-m <commit_message>：设置提交信息，不添加这个参数的话git会启动默认文本编辑器，让你输入提交信息；--amend：修改提交，不添加额外的参数意为修改上一次提交，如果要修改的不是上一次提交，请将需修改的提交的ID附在此参数后面；-s：添加Sign-off-by，推荐使用此参数 | git commit -a -m "What have I done?" |
    | **branch** [options] [branch_name] | 查看或修改分支 | -D <branch_name>：删除本地分支；-r：列出或删除（如果与“-d”一起使用）远端分支；-a：列出远端和本地的所有分支；-m：移动或重命名一个分支；-c：复制一个分支；-l：列出所有本地分支 | git branch -d -r origin/test |
    | **checkout** [options] <branch_name> | 切换或新建分支 | 不加任何参数意为切换到<branch_name>分支；使用“-b <branch_name> --track <remote_name>/<remote_branch_name>”可以创建并切换到一个新的分支 | git checkout -b patch-fix --track origin/master |
    | **merge** [options] <branch_names> | 合并其他分支到当前分支 | --no-ff：为合并分支这个操作创建一个单独的提交；-m <commit_message>：设置提交信息；--abort：中断当前合并操作并恢复到合并前的状态；--continue：（冲突解决后）继续被中断的合并操作 | git merge --no-ff -m "Merge some patches" my-fix-1 my-fix-2 |
@@ -17,7 +17,7 @@
    | **push** [options] [repo_url] [branch_name] | 推送本地提交到远端仓库 | --all：推送所有分支；-d <branch_name>：从远端仓库删除<branch_name>分支；--tags：推送所有标签到远端仓库；-f：强制覆盖远端仓库；什么参数也不加意为推送当前分支到远端仓库的相同分支 | git push origin master |
    | **remote** | 查看或修改远端仓库的设置 | add <remote_name> <repo_url>：添加远端仓库；rename <old_name> <new_name>：重命名远端仓库；remove <remote_name>：删除远端仓库；什么参数也不加意为列出所有远端仓库 | git remote add staging git://git.kernel.org/.../gregkh/staging.git |
    | **submodule** | 查看或修改子模块 | add <repo_url> [path_to_save]：添加子模块；init [path]：初始化子模块；update [--init] [--recursive] [path]：更新子模块 | - |
-   | **apply** <patch_file> | 应用补丁 | - | git apply mypatch.patch |
+   | **apply** <patch_file> | 应用补丁。此命令只适用于使用`git diff`命令制作的老式补丁，使用`git format-patch`命令制作的新式补丁应使用`git am`命令。 | - | git apply mypatch.patch |
    | **cherry-pick** [options] <some_commits> | 将某一个或某几个**已经存在**的提交合并到当前分支。可以用*fetch*命令刷新提交历史，获取最新的提交记录 | --continue：（冲突解决后）继续被中断的操作；--abort：中断当前操作并恢复到之前的状态 | - |
    | **rebase** [options] | 变基 | - | - |
    | **revert** [options] <commid_id> | 回退某次提交 | --continue；--abort | - |
@@ -91,3 +91,17 @@
   2. 使用`git fetch --all`获取新远端的提交记录
   3. 使用`git checkout -b <branch_name>`新建并切换分支（防止污染当前分支）
   4. 使用`git cherry-pick <commit_id>`拉取你想要的提交
+- 如何制作和应用补丁文件
+  ```bash
+  git format-patch -N
+  # N 为一个正整数，意为将最后的 N 次提交制作为一个补丁
+  git format-patch -M origin/master
+  # 将当前分支所有超前 origin/master 的提交制作为一个补丁
+  git format-patch <commit_id>
+  # 将某次提交以后的所有提交制作为一个补丁
+  git format-patch <commit_id_1>..<commit_id_2>
+  # 将某两次提交之间的提交制作为一个补丁
+  git am patch_file_name.patch
+  # 应用补丁文件。推荐添加 -s 参数（即添加 Sign-off-by）
+  ```
+  制作补丁文件时，可以添加`-o`参数，设置补丁文件的输出文件夹。
