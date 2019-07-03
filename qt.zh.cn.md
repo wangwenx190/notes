@@ -167,3 +167,6 @@
   [static] void QGuiApplication::restoreOverrideCursor();
   特别的，设置为“Qt::BlankCursor”可以隐藏鼠标指针。
   ```
+- 如何将`std::cout`、`std::cerr`、`qDebug`、`qWarning`、`qCritical`和`qInfo`输出的调试信息重定向到某一个Widget中：
+
+  参考：https://stackoverflow.com/questions/46927087/redirecting-stdcout-from-dll-in-a-separate-thread-to-qtextedit
