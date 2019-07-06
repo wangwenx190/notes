@@ -3,30 +3,33 @@
 | 变量 | 作用 | 示例 |
 | --- | ---- | ---- |
 | CMAKE_C_STANDARD | C标准，可取的值为`90`，`99`和`11` | set(CMAKE_C_STANDARD 11) |
+| CMAKE_C_EXTENSIONS | 是否启用C语言编译器扩展 | set(CMAKE_C_EXTENSIONS OFF) |
 | CMAKE_CXX_STANDARD | C++标准，可取的值为`98`，`11`，`14`，`17`和`20` | set(CMAKE_CXX_STANDARD 14) |
-| CMAKE_C_COMPILER | C编译器（具体的程序名） | set(CMAKE_C_COMPILER clang) |
-| CMAKE_CXX_COMPILER | C++编译器（具体的程序名） | set(CMAKE_CXX_COMPILER clang++) |
-| CMAKE_LINKER | 链接器（具体的程序名） | set(CMAKE_LINKER ld.lld) |
-| CMAKE_C_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 编译C文件时的选项 | - |
-| CMAKE_CXX_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 编译C++文件时的选项 | - |
-| CMAKE_BUILD_TYPE | 构建类型 | set(CMAKE_BUILD_TYPE Release) |
-| BUILD_SHARED_LIBS | 更改库默认构建类型为动态库 | - |
-| CMAKE_SOURCE_DIR,PROJECT_SOURCE_DIR | 项目顶级CMakeLists.txt所在目录，即项目根目录 | - |
-| CMAKE_BINARY_DIR,PROJECT_BINARY_DIR | 项目构建目录，即build文件夹 | - |
-| CMAKE_INSTALL_PREFIX | 项目安装路径前缀 | - |
-| CMAKE_EXE_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | exe链接选项 | - |
-| CMAKE_MODULE_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | - | - |
-| CMAKE_SHARED_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | - | - |
-| CMAKE_STATIC_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | - | - |
+| CMAKE_CXX_EXTENSIONS | 是否启用C++语言编译器扩展 | set(CMAKE_CXX_EXTENSIONS OFF) |
+| CMAKE_C_COMPILER | C编译器（除非在环境变量中，否则要写具体的路径） | set(CMAKE_C_COMPILER clang) |
+| CMAKE_CXX_COMPILER | C++编译器（除非在环境变量中，否则要写具体的路径） | set(CMAKE_CXX_COMPILER clang++) |
+| CMAKE_LINKER | 链接器（除非在环境变量中，否则要写具体的路径） | set(CMAKE_LINKER ld.lld) |
+| CMAKE_C_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 编译C文件时的选项，其中，不带后缀的为公共选项，会添加到其他所有选项的后边 | - |
+| CMAKE_CXX_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 编译C++文件时的选项，其中，不带后缀的为公共选项，会添加到其他所有选项的后边 | - |
+| CMAKE_BUILD_TYPE | 构建类型，分为`Debug`、`MinSizeRel`、`Release`和`RelWithDebInfo` | set(CMAKE_BUILD_TYPE Release) |
+| BUILD_SHARED_LIBS | 设置库默认构建类型是否为动态库 | set(BUILD_SHARED_LIBS OFF) |
+| CMAKE_SOURCE_DIR,PROJECT_SOURCE_DIR | 项目顶级源码目录，即项目根目录 | - |
+| CMAKE_BINARY_DIR,PROJECT_BINARY_DIR | 项目构建目录，用来存放CMake生成的各种脚本、缓存文件和所有编译过程中生成的文件 | - |
+| CMAKE_INSTALL_PREFIX | 项目安装路径前缀 | set(CMAKE_INSTALL_PREFIX /usr) |
+| CMAKE_EXE_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 可执行程序链接选项，其中，不带后缀的为公共选项，会添加到其他所有选项的后边 | - |
+| CMAKE_MODULE_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 模块？链接选项，其中，不带后缀的为公共选项，会添加到其他所有选项的后边 | - |
+| CMAKE_SHARED_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 动态库链接选项，其中，不带后缀的为公共选项，会添加到其他所有选项的后边 | - |
+| CMAKE_STATIC_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 静态库链接选项，其中，不带后缀的为公共选项，会添加到其他所有选项的后边 | - |
 | CMAKE_RUNTIME_OUTPUT_DIRECTORY[_DEBUG/_MINSIZEREL/_RELEASE] | 可执行程序输出路径 | set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin) |
-| CMAKE_LIBRARY_OUTPUT_DIRECTORY[_DEBUG/_MINSIZEREL/_RELEASE] | 链接库（.dll/.so）输出路径 | set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin) |
-| CMAKE_ARCHIVE_OUTPUT_DIRECTORY[_DEBUG/_MINSIZEREL/_RELEASE] | 链接库（.lib/.a）输出路径 | set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib) |
+| CMAKE_LIBRARY_OUTPUT_DIRECTORY[_DEBUG/_MINSIZEREL/_RELEASE] | 动态链接库（.dll/.so）输出路径 | set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin) |
+| CMAKE_ARCHIVE_OUTPUT_DIRECTORY[_DEBUG/_MINSIZEREL/_RELEASE] | 静态链接库（.lib/.a）输出路径 | set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib) |
 | CMAKE_GENERATOR | 生成器名称（cmake参数：-G） | set(CMAKE_GENERATOR Ninja) |
 | CMAKE_GENERATOR_PLATFORM | 生成器架构（cmake参数：-A） | set(CMAKE_GENERATOR_PLATFORM Win32) |
 | CMAKE_GENERATOR_TOOLSET | 生成器工具链（cmake参数：-T） | set(CMAKE_GENERATOR_TOOLSET x64) |
-| CMAKE_CURRENT_SOURCE_DIR | 当前CMakeLists.txt所在目录 | - |
+| CMAKE_CURRENT_SOURCE_DIR | 当前源码目录（不一定是CMakeLists.txt所在的目录） | - |
 | CMAKE_CURRENT_BINARY_DIR | 当前target的构建目录 | - |
-| CMAKE_CURRENT_LIST_FILE | 调用这个变量的CMakeLists.txt的完整路径 | - |
+| CMAKE_CURRENT_LIST_DIR | 当前CMakeLists.txt所在的目录 | - |
+| CMAKE_CURRENT_LIST_FILE | 当前CMakeLists.txt的完整路径 | - |
 | PROJECT_NAME | 项目名 | - |
 | CMAKE_SYSTEM | 系统名称（带版本号） | - |
 | CAMKE_SYSTEM_NAME | 系统名称（不带版本号） | - |
@@ -117,11 +120,11 @@
    ```cmake
    #方法一：
    message("Current operating system is ${CMAKE_SYSTEM}")
-   if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
        message("Current platform: Linux")
-   elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
+   elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
        message("Current platform: Windows")
-   elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+   elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
        message("Current platform: FreeBSD")
    else()
        message("Other platform: ${CMAKE_SYSTEM_NAME}")
@@ -137,7 +140,7 @@
    ```
 - 如何为调试版本和发布版本的可执行程序设置不同后缀：
    ```cmake
-   # 设置 CMAKE_DEBUG_POSTFIX 或 CMAKE_RELEASE_POSTFIX 也可
+   # 设置 CMAKE_DEBUG_POSTFIX 或 CMAKE_RELEASE_POSTFIX 也可，这样就不用为每个target都设置后缀了
    set_target_properties(${TARGET_NAME} PROPERTIES DEBUG_POSTFIX "_d")
    set_target_properties(${TARGET_NAME} PROPERTIES RELEASE_POSTFIX "_r")
    ```
