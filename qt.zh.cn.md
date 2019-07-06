@@ -37,7 +37,7 @@
 - 修改二进制文件输出目录：`DESTDIR = $$PWD/bin`，在 Windows 平台上，dll 文件专有一个`DLLDESTDIR`。
 - `.qmake.conf`文件：将此文件放在`.pro`文件所在的文件夹中，qmake会自动加载这个文件，并且会在加载`.pro`文件前先加载它，因此可以将一些通用的配置写到这个文件中
 - `qt.conf`文件：将此文件放在你开发的程序所在的文件夹中，可以修改 Qt 加载某些库和翻译文件（`.qm`文件）的路径，个别场景会用到这个文件，具体请查看 Qt 帮助文档。在代码中也可以动态获取，例如，可以使用`QLibraryInfo::location(QLibraryInfo::TranslationsPath)`来获取`qt.conf`文件中指定的翻译文件的路径，但就算文件中没有指定，或者这个文件根本不存在，Qt 自身也会提供一个默认路径，例如，插件默认为`plugins`文件夹，翻译文件默认为`translations`文件夹等。
-- 经过我的实验，`QFile`无法在`%APPDATA%`（常见路径：`C:\Users\Administrator\AppData`）文件夹创建文件，如果文件路径中有不存在的文件夹，它也不能自行创建，但已有的文件可以修改，不知道具体的原因。因此，如果你要在这个文件夹记录调试日志，要先创建一个文件，再用`QFile`去修改它。奇怪的是，`QSettings`可以在这个文件夹创建文件和文件夹。
+- `QFile`无法在不存在的文件夹中创建文件，只能在已经存在的路径中新建或修改文件。如果路径不存在，可以使用`QDir::mkpath`创建，使用这个API，路径中任何不存在的文件夹都会被创建。
 - 区分操作系统：编译时可以通过`Q_OS_WIN`，`Q_OS_LINUX`和`Q_OS_MAC`等宏来区分，运行时可以通过`QOperatingSystemVersion`这个类（Qt 5.9添加，可以直接获取到当前系统的可读版本，例如“Windows 8.1”）或`QSysInfo`这个类（只能获取到纯数字的版本号，例如“10.0.17763.152”，但能获取一些前者不能获取到的信息）来获取
 - 区分编译器：编译时可以通过`Q_CC_MSVC`，`Q_CC_GNU`（GCC，G++，MinGW），`Q_CC_INTEL`（ICC），`Q_CC_CLANG`等宏来区分
 - 交叉编译：`configure -xplatform win32-clang-g++ -device-option CROSS_COMPILE=x86_64-w64-mingw32-`，其中，`CROSS_COMPILE`参数前面没有`-`，它前面还要跟一个单独的`-device-option`，而且`x86_64-w64-mingw32-`末尾的`-`不能丢
@@ -140,7 +140,6 @@
 - 在 Linux 平台上交叉编译 Windows 版 Qt 时，需要安装`glibc`。Ubuntu 平台上的包名为`libc6-dev-i386`，`libc6-dev-amd64`，`libc6-dev-i386-cross`，`libc6-dev-amd64-cross`，`libc6-dev-i386-amd64-cross`和`libc6-dev-amd64-i386-cross`（写了这么多是因为我不知道具体是哪（几）个，只好都列出来）。
 - <del>在 Linux 平台上交叉编译 Windows 版 Qt 时，如果报找不到`<EGL/egl.h>`的错误，需要安装额外的包。Ubuntu 平台上的包名为`freeglut3-dev`，`libgl1-mesa-glx`，`libglu1-mesa`，`libgles2-mesa`，`libgl1-mesa-dev`，`libglu1-mesa-dev`和`libgles2-mesa-dev`（写了这么多是因为我不知道具体是哪（几）个，只好都列出来）。</del>
 - 在 Linux 平台上使用 MinGW 交叉编译 Windows 版 Qt 时，可以启用 LTO，但`-fno-fat-lto-objects`参数会导致报错（原因未知），因此要修改特定的`mkspec`的部分条目，去掉这个参数
-- 使用 MinGW 编译 Qt 时，可以把`qtbase\config.tests\x86_simd\main.cpp`文件中的第148行`#error "AVX support is broken in 64-bit MinGW - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=49001"`注释掉。因为经过我的测试，虽然这个 bug 目前仍然处于“UNCONFIRMED”的状态，但实际上 MinGW-w64 是支持 AVX 的，可能是新版 GCC 改善了相关的地方
 - `QNetworkReply`可能无法处理`redirection`（重定向），原因未知
 - 在Ubuntu系统上用Clang为Windows平台交叉编译（mkpsec：win32-clang-g++）时，如果编译静态版Qt，配置时不要添加`-static-runtime`，但编译自己的Qt工程时`CONFIG`条目要添加`static_runtime`（或在`QMAKE_LFLAGS`里添加`-static`），否则会提示找不到符号，原因暂时未知
 - 在Ubuntu系统上，使用`win32-clang-g++`这个`mkspec`时，编译静态版Qt可以同时开启`-optimize-size`和`-ltcg`，编译动态版Qt不能开启LTO，原因暂时未知
