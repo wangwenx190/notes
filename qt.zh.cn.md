@@ -28,7 +28,7 @@
    ```bash
    VERSION = 1.2.3 #设置版本，这个是全平台通用的。其中，只有 Windows 平台上的版本号是4位的，其他平台都是3位
    RC_ICONS = "../res/icon.ico" #设置图标
-   RC_FILE = "../res/eg.rc" #设置资源文件。如果这个资源文件中包含图标或版本信息，会与此处其他语句冲突，请注意
+   RC_FILE = "../res/eg.rc" #设置资源文件。此语句会与此处其他语句冲突，请注意
    QMAKE_TARGET_PRODUCT = "My app name" #设置产品名称
    QMAKE_TARGET_DESCRIPTION = "My app description" #设置文件说明
    QMAKE_TARGET_COPYRIGHT = "My copyright info" #设置版权
@@ -38,7 +38,7 @@
 - `.qmake.conf`文件：将此文件放在`.pro`文件所在的文件夹中，qmake会自动加载这个文件，并且会在加载`.pro`文件前先加载它，因此可以将一些通用的配置写到这个文件中
 - `qt.conf`文件：将此文件放在你开发的程序所在的文件夹中，可以修改 Qt 加载某些库和翻译文件（`.qm`文件）的路径，个别场景会用到这个文件，具体请查看 Qt 帮助文档。在代码中也可以动态获取，例如，可以使用`QLibraryInfo::location(QLibraryInfo::TranslationsPath)`来获取`qt.conf`文件中指定的翻译文件的路径，但就算文件中没有指定，或者这个文件根本不存在，Qt 自身也会提供一个默认路径，例如，插件默认为`plugins`文件夹，翻译文件默认为`translations`文件夹等。
 - `QFile`无法在不存在的文件夹中创建文件，只能在已经存在的路径中新建或修改文件。如果路径不存在，可以使用`QDir::mkpath`创建，使用这个API，路径中任何不存在的文件夹都会被创建。
-- 区分操作系统：编译时可以通过`Q_OS_WIN`，`Q_OS_LINUX`和`Q_OS_MAC`等宏来区分，运行时可以通过`QOperatingSystemVersion`这个类（Qt 5.9添加，可以直接获取到当前系统的可读版本，例如“Windows 8.1”）或`QSysInfo`这个类（只能获取到纯数字的版本号，例如“10.0.17763.152”，但能获取一些前者不能获取到的信息）来获取
+- 区分操作系统：编译时可以通过`Q_OS_WINDOWS`（Qt 5.14 添加，早期版本请使用`Q_OS_WIN`代替），`Q_OS_WINRT`，`Q_OS_LINUX`，`Q_OS_MACOS`（不要使用`Q_OS_MAC`，已废弃），`Q_OS_MINGW`，`Q_OS_CYGWIN`，`Q_OS_ANDROID`和`Q_OS_IOS`等宏来区分，运行时可以通过`QOperatingSystemVersion`这个类（Qt 5.9 添加，可以直接获取到当前系统的可读版本，例如“Windows 8.1”，也可以用具体的静态常量`QOperatingSystemVersion::Windows8_1`等来区分正在运行的系统，非常方便好用。官方推荐使用此类）或`QSysInfo`这个类（只能获取到纯数字的版本号，例如“10.0.17763.152”，但能获取一些前者不能获取到的信息。但尽量不要用这个类，官方推荐使用前者）来获取
 - 区分编译器：编译时可以通过`Q_CC_MSVC`，`Q_CC_GNU`（GCC，G++，MinGW），`Q_CC_INTEL`（ICC），`Q_CC_CLANG`等宏来区分
 - 交叉编译：`configure -xplatform win32-clang-g++ -device-option CROSS_COMPILE=x86_64-w64-mingw32-`，其中，`CROSS_COMPILE`参数前面没有`-`，它前面还要跟一个单独的`-device-option`，而且`x86_64-w64-mingw32-`末尾的`-`不能丢
 - 在 Windows 平台上编译 Qt 时，如果没有显式的指定，所有第三方库都会用 Qt 自带的。而在 Linux 平台上相反，Qt 会自动使用系统中已经存在的第三方库，默认是不会使用自带的第三方库的。
@@ -169,3 +169,4 @@
 - 如何将`std::cout`、`std::cerr`、`qDebug`、`qWarning`、`qCritical`和`qInfo`输出的调试信息重定向到某一个Widget中：
 
   参考：https://stackoverflow.com/questions/46927087/redirecting-stdcout-from-dll-in-a-separate-thread-to-qtextedit
+- 判断、比较版本号：推荐使用Qt提供的`QVersionNumber`类，直接把版本号的完整字符串传过去，它就能自行识别主版本号、次版本号、修订号和一些其他字符串后缀，也能方便的比较版本号的高低，非常方便好用。
