@@ -14,7 +14,7 @@
 | CMAKE_BUILD_TYPE | 构建类型，分为`Debug`、`MinSizeRel`、`Release`和`RelWithDebInfo` | set(CMAKE_BUILD_TYPE Release) |
 | BUILD_SHARED_LIBS | 设置库默认构建类型是否为动态库 | set(BUILD_SHARED_LIBS OFF) |
 | CMAKE_SOURCE_DIR,PROJECT_SOURCE_DIR | 项目顶级源码目录，即项目根目录 | - |
-| CMAKE_BINARY_DIR,PROJECT_BINARY_DIR | 项目构建目录，用来存放CMake生成的各种脚本、缓存文件和所有编译过程中生成的文件 | - |
+| CMAKE_BINARY_DIR,PROJECT_BINARY_DIR | 项目顶级构建目录，用来存放CMake生成的各种脚本、缓存文件和所有编译过程中生成的文件。如果当前项目存在多个target，CMake会在顶级构建目录中分别创建每个target对应的构建目录 | - |
 | CMAKE_INSTALL_PREFIX | 项目安装路径前缀 | set(CMAKE_INSTALL_PREFIX /usr) |
 | CMAKE_EXE_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 可执行程序链接选项，其中，不带后缀的为公共选项，会添加到其他所有选项的后边 | - |
 | CMAKE_MODULE_LINKER_FLAGS[_DEBUG/_MINSIZEREL/_RELEASE] | 模块？链接选项，其中，不带后缀的为公共选项，会添加到其他所有选项的后边 | - |
@@ -26,11 +26,16 @@
 | CMAKE_GENERATOR | 生成器名称（cmake参数：-G） | set(CMAKE_GENERATOR Ninja) |
 | CMAKE_GENERATOR_PLATFORM | 生成器架构（cmake参数：-A） | set(CMAKE_GENERATOR_PLATFORM Win32) |
 | CMAKE_GENERATOR_TOOLSET | 生成器工具链（cmake参数：-T） | set(CMAKE_GENERATOR_TOOLSET x64) |
-| CMAKE_CURRENT_SOURCE_DIR | 当前源码目录（不一定是CMakeLists.txt所在的目录） | - |
+| CMAKE_CURRENT_SOURCE_DIR | 当前target的源码目录（不一定是CMakeLists.txt所在的目录） | - |
 | CMAKE_CURRENT_BINARY_DIR | 当前target的构建目录 | - |
 | CMAKE_CURRENT_LIST_DIR | 当前CMakeLists.txt所在的目录 | - |
 | CMAKE_CURRENT_LIST_FILE | 当前CMakeLists.txt的完整路径 | - |
-| PROJECT_NAME | 项目名 | - |
+| CMAKE_PROJECT_NAME,PROJECT_NAME | 项目名 | - |
+| CMAKE_PROJECT_VERSION,PROJECT_VERSION | 项目完整版本号 | - |
+| CMAKE_PROJECT_VERSION_MAJOR,PROJECT_VERSION_MAJOR | 项目主版本号 | - |
+| CMAKE_PROJECT_VERSION_MINOR,PROJECT_VERSION_MINOR | 项目次版本号 | - |
+| CMAKE_PROJECT_VERSION_PATCH,PROJECT_VERSION_PATCH | 项目修订版本号 | - |
+| CMAKE_PROJECT_VERSION_TWEAK,PROJECT_VERSION_TWEAK | WIN32程序专用：项目第四位版本号 | - |
 | CMAKE_SYSTEM | 系统名称（带版本号） | - |
 | CAMKE_SYSTEM_NAME | 系统名称（不带版本号） | - |
 | CMAKE_SYSTEM_VERSION | 系统版本 | - |
