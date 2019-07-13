@@ -22,9 +22,9 @@
    echo --disable-muxers >> ffmpeg_options
    echo --disable-encoders >> ffmpeg_options
    echo --disable-filters >> ffmpeg_options
-   echo --enable-filter=*fade,*fifo,*format,*resample,aeval,all*,atempo,color*,convolution,draw*,eq*,framerate,hw*,null,volume >> ffmpeg_options
+   echo --enable-filter=*fade,*fifo,*format,*resample,aeval,all*,atempo,color*,convolution,draw*,eq*,framerate,hw*,null,scale,volume >> ffmpeg_options
    echo --disable-decoders >> ffmpeg_options
-   echo --enable-decoder=*sub*,*text*,*web*,aac*,ac3*,alac*,ape,ass,cc_dec,cook,dca,eac3*,truehd,flv,flac,gif,h264*,hevc*,mp[1-3]*,*peg*,mlp,mpl2,nellymoser,opus,pcm*,rawvideo,rv*,sami,srt,ssa,v210*,vc1*,vorbis,vp[6-9],wm*,wrapped_avframe >> ffmpeg_options
+   echo --enable-decoder=*sub*,*text*,*web*,aac*,ac3*,alac*,ape,ass,cc_dec,cook,dca,eac3*,truehd,flv,flac,gif,h26[3-4]*,hevc*,mp[1-3]*,*peg*,mlp,mpl2,nellymoser,opus,pcm*,rawvideo,rv*,sami,srt,ssa,v210*,vc1*,vorbis,vp[6-9]*,wm*,wrapped_avframe >> ffmpeg_options
    echo --disable-demuxers >> ffmpeg_options
    echo --enable-demuxer=*sub*,*text*,*ac3,*ac,*peg*,*web*,ape,ass,avi,concat,dts*,*dash*,*flv,gif,hls,h264,hevc,matroska,mlv,mov,mp3,mxf,nsv,nut,ogg,pcm*,rawvideo,rt*p,spdif,srt,vc1,v210*,wav,*pipe >> ffmpeg_options
    echo --disable-parsers >> ffmpeg_options
