@@ -150,7 +150,7 @@
    ```
    在Qt中使用`qSetMessagePattern()`也可以设置输出模式，但要注意以下几点：
    - 经过我在 Ubuntu 19.04 上的测试，`$(echo ...)`不是必要的，不加它仍然可以改变控制台字体的颜色，加不加完全不影响，加了它反而会在控制台把它作为文字输出
-   - **？？？**在 Ubuntu 19.04 上测试，【如果使用`qSetMessagePattern()`设置消息模式，要直接使用`Raw String`，不要使用`QStringLiteral`或者`QLatin1String`包裹，否则那几个转义字符会被转换成一般的文字而被输出而不是作为控制字符起作用】，但第二次测试时又不会被`QStringLiteral`和`QLatin1String`影响了，以后自己使用时多加注意
+   - **【待确认】**在 Ubuntu 19.04 上测试，【如果使用`qSetMessagePattern()`设置消息模式，要直接使用`Raw String`，不要使用`QStringLiteral`或者`QLatin1String`包裹，否则那几个转义字符会被转换成一般的文字而被输出而不是作为控制字符起作用】，但第二次测试时又不会被`QStringLiteral`和`QLatin1String`影响了，以后自己使用时多加注意
 - Qt创建快捷方式（Windows）或符号链接（UNIX）：
    ```cpp
    // Creates a link named linkName that points to the file currently specified by fileName().
@@ -170,3 +170,44 @@
 
   参考：https://stackoverflow.com/questions/46927087/redirecting-stdcout-from-dll-in-a-separate-thread-to-qtextedit
 - 判断、比较版本号：推荐使用Qt提供的`QVersionNumber`类，直接把版本号的完整字符串传过去，它就能自行识别主版本号、次版本号、修订号和一些其他字符串后缀，也能方便的比较版本号的高低，非常方便好用。
+- Qt 6 因为性能原因计划废弃`QStringList`等`QList`类，尽量使用C语言风格的数组（例如`const QString []`）或`QVector`代替。
+- Qt 6 计划废弃`QScopedPointer`等`STL`的替代品（即`QTL`），以后尽量使用`STL`提供的类（例如`std::unique_ptr`等）。
+- 输出调试信息有两种方式（以`qDebug`为例）：
+  ```cpp
+  qDebug().noquote() << QStringLiteral("Total count is:") << totalCount;
+  qDebug("Total Count is: %d", totalCount);
+  ```
+  其中，第一种方式比较方便，但第二种方式性能更好（根据Qt官方开发人员所说），具体使用哪种方式，请自行取舍。
+- Qt 5（说Qt5是因为不知道Qt6会不会改）在使用`qInstallMessageHandler`设置回调函数时，不能通过常规方法设置为类的成员函数，一般都是设置为全局函数，如果非要设置为一个类的成员函数，请参考以下示例：
+  ```cpp
+  // mylogger.h
+  #include <QObject>
+  class MyLogger : public QObject
+  {
+      Q_OBJECT
+  public:
+      explicit MyLogger(QObject *parent = nullptr);
+      ~MyLogger() override = default;
+      static void customLogger(QtMsgType type, const QMessageLogContext &context, const QString &message);
+      void customLoggerImpl(QtMsgType type, const QMessageLogContext &context, const QString &message);
+  }
+  // mylogger.cpp
+  #include "mylogger.h"
+  static MyLogger *currentLogHandler = nullptr;
+  MyLogger::MyLogger(QObject *parent) : QObject(parent)
+  {
+      currentLogHandler = this;
+      Q_ASSERT(currentLogHandler != nullptr);
+      qInstallMessageHandler(customLogger);
+  }
+  void MyLogger::customLogger(QtMsgType type, const QMessageLogContext &context, const QString &message)
+  {
+      currentLogHandler->customLoggerImpl(type, context, message);
+  }
+  void MyLogger::customLoggerImpl(QtMsgType type, const QMessageLogContext &context, const QString &message)
+  {
+      Q_UNUSED(type);
+      Q_UNUSED(context);
+      Q_UNUSED(message);
+  }
+  ```
