@@ -142,6 +142,7 @@
    elseif(UNIX)
        message("Now is UNIX-like OS.")
    endif()
+   #其他CMake预定义的宏还有WINDOWS_STORE、MINGW、CYGWIN、ANDROID和IOS等
    ```
 - 如何为调试版本和发布版本的可执行程序设置不同后缀：
    ```cmake
@@ -173,3 +174,16 @@
   endif()
   ```
   注：根据 https://bugreports.qt.io/browse/QTBUG-41736 ，qt5_create_translation这个宏会在make clean或rebuild时把全部ts文件都删掉后再重新生成，这意味着已经翻译好的文本会全部丢失，已有的解决方法也已经失效，而Qt官方也没有针对这个问题进行修复，因此不建议再使用这个宏了，还是手动生成ts文件再搭配qt5_add_translation比较保险。
+- 如何通过CMake直接进行构建和安装过程（即让CMake自行调用设定的生成工具）：
+  ```cmake
+  # Configure
+  cmake <path-to-your-top-level-source-code-dir>
+  # Build
+  cmake --build <path-to-your-project's-top-level-binary-dir>
+  # Install
+  cmake --install <path-to-your-project's-top-level-binary-dir>
+  ```
+- 显式指定CMake二进制文件夹和源码文件夹
+  ```cmake
+  cmake -S <path-to-top-level-source-code-dir> -B <path-to-top-level-binary-dir>
+  ```
