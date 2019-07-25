@@ -174,8 +174,8 @@
 - Qt 6 计划废弃`QScopedPointer`等`STL`的替代品（即`QTL`），以后尽量使用`STL`提供的类（例如`std::unique_ptr`等）。
 - 输出调试信息有两种方式（以`qDebug`为例）：
   ```cpp
-  qDebug().noquote() << QStringLiteral("Total count is:") << totalCount;
-  qDebug("Total Count is: %d", totalCount);
+  qDebug().noquote() << QStringLiteral("Application version:") << qApp->applicationVersion();
+  qDebug("Application version: %ls", qUtf16Printable(qApp->applicationVersion()));
   ```
   其中，第一种方式比较方便，但第二种方式性能更好（根据Qt官方开发人员所说），具体使用哪种方式，请自行取舍。
 - Qt 5（说Qt5是因为不知道Qt6会不会改）在使用`qInstallMessageHandler`设置回调函数时，不能通过常规方法设置为类的成员函数，一般都是设置为全局函数，如果非要设置为一个类的成员函数，请参考以下示例：
@@ -190,7 +190,7 @@
       ~MyLogger() override = default;
       static void customLogger(QtMsgType type, const QMessageLogContext &context, const QString &message);
       void customLoggerImpl(QtMsgType type, const QMessageLogContext &context, const QString &message);
-  }
+  };
   // mylogger.cpp
   #include "mylogger.h"
   static MyLogger *currentLogHandler = nullptr;
@@ -206,8 +206,8 @@
   }
   void MyLogger::customLoggerImpl(QtMsgType type, const QMessageLogContext &context, const QString &message)
   {
-      Q_UNUSED(type);
-      Q_UNUSED(context);
-      Q_UNUSED(message);
+      Q_UNUSED(type)
+      Q_UNUSED(context)
+      Q_UNUSED(message)
   }
   ```
