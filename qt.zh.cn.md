@@ -11,6 +11,7 @@
 - 不要将 Qt 项目放在有非英文字符的路径下，否则会无法编译
 - 添加删除源文件或者源文件改名后，要重新执行`qmake`然后重新构建，否则会有链接错误
 - 编译器选项与 Qt 的`CONFIG`如何对应：
+
   | 编译器选项 | MSVC参数 | Clang参数 | GCC参数 | ICC参数 | qmake |
   | --------- | -------- | -------- | ------- | ------- | ----- |
   | 为速度优化 | `/O2`    | `-Ofast`（clang-cl：`/clang:-Ofast`） | `-Ofast` | `-Ofast`（icl：`/O3`） | `CONFIG += optimize_full` |
@@ -217,7 +218,7 @@
   }
   void MyLogger::customLoggerImpl(QtMsgType type, const QMessageLogContext &context, const QString &message)
   {
-      Q_UNUSED(type)
+      Q_UNUSED(type) // Q_UNUSED 宏自己带结尾的分号，Qt可能会在以后的版本中去掉结尾的分号，让各位开发者自己添加，请注意
       Q_UNUSED(context)
       Q_UNUSED(message)
   }
