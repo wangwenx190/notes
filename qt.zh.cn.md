@@ -10,7 +10,18 @@
 - 在 Windows 平台上，`QWebEngine`模块只能使用最新版的`Visual Studio`编译，不支持其他一切编译器（目前，2019-03-27）
 - 不要将 Qt 项目放在有非英文字符的路径下，否则会无法编译
 - 添加删除源文件或者源文件改名后，要重新执行`qmake`然后重新构建，否则会有链接错误
-- 编译器选项与 Qt 的`CONFIG`如何对应：`O3/O2`->`optimize_full`，`O1/Os/Oz`->`optimize_size`，`LTCG/LTO`->`ltcg`，`Qt Quick Compiler`->`qtquickcompiler`（Qt Quick 编译器在 5.11 后默认开启），`-MT/-MTd`->`static_runtime`
+- 编译器选项与 Qt 的`CONFIG`如何对应：
+  | 编译器选项 | MSVC参数 | Clang参数 | GCC参数 | ICC参数 | qmake |
+  | --------- | -------- | -------- | ------- | ------- | ----- |
+  | 为速度优化 | `/O2`    | `-Ofast`（clang-cl：`/clang:-Ofast`） | `-Ofast` | `-Ofast`（icl：`/O3`） | `CONFIG += optimize_full` |
+  | 为大小优化 | `/O1`    | `-Oz`（clang-cl：`/clang:-Oz`） | `-Os` | `-Os`（icl：与MSVC相同） | `CONFIG += optimize_size` |
+  | 启用链接时间代码生成 | `/GL`（编译器），`/LTCG`（连接器） | `-flto=thin`（clang-cl：`/clang:-flto=thin`；只有lld-link不需要额外的参数，其他任何连接器都要传这个参数） | `-flto -fno-fat-objects`（连接器还要多一个`-fuse-linker-plugin`参数） | `-ipo -fno-fat-objects`（icl：`/Qipo`） | `CONFIG += ltcg` |
+  | 静态连接运行时 | `/MT`/`/MTd` | `-static`（clang-cl：与MSVC相同） | `-static` | `-static`（icl：与MSVC相同） | `CONFIG += static_runtime` |
+  | 启用Quick编译器 | - | - | - | - | `CONFIG += qtquickcompiler` |
+  | 启用异常处理 | `/EHsc` | `-fexceptions`（clang-cl：与MSVC相同） | `-fexceptions` | `-fexceptions`（icl：与MSVC相同） | `CONFIG += exceptions` |
+  | 禁用异常处理 | （留空，不加任何参数） | `-fno-exceptions`（clang-cl：与MSVC相同） | `-fno-exceptions` | `-fno-exceptions`（icl：与MSVC相同） | `CONFIG += exceptions_off` |
+  | 启用RTTI | `/GR` | `-frtti`（clang-cl：与MSVC相同） | `-frtti` | `-frtti`（icl：与MSVC相同） | `CONFIG += rtti` |
+  | 禁用RTTI | `/GR-` | `-fno-rtti`（clang-cl：与MSVC相同） | `-fno-rtti` | `-fno-rtti`（icl：与MSVC相同） | `CONFIG += rtti_off` |
 - `opengl32sw.dll`这个文件是用软件模拟的显卡，针对的是没有显卡的机器，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件，能极大减小发布大小
 - 发布 Windows 平台的 Qt 程序时可以使用 Qt 官方提供的`windeployqt`程序，这个小程序会自动检测并复制相关的 dll 到你的程序文件夹，非常方便。但它无法检测第三方库，必须自行查找并复制。而且这个工具会复制一些多余的 Qt 的 dll，但极难判断究竟哪些是真的无用，因此就不要管了。
 - 使用`CONFIG += windeployqt` -> `nmake/jom windeployqt`来自动执行`windeployqt`程序
