@@ -14,7 +14,7 @@
    | **tag** [options] <tag_name> [commit_id] | 打标签或修改标签 | -s：创建GPG签名的标签；-f：强制覆盖同名的标签；-d <tag_name>：删除已经存在的标签；-v <tag_name>：验证给定标签的GPG签名；-l：列出所有标签；-m <tag_message>：设置标签信息 | git tag -m "New release" v1.2.3 |
    | **fetch** [repo_url] [branch_name] | 从远端仓库获取提交（不一定必须与本地是同一个仓库） | 什么参数也不加意为从当前远端更新本地仓库的当前分支（单纯的fetch，并没有真实的修改本地文件） | git fetch https://ex.git master |
    | **pull** [repo_url] [branch_name] | 获取并合并远端仓库的提交（相当于fetch+merge） | 什么参数也不加意为从当前远端更新本地仓库的当前分支（fetch+merge，本地文件被修改） | git pull http://ex.git dev |
-   | **push** [options] [repo_url] [branch_name] | 推送本地提交到远端仓库 | --all：推送所有分支；-d <branch_name>：从远端仓库删除<branch_name>分支；--tags：推送所有标签到远端仓库；-f：强制覆盖远端仓库；什么参数也不加意为推送当前分支到远端仓库的相同分支 | git push origin master |
+   | **push** [options] [repo_url] [branch_name] | 推送本地提交到远端仓库 | --set-upstream：设置远端分支，在本地新建的分支第一次推送到远端时要加这个参数；--all：推送所有分支；-d <branch_name>：从远端仓库删除<branch_name>分支；--tags：推送所有标签到远端仓库；-f：强制覆盖远端仓库；什么参数也不加意为推送当前分支到远端仓库的相同分支 | git push origin master |
    | **remote** | 查看或修改远端仓库的设置 | add <remote_name> <repo_url>：添加远端仓库；rename <old_name> <new_name>：重命名远端仓库；remove <remote_name>：删除远端仓库；什么参数也不加意为列出所有远端仓库 | git remote add staging git://git.kernel.org/.../gregkh/staging.git |
    | **submodule** | 查看或修改子模块 | add <repo_url> [path_to_save]：添加子模块；init [path]：初始化子模块；update [--init] [--recursive] [path]：更新子模块 | - |
    | **apply** <patch_file> | 应用补丁。此命令只适用于使用`git diff`命令制作的老式补丁，使用`git format-patch`命令制作的新式补丁应使用`git am`命令。 | - | git apply mypatch.patch |
