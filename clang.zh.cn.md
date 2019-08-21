@@ -40,6 +40,7 @@
      cmake --build .
      ```
      或者打开CMake刚刚生成的工程文件自己编译。命令最后的那个点不要落掉，这个参数代表的是该项目的二进制目录，一个点代表当前文件夹，如果不是当前文件夹，要传真实的路径过去，例如`cmake --build "C:/llvm-build-dir/build"`。
+     - 注：特别的，对于VS工程而言，可以使用`msbuild /p:Configuration=Release INSTALL.vcxproj`来开始构建并在构建完毕后进行安装。
   5. 安装：
      ```bash
      cmake --install .
