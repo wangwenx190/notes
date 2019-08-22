@@ -223,3 +223,22 @@
       Q_UNUSED(message)
   }
   ```
+- 如何使Qt编译生成的带版本信息的动态库，文件名末尾不带主版本号：
+  ```text
+  CONFIG += skip_target_version_ext
+  ```
+- 如何使QML插件支持静态加载（只是简单的能静态编译是不行的）：
+  ```text
+  uri = wangwenx190.QuickMpv
+  # Insert the plugins URI into its meta data to enable usage
+  # of static plugins in QtDeclarative:
+  QMAKE_MOC_OPTIONS += -Muri=$$replace(uri, "/", ".")
+  static: CONFIG += builtin_resources
+  else: CONFIG += install_qml_files
+  # 这里的.qrc资源文件里包含的是插件的qmldir文件和所有.qml文件
+  # plugins.qmltypes文件仍然需要放在外面，不需要打包进去
+  # 资源的前缀为“/qt-project.org/imports/插件URI”
+  # 此处应为“/qt-project.org/imports/wangwenx190.QuickMpv”
+  builtin_resources: RESOURCES += mpvdeclarativewrapper.qrc
+  # install_qml_files的情况就是简单的复制qmldir文件和.qml文件
+  ```
