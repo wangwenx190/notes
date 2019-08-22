@@ -237,8 +237,8 @@
   else: CONFIG += install_qml_files
   # 这里的.qrc资源文件里包含的是插件的qmldir文件和所有.qml文件
   # plugins.qmltypes文件仍然需要放在外面，不需要打包进去
-  # 资源的前缀为“/qt-project.org/imports/插件URI”
-  # 此处应为“/qt-project.org/imports/wangwenx190.QuickMpv”
+  # 资源的前缀为“/qt-project.org/imports/插件URI（点“.”要换成斜杠“/”）”
+  # 此处应为“/qt-project.org/imports/wangwenx190/QuickMpv”
   builtin_resources: RESOURCES += mpvdeclarativewrapper.qrc
   # install_qml_files的情况就是简单的复制qmldir文件和.qml文件
   ```
