@@ -3,7 +3,7 @@
 - Qt 国内镜像站：http://mirrors.ustc.edu.cn/qtproject/
 - 在 Windows 平台上编译 Qt 时，编译`ANGLE`时需要一个叫`WindowsSdkVerBinPath`的环境变量，其路径指向`fxc.exe`(Microsoft Direct3D Shader Compiler)所在的文件夹，常见路径为`C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0`
 - 在 Windows 平台上，如果要编译`ANGLE`，需要安装[`DirectX SDK`](http://www.microsoft.com/en-us/download/details.aspx?id=6812)，新版 DX SDK 已经与[`Windows SDK`](https://developer.microsoft.com/en-us/windows/downloads/sdk-archive)合并了。同时还需要[`Win flex-bison`](https://sourceforge.net/projects/winflexbison/)
-- 最新版`Mesa 3D Library`（`opengl32sw.dll`）下载：https://github.com/pal1000/mesa-dist-win/releases
+- 最新版`Mesa llvmpipe`（`opengl32sw.dll`）下载：https://github.com/pal1000/mesa-dist-win/releases
 - 在 Linux 平台进行 Qt 开发需要安装额外的库：https://doc.qt.io/qt-5/linux.html 。其中，在 Ubuntu 平台上进行开发的官方 Wiki：https://wiki.qt.io/Install_Qt_5_on_Ubuntu
 - 在 Linux 平台编译 Qt 需要安装额外的库：https://doc.qt.io/qt-5/linux-requirements.html
 - `QWebEngine`模块不支持静态编译
@@ -169,8 +169,6 @@
    bool QFile::link(const QString &linkName);
    // Note: To create a valid link on Windows, linkName must have a .lnk file extension.
    ```
-- QML使用C++方法
-- C++使用QML方法
 - 包含`QScopedPointer`的类不能使其析构函数内联，例如`~MyClass() override = default;`或`~MyClass() override { ...; }`之类的，否则会无法编译。这也是Qt文档中所提到的。
 - 修改鼠标指针：
   ```text
@@ -255,3 +253,5 @@
   TARGET = $$qtLibraryTarget(目标文件名)
   ```
   `qtLibraryTarget`这个qmake函数会自动添加平台对应的调试版后缀（发布版本不会添加后缀）。不要用`qt5LibraryTarget`，这个函数除了添加后缀，还会添加`Qt5`这个前缀，是Qt自己的库才需要的函数。
+- Qt计划废弃`QStringLiteral`，以后尽量使用`u"..." (→ QStringView)`或者`QLatin1String`代替。其中，`QLatin1String`已经支持`.arg()`了，已经不存在不使用它的理由了。
+- 使用*QString*时尽量使用*multiArgs*，即`.arg(string, ...., string)`，以前那种分开的写法已经废弃了，不要再用了。`QLatin1String`和`QStringView`也支持这个特性。
