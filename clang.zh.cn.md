@@ -26,10 +26,11 @@
      此处是以 Linux 环境举例，Windows 系统下也要自己找个地方专门创建一个文件夹，不要直接在 LLVM 源码文件夹下构建。
   3. 使用 CMake 配置工程：
      ```bat
-     cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_CRT_RELEASE=MT -DLLVM_USE_CRT_DEBUG=MTd -DLLVM_ENABLE_PROJECTS=clang -DCMAKE_INSTALL_PREFIX=C:/LLVM -G"Visual Studio 16 2019" -Ax64 -Thost=x64 <llvm-project源码根目录>\llvm
+     cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_CRT_RELEASE=MT -DLLVM_USE_CRT_DEBUG=MTd -DLLVM_TARGETS_TO_BUILD="X86;PowerPC" -DLLVM_ENABLE_PROJECTS="clang;lldb" -DCMAKE_INSTALL_PREFIX=C:/LLVM -G"Visual Studio 16 2019" -Ax64 -Thost=x64 <llvm-project源码根目录>\llvm
      ```
      此处以使用 Visual Studio 2019 构建 64 位架构的 LLVM 为例。在运行CMake前，环境变量要先设置好，例如VS提供`vcvarsall.bat`，或者设置`CC`和`CXX`这两个环境变量。
      - CMAKE_BUILD_TYPE：构建类型，可选值为`Debug`，`Release`，`MinSizeRel`以及`RelWithDebInfo`。此参数不是必需的。
+     - LLVM_TARGETS_TO_BUILD：要构建的架构，`all`（全部构建）或者以英文半角分号为分隔的列表，例如`X86;PowerPC`。此参数不是必需的。
      - LLVM_USE_CRT_RELEASE，LLVM_USE_CRT_DEBUG：连接动态还是静态C运行时，动态为`MD/MDd`，静态为`MT/MTd`，VS（以及clang-cl，icl）专用，其他编译器不支持此参数。此参数不是必需的。
      - LLVM_ENABLE_PROJECTS：要构建的项目，`all`（全部构建）或者以英文半角分号为分隔的列表，例如`clang;clang-tools-extra;lld`（其实就是各个项目文件夹的名字），要使用这个参数就不能将各个组件放到`llvm`项目的子文件夹中，例如不能将`clang`文件夹移动到`llvm\tools\clang`，要保持`llvm-project`这整个项目刚检出时的结构。此参数不是必需的。
      - CMAKE_INSTALL_PREFIX：安装路径，编译完成后执行`install`命令，会将开发者指定的文件复制到这个路径。此参数不是必需的。
