@@ -187,3 +187,18 @@
   ```cmake
   cmake -S <path-to-top-level-source-code-dir> -B <path-to-top-level-binary-dir>
   ```
+- 如何使CMake自动复制MSVC的运行时DLL到指定位置：
+  ```cmake
+  # 包含对应的CMake模块。注：此模块为MSVC专用。
+  include(InstallRequiredSystemLibraries)
+  # 设置为TRUE时会一同复制UCRT的DLL。非必需。
+  set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
+  # 可以使用下面这个变量来设置自定义的Win10 SDK路径。非必需。
+  set(CMAKE_WINDOWS_KITS_10_DIR "C:/Program Files (x86)/Windows Kits/10")
+  # 设置为TRUE时会一同复制MFC的运行时DLL。非必需。
+  set(CMAKE_INSTALL_MFC_LIBRARIES TRUE)
+  # 设置为TRUE时会一同复制OpenMP的DLL。非必需。
+  set(CMAKE_INSTALL_OPENMP_LIBRARIES TRUE)
+  # 可以通过下面这个变量来设置要将所有DLL复制到什么地方，在Windows平台默认是bin，其他平台默认是lib。非必需。
+  set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION bin64)
+  ```
