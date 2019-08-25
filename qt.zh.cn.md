@@ -255,3 +255,6 @@
   `qtLibraryTarget`这个qmake函数会自动添加平台对应的调试版后缀（发布版本不会添加后缀）。不要用`qt5LibraryTarget`，这个函数除了添加后缀，还会添加`Qt5`这个前缀，是Qt自己的库才需要的函数。
 - Qt计划废弃`QStringLiteral`，以后尽量使用`u"..." (→ QStringView)`或者`QLatin1String`代替。其中，`QLatin1String`已经支持`.arg()`了，已经不存在不使用它的理由了。
 - 使用*QString*时尽量使用*multiArgs*，即`.arg(string, ...., string)`，以前那种分开的写法已经废弃了，不要再用了。`QLatin1String`和`QStringView`也支持这个特性。
+- 如果在编译Qt或编译Qt的插件时开启`guard:cf`（MSVC专属特性，类MSVC编译器也都支持），Qt会无法加载动态插件（.dll），部分静态插件（.lib）也会因为这个特性而无法加载成功，导致使用Qt开发的程序在启动时崩溃，但在不涉及Qt插件的加载和使用时，编译出的exe大概率是能正常运行的，原因暂时未知，因此先不要启用这个特性。
+- 编译Qt时，如果禁用异常处理，会导致*Qt 3D*，*Qt Location*和*Qt XmlPatterns*无法编译，这三个仓库在编译时都需要开启异常处理，请注意。如果必须禁用异常处理，可以在配置Qt时使用`-skip`参数来跳过这三个仓库。已经编译完成的Qt库不受影响，可以随意开启和关闭异常处理。
+- 编译Qt时，如果使用了`Ofast`优化级别（Clang，GCC和ICC都支持，只有MSVC和类MSVC编译器才不支持），会导致Qt的*sqlite*插件无法编译。这个插件不支持高于`O3`的优化级别。然而这个是*QtCore*模块中无法禁用或者跳过的基础插件，如果编译出错就会中断整个Qt的编译，因此只能通过修改这个插件的.pro/.pri文件来规避这个问题（使用自定义的`QMAKE_CFLAGS_RELEASE`和`QMAKE_CXXFLAGS_RELEASE`）。已经编译完成的Qt库不受影响，可以随意调整优化级别。
