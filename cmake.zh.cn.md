@@ -42,6 +42,7 @@
 | CMAKE_SYSTEM_PROCESSOR | 处理器名称，如`i686` | - |
 | CMAKE_DEBUG_POSTFIX | 调试版本库文件后缀 | set(CMAKE_DEBUG_POSTFIX "_d") |
 | CMAKE_RELEASE_POSTFIX | 发布版本库文件后缀 | set(CMAKE_RELEASE_POSTFIX "_r") |
+| CMAKE_INTERPROCEDURAL_OPTIMIZATION | 是否开启*链接时间代码生成*（*LTCG*） | set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON) |
 
 注：
 1. 如何设置这些变量：除了使用`set`命令，也可以在cmake命令中使用，如`cmake -DCMAKE_BUILD_TYPE=Release`，此举可覆盖CMakeLists.txt中的设置
@@ -202,3 +203,31 @@
   # 可以通过下面这个变量来设置要将所有DLL复制到什么地方，在Windows平台默认是bin，其他平台默认是lib。非必需。
   set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION bin64)
   ```
+- Qt程序编译完成后自动执行`win(mac)deployqt`工具
+  ```cmake
+  # 第一步，先获取win(mac)deployqt的路径
+  find_package(Qt5 COMPONENTS Core REQUIRED)
+  get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
+  get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+  find_program(DEPLOYQT_EXECUTABLE NAMES windeployqt macdeployqt HINTS "${_qt_bin_dir}")
+  # 第二步
+  if(WIN32)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${DEPLOYQT_EXECUTABLE} "$<TARGET_FILE:${PROJECT_NAME}>")
+  elseif(APPLE)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${DEPLOYQT_EXECUTABLE} "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>")
+  endif()
+  ```
+- 判断并启用*链接时间代码生成*/*链接时间优化*（即*LTCG*/*LTO*/*IPO*）
+  ```cmake
+  # 方式一，如果编译器不支持IPO则直接报致命错误，中断配置进程：
+  check_ipo_supported()
+  set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  # 方式二，编译器支持IPO才启用此特性，不支持时不会中断配置进程：
+  check_ipo_supported(RESULT ipo_result OUTPUT error_message)
+  if(ipo_result)
+    set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  else()
+    message(WARNING "IPO is not supported: ${error_message}")
+  endif()
+  ```
+  把CMake变量`CMAKE_INTERPROCEDURAL_OPTIMIZATION`设置为`ON`可以在全局范围内无条件启用IPO，但如果编译器不支持，会报错。
