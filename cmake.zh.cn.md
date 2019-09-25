@@ -219,6 +219,10 @@
   ```
 - 判断并启用*链接时间代码生成*/*链接时间优化*（即*LTCG*/*LTO*/*IPO*）
   ```cmake
+  # CMake的早期版本（3.9以前）只支持ICC for Linux开启IPO，下面一行的作用是开启对其他编译器的兼容支持
+  # cmake_policy(SET CMP0069 NEW)
+  # 包含所需模块
+  # include(CheckIPOSupported)
   # 方式一，如果编译器不支持IPO则直接报致命错误，中断配置进程：
   check_ipo_supported()
   set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
