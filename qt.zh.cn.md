@@ -1,5 +1,5 @@
 # Qt 使用笔记
-- Windows 平台尽量使用[`JOM`](http://download.qt.io/official_releases/jom/)编译，速度快很多，远远不是`NMAKE`或者`mingw32-make`能比得上的。
+- Windows 平台尽量使用[`JOM`](http://download.qt.io/official_releases/jom/)编译，速度快很多，远远不是`NMake`或者`mingw32-make`能比得上的。
 - Qt 国内镜像站：http://mirrors.ustc.edu.cn/qtproject/
 - 在 Windows 平台上编译 Qt 时，编译`ANGLE`时需要一个叫`WindowsSdkVerBinPath`的环境变量，其路径指向`fxc.exe`(Microsoft Direct3D Shader Compiler)所在的文件夹，常见路径为`C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0`
 - 在 Windows 平台上，如果要编译`ANGLE`，需要安装[`DirectX SDK`](http://www.microsoft.com/en-us/download/details.aspx?id=6812)，新版 DX SDK 已经与[`Windows SDK`](https://developer.microsoft.com/en-us/windows/downloads/sdk-archive)合并了。同时还需要[`Win flex-bison`](https://sourceforge.net/projects/winflexbison/)
@@ -20,7 +20,7 @@
   | 静态连接运行时 | `/MT`/`/MTd` | `-static`（clang-cl：与MSVC相同） | `-static` | `-static`（icl：与MSVC相同） | `CONFIG += static_runtime` |
   | 启用Quick编译器 | - | - | - | - | `CONFIG += qtquickcompiler` |
   | 启用异常处理 | `/EHsc` | `-fexceptions`（clang-cl：与MSVC相同） | `-fexceptions` | `-fexceptions`（icl：与MSVC相同） | `CONFIG += exceptions` |
-  | 禁用异常处理 | （留空，不加任何参数） | `-fno-exceptions`（clang-cl：与MSVC相同） | `-fno-exceptions` | `-fno-exceptions`（icl：与MSVC相同） | `CONFIG += exceptions_off` |
+  | 禁用异常处理 | `/EHs-c-`（或留空，不加任何参数） | `-fno-exceptions`（clang-cl：与MSVC相同） | `-fno-exceptions` | `-fno-exceptions`（icl：与MSVC相同） | `CONFIG += exceptions_off` |
   | 启用RTTI | `/GR` | `-frtti`（clang-cl：与MSVC相同） | `-frtti` | `-frtti`（icl：与MSVC相同） | `CONFIG += rtti` |
   | 禁用RTTI | `/GR-` | `-fno-rtti`（clang-cl：与MSVC相同） | `-fno-rtti` | `-fno-rtti`（icl：与MSVC相同） | `CONFIG += rtti_off` |
 - `opengl32sw.dll`这个文件是用软件模拟的显卡，针对的是没有显卡的机器，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件，能极大减小发布大小
@@ -29,8 +29,8 @@
 - 用命令行编译 Qt 工程：`qmake "example.pro" -spec win32-clang-g++ "CONFIG+=release"` -> `jom qmake_all` -> `jom` -> `jom install`。其中，`-spec`指定了`mkspec`，是不可缺少的参数，`CONFIG`指定了额外的配置选项，也不能缺少。这个命令行是全平台通用的。
 - 可以使用[`Dependency Walker`](http://www.dependencywalker.com/)这个工具来检测你开发的程序具体依赖哪些 dll，非常好用
 - 如果你开发的程序不是很大，不推荐使用 Qt 提供的`Installer Framework`(`IFW`)打包，因为这个`IFW`是 Qt 静态编译的，因此文件会比较大，哪怕什么文件都不打包，也会有**20MB**左右的大小，得不偿失。当然，如果你的程序很大，几百兆甚至更大，就可以用它了。小软件推荐：[NSIS](https://sourceforge.net/projects/nsis/)，[Inno Setup](http://jrsoftware.org/isinfo.php)，[WiX Toolset](http://wixtoolset.org/)（制作**MSI**安装包专用）。不推荐：Install Shield（授权费非常昂贵，软件非常臃肿，打包出的安装程序较大，界面不容易定制。不信自己装一个试试），Install Anywhere（与前者是同一个公司的，因此缺点也差不多），Advanced Installer（有授权费），Vice Installer（远古软件），Wise Installation System（远古软件），Smart Install Maker（基本就是个玩具）以及其他任何不知名小软件
-- 尽量不要链接`ICU`(`International Components for Unicode`)，虽然它提供了对世界上大多数国家和地区的语言和文字支持，功能非常强大，但文件太大，裁剪前**20~30MB**左右，裁剪后也有**10MB**左右，实际上一般程序根本用不到这种变态级别的国际化支持，所以不推荐使用这个库。Qt 官方也早已去掉了对它的依赖。
-- Qt 5.13系列添加了对`Schannel`的支持，可以在配置时通过`-schannel`来启用，以此去掉对`OpenSSL`的依赖
+- 尽量不要链接`ICU`(`International Components for Unicode`)，虽然它提供了对世界上大多数国家和地区的语言和文字支持，功能非常强大，但文件太大，裁剪前**20~30MB**左右，裁剪后也有**10MB**左右，实际上一般程序根本用不到这种变态级别的国际化支持，所以不推荐使用这个库。Qt 官方也早已去掉了对它的依赖。在配置时给一个`-no-icu`参数就可以禁用`ICU`支持。
+- Qt 5.13系列添加了对`Schannel`的支持，可以在配置时通过`-schannel`来启用，以此去掉对`OpenSSL`的依赖（如果完全不需要`OpenSSL`的支持，需要在配置时给一个`-no-openssl`参数来禁用`OpenSSL`）
 - `Qt Remote Objects`模块是用来做`进程间通信`（`IPC`）的，对于 Qt 程序来说非常好用
 - 区分调试版本和发布版本：`CONFIG(debug, debug|release)`（debug时返回true），`CONFIG(release, debug|release)`（release时返回true），`contains(CONFIG, debug)`（debug时返回true），`contains(CONFIG, release)`（release时返回true），或者更简单的`debug:`和`release:`。在代码中，可以通过`#ifdef _DEBUG`来判断，但请注意，发布版本并没有`_RELEASE`这样的宏。
 - 区分 Qt 是静态链接还是动态链接的：`CONFIG(static, static|shared)`，`CONFIG(shared, static|shared)`，`contains(CONFIG, static)`，`contains(CONFIG, shared)`，`static:`，`shared:`。在代码中，可以通过`#ifdef QT_STATIC`和`#ifdef QT_SHARED`来判断。
@@ -48,7 +48,7 @@
    ```
 - 修改二进制文件输出目录：`DESTDIR = $$PWD/bin`，在 Windows 平台上，dll 文件专有一个`DLLDESTDIR`。
 - `.qmake.conf`文件：将此文件放在`.pro`文件所在的文件夹中，qmake会自动加载这个文件，并且会在加载`.pro`文件前先加载它，因此可以将一些通用的配置写到这个文件中
-- `qt.conf`文件：将此文件放在你开发的程序所在的文件夹中，可以修改 Qt 加载某些库和翻译文件（`.qm`文件）的路径，个别场景会用到这个文件，具体请查看 Qt 帮助文档。在代码中也可以动态获取，例如，可以使用`QLibraryInfo::location(QLibraryInfo::TranslationsPath)`来获取`qt.conf`文件中指定的翻译文件的路径，但就算文件中没有指定，或者这个文件根本不存在，Qt 自身也会提供一个默认路径，例如，插件默认为`plugins`文件夹，翻译文件默认为`translations`文件夹等。
+- `qt.conf`文件：将此文件放在你开发的程序所在的文件夹中，可以修改 Qt 加载某些库和翻译文件（`.qm`文件）的路径，个别场景会用到这个文件，具体请查看 Qt 帮助文档。在代码中也可以动态获取，例如，可以使用`QLibraryInfo::location(QLibraryInfo::TranslationsPath)`来获取`qt.conf`文件中指定的翻译文件的路径，但就算文件中没有指定，或者这个文件根本不存在，Qt 自身也会提供一个默认路径，例如，插件默认为`plugins`文件夹，翻译文件默认为`translations`文件夹等。**注意：如果你是在Qt Creator中运行你的Qt程序（例如你正在调试你的程序），那么`QLibraryInfo::location()`返回的就是当前正在使用的Qt Kit的相关路径，而不是你自己在qt.conf中所设置的路径。换句话说，在这个时候这个函数不会返回你应用程序所在文件夹的路径了。但只要不是用Qt Creator运行，就没有这个问题。**
 - `QFile`无法在不存在的文件夹中创建文件，只能在已经存在的路径中新建或修改文件。如果路径不存在，可以使用`QDir::mkpath`创建，使用这个API，路径中任何不存在的文件夹都会被创建。
 - 区分操作系统：编译时可以通过`Q_OS_WINDOWS`（Qt 5.14 添加，早期版本请使用`Q_OS_WIN`代替），`Q_OS_WINRT`，`Q_OS_LINUX`，`Q_OS_MACOS`（不要使用`Q_OS_MAC`，已废弃），`Q_OS_MINGW`，`Q_OS_CYGWIN`，`Q_OS_ANDROID`和`Q_OS_IOS`等宏来区分，运行时可以通过`QOperatingSystemVersion`这个类（Qt 5.9 添加，可以直接获取到当前系统的可读版本，例如“Windows 8.1”，也可以用具体的静态常量`QOperatingSystemVersion::Windows8_1`等来区分正在运行的系统，非常方便好用。官方推荐使用此类）或`QSysInfo`这个类（只能获取到纯数字的版本号，例如“10.0.17763.152”，但能获取一些前者不能获取到的信息。但尽量不要用这个类，官方推荐使用前者）来获取
 - 区分编译器：编译时可以通过`Q_CC_MSVC`，`Q_CC_GNU`（GCC，G++，MinGW），`Q_CC_INTEL`（ICC），`Q_CC_CLANG`等宏来区分
@@ -253,10 +253,17 @@
   TARGET = $$qtLibraryTarget(目标文件名)
   ```
   `qtLibraryTarget`这个qmake函数会自动添加平台对应的调试版后缀（发布版本不会添加后缀）。不要用`qt5LibraryTarget`，这个函数除了添加后缀，还会添加`Qt5`这个前缀，是Qt自己的库才需要的函数。
-- Qt计划废弃`QStringLiteral`，以后尽量使用`u"..." (→ QStringView)`或者`QLatin1String`代替。其中，`QLatin1String`已经支持`.arg()`了，已经不存在不使用它的理由了。
+- Qt计划废弃`QStringLiteral`，以后尽量使用`u"..." (→ QStringView)`或者`QLatin1String`代替。其中，`QLatin1String`已经支持`.arg()`了，已经不存在不使用它的理由了。推荐使用`QLatin1String`的原因是因为它仅仅是对`const char *`的简单封装，性能仅次于直接使用`const char *`。
 - 使用*QString*时尽量使用*multiArgs*，即`.arg(string, ...., string)`，以前那种分开的写法已经废弃了，不要再用了。`QLatin1String`和`QStringView`也支持这个特性。
-- 如果在编译Qt或编译Qt的插件时开启`guard:cf`（MSVC专属特性，类MSVC编译器也都支持），Qt会无法加载动态插件（.dll），部分静态插件（.lib）也会因为这个特性而无法加载成功，导致使用Qt开发的程序在启动时崩溃，但在不涉及Qt插件的加载和使用时，编译出的exe大概率是能正常运行的，原因暂时未知，因此先不要启用这个特性。
+- <del>如果在编译Qt或编译Qt的插件时开启`guard:cf`（MSVC专属特性，类MSVC编译器也都支持），Qt会无法加载动态插件（.dll），部分静态插件（.lib）也会因为这个特性而无法加载成功，导致使用Qt开发的程序在启动时崩溃，但在不涉及Qt插件的加载和使用时，编译出的exe大概率是能正常运行的，原因暂时未知，因此先不要启用这个特性。</del>
 
-  注：经观察，微软自己的大部分软件（例如：Office套件）以及火狐浏览器等用户众多的项目，均已开启此特性（exe和dll都启用了`guard:cf`），但仍能正常运行，不明白为什么Qt开启就会崩溃。
-- 编译Qt时，如果禁用异常处理，会导致*Qt 3D*，*Qt Location*和*Qt XmlPatterns*无法编译，这三个仓库在编译时都需要开启异常处理，请注意。如果必须禁用异常处理，可以在配置Qt时使用`-skip`参数来跳过这三个仓库。已经编译完成的Qt库不受影响，可以随意开启和关闭异常处理。
+  <del>注：经观察，微软自己的大部分软件（例如：Office套件）以及火狐浏览器等用户众多的项目，均已开启此特性（exe和dll都启用了`guard:cf`），但仍能正常运行，不明白为什么Qt开启就会崩溃。</del>
+- 编译Qt时，如果禁用异常处理，会导致*Qt 3D*，*Qt Location*，*Qt Quick 3D*和*Qt XmlPatterns*无法编译，这四个仓库在编译时都需要开启异常处理，请注意。如果必须禁用异常处理，可以在配置Qt时使用`-skip`参数来跳过这四个仓库。已经编译完成的Qt库不受影响，可以随意开启和关闭异常处理。
 - 编译Qt时，如果使用了`Ofast`优化级别（Clang，GCC和ICC都支持，只有MSVC和类MSVC编译器才不支持），会导致Qt的*sqlite*插件无法编译。这个插件不支持高于`O3`的优化级别。然而这个是*QtCore*模块中无法禁用或者跳过的基础插件，如果编译出错就会中断整个Qt的编译，因此只能通过修改这个插件的.pro/.pri文件来规避这个问题（使用自定义的`QMAKE_CFLAGS_RELEASE`和`QMAKE_CXXFLAGS_RELEASE`）。已经编译完成的Qt库不受影响，可以随意调整优化级别。
+- 在`Q(Core|Gui)Application`构造前，如何快速将`char **`类型的命令行参数转换为Qt自己的`QStringList`：
+  ```cpp
+  #include <algorithm>
+
+  QStringList args;
+  std::copy(argv + 1, argv + argc, std::back_inserter(args));
+  ```
