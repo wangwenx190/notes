@@ -267,3 +267,41 @@
   QStringList args;
   std::copy(argv + 1, argv + argc, std::back_inserter(args));
   ```
+- Windows平台如何获取是否开启深色模式/浅色模式：
+  ```cpp
+  bool lightModeEnabled() const {
+  // Qt 5.14 之前的版本请使用 Q_OS_WIN
+  #ifdef Q_OS_WINDOWS
+    const QSettings settings(QLatin1String("HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"), QSettings::NativeFormat);
+    const auto appsUseLightTheme = settings.value(QLatin1String("AppsUseLightTheme"));
+    const auto systemUsesLightTheme = settings.value(QLatin1String("SystemUsesLightTheme"));
+    return (appsUseLightTheme.isValid() && (appsUseLightTheme.toInt() != 0));
+  #else
+    return false;
+  #endif
+  }
+
+  bool darkModeEnabled() const { return !lightModeEnabled(); }
+  ```
+- Windows平台如何将窗口设置为深色模式：
+  ```cpp
+  #include <uxtheme.h>
+  // Lib 文件：UxTheme.lib，记得要引用此文件
+  // 对应的 DLL：UxTheme.dll
+
+  bool setWindowsExplorerDarkTheme(QWidget *widget) {
+  #ifdef Q_OS_WINDOWS
+  #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    const auto windowHandle = widget->windowHandle();
+    if (windowHandle == nullptr) {
+      return false;
+    }
+    const auto hwnd = reinterpret_cast<HWND>(windowHandle->winId());
+  #else
+    const auto hwnd = widget->winId();
+  #endif
+    return SUCCEEDED(SetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr));
+  #endif
+    return false;
+  }
+  ```
