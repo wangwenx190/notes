@@ -290,6 +290,9 @@
   // 对应的 DLL：UxTheme.dll
 
   bool setWindowsExplorerDarkTheme(QWidget *widget) {
+    if (widget == nullptr) {
+      return false;
+    }
   #ifdef Q_OS_WINDOWS
   #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     const auto windowHandle = widget->windowHandle();
@@ -300,8 +303,12 @@
   #else
     const auto hwnd = widget->winId();
   #endif
+    if (hwnd == nullptr) {
+      return false;
+    }
     return SUCCEEDED(SetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr));
-  #endif
+  #else
     return false;
+  #endif
   }
   ```
