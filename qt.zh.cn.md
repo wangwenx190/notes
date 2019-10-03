@@ -312,3 +312,8 @@
   #endif
   }
   ```
+- Qt5如何从C++方面调用QML函数/信号？
+  ```cpp
+  QMetaObject::invokeMethod(rootObject, "methodName", Q_ARG(QVariant, methodParameter1), Q_ARG(QVariant, methodParameterN));
+  ```
+  注意：如果函数带参数，不管其参数都是什么类型，在调用时一定统一使用`QVariant`，否则调用无法成功。这不是Bug，这是Qt官方文档中所提到的注意事项。
