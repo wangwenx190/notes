@@ -162,7 +162,7 @@
    ```
    在Qt中使用`qSetMessagePattern()`也可以设置输出模式，但要注意以下几点：
    - 经过我在 Ubuntu 19.04 上的测试，`$(echo ...)`不是必要的，不加它仍然可以改变控制台字体的颜色，加不加完全不影响，加了它反而会在控制台把它作为文字输出
-   - **【待确认】**在 Ubuntu 19.04 上测试，【如果使用`qSetMessagePattern()`设置消息模式，要直接使用`Raw String`，不要使用`QStringLiteral`或者`QLatin1String`包裹，否则那几个转义字符会被转换成一般的文字而被输出而不是作为控制字符起作用】，但第二次测试时又不会被`QStringLiteral`和`QLatin1String`影响了，以后自己使用时多加注意
+   - **【待确认】**在 Ubuntu 19.04 上测试，【如果使用`qSetMessagePattern()`设置消息模式，要直接使用`Raw String`，不要使用`QStringLiteral`或者`QLatin1String`包裹，否则那几个转义字符会被转换成一般的文字而被输出而不是作为控制字符起作用】，但第二次测试时又不会被`QStringLiteral`和`QLatin1String`影响了，非常奇怪，不知道为什么，以后自己使用时多加注意
 - Qt创建快捷方式（Windows）或符号链接（UNIX）：
    ```cpp
    // Creates a link named linkName that points to the file currently specified by fileName().
@@ -184,7 +184,7 @@
 - Qt 6 计划废弃`QScopedPointer`等`STL`的替代品（即`QTL`），以后尽量使用`STL`提供的类（例如`std::unique_ptr`等）。
 - 输出调试信息有两种方式（以`qDebug`为例）：
   ```cpp
-  qDebug().noquote() << QStringLiteral("Application version:") << qApp->applicationVersion();
+  qDebug().noquote() << "Application version:" << qApp->applicationVersion();
   qDebug("Application version: %ls", qUtf16Printable(qApp->applicationVersion()));
   ```
   其中，第一种方式比较方便，但第二种方式性能更好（根据Qt官方开发人员所说），具体使用哪种方式，请自行取舍。
@@ -253,8 +253,8 @@
   TARGET = $$qtLibraryTarget(目标文件名)
   ```
   `qtLibraryTarget`这个qmake函数会自动添加平台对应的调试版后缀（发布版本不会添加后缀）。不要用`qt5LibraryTarget`，这个函数除了添加后缀，还会添加`Qt5`这个前缀，是Qt自己的库才需要的函数。
-- Qt计划废弃`QStringLiteral`，以后尽量使用`u"..." (→ QStringView)`或者`QLatin1String`代替。其中，`QLatin1String`已经支持`.arg()`了，已经不存在不使用它的理由了。推荐使用`QLatin1String`的原因是因为它仅仅是对`const char *`的简单封装，性能仅次于直接使用`const char *`。
-- 使用*QString*时尽量使用*multiArgs*，即`.arg(string, ...., string)`，以前那种分开的写法已经废弃了，不要再用了。`QLatin1String`和`QStringView`也支持这个特性。
+- Qt计划废弃`QStringLiteral`，以后尽量使用`u"..." (→ QStringView)`或者`QLatin1String`代替。其中，`QLatin1String`已经支持`.arg(arg1, ..., argN)`了，已经不存在不使用它的理由了。推荐使用`QLatin1String`的原因是因为它仅仅是对`const char *`的简单封装，性能仅次于直接使用`const char *`。`QString::fromLatin1()`=`QLatin1String`，不推荐使用前者是因为前者打字比较多。`QStringLiteral`性能也不错，但它完整的构建了一个`QString`对象，因此性能也比`QLatin1String`差不少。除非是对性能不敏感的项目，否则一定不要直接用`QString`，这个形式性能最差。如果是对性能不敏感的项目，那么就推荐统一无脑使用`QString`，性能虽然不行，但格式统一，方便管理和理解。
+- 使用*QString*时尽量使用*multiArgs*，即`.arg(arg1, ..., argN)`，以前那种分开的写法已经废弃了，不要再用了。`QLatin1String`和`QStringView`也支持这个特性。
 - <del>如果在编译Qt或编译Qt的插件时开启`guard:cf`（MSVC专属特性，类MSVC编译器也都支持），Qt会无法加载动态插件（.dll），部分静态插件（.lib）也会因为这个特性而无法加载成功，导致使用Qt开发的程序在启动时崩溃，但在不涉及Qt插件的加载和使用时，编译出的exe大概率是能正常运行的，原因暂时未知，因此先不要启用这个特性。</del>
 
   <del>注：经观察，微软自己的大部分软件（例如：Office套件）以及火狐浏览器等用户众多的项目，均已开启此特性（exe和dll都启用了`guard:cf`），但仍能正常运行，不明白为什么Qt开启就会崩溃。</del>
@@ -272,7 +272,7 @@
   bool lightModeEnabled() const {
   // Qt 5.14 之前的版本请使用 Q_OS_WIN
   #ifdef Q_OS_WINDOWS
-    const QSettings settings(QLatin1String("HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"), QSettings::NativeFormat);
+    const QSettings settings(QLatin1String("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"), QSettings::NativeFormat);
     const auto appsUseLightTheme = settings.value(QLatin1String("AppsUseLightTheme"));
     const auto systemUsesLightTheme = settings.value(QLatin1String("SystemUsesLightTheme"));
     return (appsUseLightTheme.isValid() && (appsUseLightTheme.toInt() != 0));
