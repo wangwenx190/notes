@@ -29,3 +29,63 @@
     return SHFileOperation(&shDelFile);
   }
   ```
+- 判断当前程序是否正在以管理员权限运行
+  ```cpp
+  // 头文件：securitybaseapi.h (include Windows.h)
+  // 库文件：Advapi32.lib（Advapi32.dll）
+  BOOL IsUserAdmin(VOID)
+  /*++
+  Routine Description: This routine returns TRUE if the caller's
+  process is a member of the Administrators local group. Caller is NOT
+  expected to be impersonating anyone and is expected to be able to
+  open its own process and process token.
+  Arguments: None.
+  Return Value:
+     TRUE - Caller has Administrators local group.
+     FALSE - Caller does not have Administrators local group. --
+  */
+  {
+  BOOL b;
+  SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+  PSID AdministratorsGroup;
+  b = AllocateAndInitializeSid(
+      &NtAuthority,
+      2,
+      SECURITY_BUILTIN_DOMAIN_RID,
+      DOMAIN_ALIAS_RID_ADMINS,
+      0, 0, 0, 0, 0, 0,
+      &AdministratorsGroup);
+  if(b)
+  {
+      if (!CheckTokenMembership( NULL, AdministratorsGroup, &b))
+      {
+           b = FALSE;
+      }
+      FreeSid(AdministratorsGroup);
+  }
+
+  return(b);
+  }
+  ```
+  摘自：https://docs.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-checktokenmembership
+- 以管理员权限启动程序：
+  ```cpp
+  // 头文件：shellapi.h
+  SHELLEXECUTEINFO sei{sizeof(SHELLEXECUTEINFO)};
+  sei.lpVerb = TEXT("runas"); // 这一行是关键，有了这一行才能以管理员权限执行
+  sei.lpFile = TEXT("notepad.exe"); // 待启动程序的路径
+  sei.nShow = SW_HIDE; // 想隐藏程序窗口的话要加上这一句，否则不需要这一行
+  sei.lpParameters = TEXT("/ABC /DEF"); // 要传给程序的参数，没有的话也不需要这一行
+  if(ShellExecuteEx(&sei) != TRUE)
+  {
+      DWORD dwStatus = GetLastError();
+      if(dwStatus == ERROR_CANCELLED)
+      {
+          std::cerr << "[UAC] : User denied to give admin privilege.";
+      }
+      else if(dwStatus == ERROR_FILE_NOT_FOUND)
+      {
+          std::cerr << "[UAC] : File not found.";
+      }
+  }
+  ```

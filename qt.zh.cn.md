@@ -1,7 +1,11 @@
 # Qt 使用笔记
 - Windows 平台尽量使用[`JOM`](http://download.qt.io/official_releases/jom/)编译，速度快很多，远远不是`NMake`或者`mingw32-make`能比得上的。
+
+  注：JOM仅支持原生Windows环境，任何Unix或类Unix环境（例如MinGW）均不支持。
 - Qt 国内镜像站：http://mirrors.ustc.edu.cn/qtproject/
 - 在 Windows 平台上编译 Qt 时，编译`ANGLE`时需要一个叫`WindowsSdkVerBinPath`的环境变量，其路径指向`fxc.exe`(Microsoft Direct3D Shader Compiler)所在的文件夹，常见路径为`C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0`
+
+  注：`10.0.17763.0`为你所安装的Win SDK的版本号。
 - 在 Windows 平台上，如果要编译`ANGLE`，需要安装[`DirectX SDK`](http://www.microsoft.com/en-us/download/details.aspx?id=6812)，新版 DX SDK 已经与[`Windows SDK`](https://developer.microsoft.com/en-us/windows/downloads/sdk-archive)合并了。同时还需要[`Win flex-bison`](https://sourceforge.net/projects/winflexbison/)
 - 最新版`Mesa llvmpipe`（`opengl32sw.dll`）下载：https://github.com/pal1000/mesa-dist-win/releases
 - 在 Linux 平台进行 Qt 开发需要安装额外的库：https://doc.qt.io/qt-5/linux.html 。其中，在 Ubuntu 平台上进行开发的官方 Wiki：https://wiki.qt.io/Install_Qt_5_on_Ubuntu
@@ -25,6 +29,24 @@
   | 禁用RTTI | `/GR-` | `-fno-rtti`（clang-cl：与MSVC相同） | `-fno-rtti` | `-fno-rtti`（icl：与MSVC相同） | `CONFIG += rtti_off` |
 - `opengl32sw.dll`这个文件是用软件模拟的显卡，针对的是没有显卡的机器，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件，能极大减小发布大小
 - 发布 Windows 平台的 Qt 程序时可以使用 Qt 官方提供的`windeployqt`程序，这个小程序会自动检测并复制相关的 dll 到你的程序文件夹，非常方便。但它无法检测第三方库，必须自行查找并复制。而且这个工具会复制一些多余的 Qt 的 dll，但极难判断究竟哪些是真的无用，因此就不要管了。
+
+  | 参数1 | 参数2 | 作用 |
+  | ---- | ---- | ----- |
+  | `--dir <directory>` | 目标文件夹路径 | 使用给定的文件夹（作为此次操作的根目录），而不是二进制文件所在的文件夹 |
+  | `--libdir <path>` | 目标文件夹路径 | 将Qt库文件（Qt5XXX.dll或libQt5XXX.so）复制到给定的路径，而不是二进制文件所在的文件夹 |
+  | `--plugindir <path>` | 目标文件夹路径 | 将Qt自身的插件复制到给定的路径，而不是直接放在二进制文件所在的文件夹 |
+  | `--pdb` | - | 一同复制.PDB文件（仅限MSVC） |
+  | `--force` | - | 强制更新文件 |
+  | `--dry-run` | - | 模拟模式。正常执行操作，但不会复制或更新任何文件 |
+  | `--qmldir <directory>` | **应用程序自身**的QML插件文件夹路径（此处用的是工程路径，不是发布后QML插件所在的路径） | 从给定的文件夹扫描.QML文件，来复制所用到的Qt Quick插件 |
+  | `--no-translations` | - | 不复制Qt自身的翻译文件 |
+  | `--no-system-d3d-compiler` | - | 不复制D3DCompiler_XX.dll |
+  | `--no-virtualkeyboard` | - | 不复制虚拟键盘相关的文件 |
+  | `--no-compiler-runtime` | - | 不复制编译器运行时相关的文件（例如vcredist_msvc2017_x64.exe） |
+  | `--no-angle` | - | 不复制ANGLE相关的文件（libEGL.dll和libGLESv2.dll） |
+  | `--no-opengl-sw` | - | 不复制Mesa llvmpipe相关的文件（opengl32sw.dll） |
+  | `--json` | - | 将输出结果输出为JSON格式 |
+  | `--list <option>` | `source`：源文件的绝对路径；`target`：目标文件的绝对路径；`relative`：目标文件的相对路径（与目标文件夹相对）；`mapping`：UWP平台的Appx专用 | 将复制的文件输出为列表文件 |
 - 使用`CONFIG += windeployqt` -> `nmake/jom windeployqt`来自动执行`windeployqt`程序
 - 用命令行编译 Qt 工程：`qmake "example.pro" -spec win32-clang-g++ "CONFIG+=release"` -> `jom qmake_all` -> `jom` -> `jom install`。其中，`-spec`指定了`mkspec`，是不可缺少的参数，`CONFIG`指定了额外的配置选项，也不能缺少。这个命令行是全平台通用的。
 - 可以使用[`Dependency Walker`](http://www.dependencywalker.com/)这个工具来检测你开发的程序具体依赖哪些 dll，非常好用
@@ -96,28 +118,27 @@
 - 可以用`qtConfig`来判断 Qt 在编译时有没有开启某特性，例如：`qtConfig(draganddrop)`。全部特性可以使用`configure -list-features`查看。
 - 资源文件别名：`<file alias="cut-img.png">images/cut.png</file>`。可以通过`alias`来给`.qrc`文件中的资源文件起别名，优点在于可以不依赖于文件的实际路径。
 - `qmake`获取 Qt 相关的文件夹路径：
-   ```text
-   QT_HOST_BINS - location of host executables
-   QT_HOST_DATA - location of data for host executables used by qmake
-   QT_HOST_PREFIX - default prefix for all host paths
-   QT_INSTALL_ARCHDATA - location of general architecture-dependent Qt data
-   QT_INSTALL_BINS - location of Qt binaries (tools and applications)
-   QT_INSTALL_CONFIGURATION - location for Qt settings. Not applicable on Windows
-   QT_INSTALL_DATA - location of general architecture-independent Qt data
-   QT_INSTALL_DOCS - location of documentation
-   QT_INSTALL_EXAMPLES - location of examples
-   QT_INSTALL_HEADERS - location for all header files
-   QT_INSTALL_IMPORTS - location of QML 1.x extensions
-   QT_INSTALL_LIBEXECS - location of executables required by libraries at runtime
-   QT_INSTALL_LIBS - location of libraries
-   QT_INSTALL_PLUGINS - location of Qt plugins
-   QT_INSTALL_PREFIX - default prefix for all paths
-   QT_INSTALL_QML - location of QML 2.x extensions
-   QT_INSTALL_TESTS - location of Qt test cases
-   QT_INSTALL_TRANSLATIONS - location of translation information for Qt strings
-   QT_SYSROOT - the sysroot used by the target build environment
-   QT_VERSION - the Qt version. We recommend that you query Qt module specific version numbers by using $$QT.<module>.version variables instead.
-   ```
+   | 变量 | 作用 |
+   | --- | --- |
+   | QT_HOST_BINS | 主机的可执行程序所在的路径 |
+   | QT_HOST_DATA | location of data for host executables used by qmake |
+   | QT_HOST_PREFIX | 所有主机路径的前缀 |
+   | QT_INSTALL_ARCHDATA | location of general architecture-dependent Qt data |
+   | QT_INSTALL_BINS | Qt二进制文件（工具和应用）所在的路径 |
+   | QT_INSTALL_CONFIGURATION | Qt配置文件所在的路径。不适用于Windows |
+   | QT_INSTALL_DATA | location of general architecture-independent Qt data |
+   | QT_INSTALL_DOCS | Qt文档所在的路径 |
+   | QT_INSTALL_EXAMPLES | Qt示例项目所在的路径 |
+   | QT_INSTALL_HEADERS | Qt头文件所在的路径 |
+   | QT_INSTALL_LIBEXECS | location of executables required by libraries at runtime |
+   | QT_INSTALL_LIBS | Qt库文件所在的路径（Windows是.lib所在的文件夹） |
+   | QT_INSTALL_PLUGINS | Qt插件所在的路径 |
+   | QT_INSTALL_PREFIX | 所有路径的默认前缀 |
+   | QT_INSTALL_QML | QML 2.x 插件所在的路径 |
+   | QT_INSTALL_TESTS | Qt测试用例所在的路径 |
+   | QT_INSTALL_TRANSLATIONS | Qt翻译文件所在的路径 |
+   | QT_SYSROOT | the sysroot used by the target build environment |
+   | QT_VERSION | the Qt version. We recommend that you query Qt module specific version numbers by using $$QT.<module>.version variables instead. |
    获取方法：`$$[var_name]`。例如：
    ```bash
    bin_dir = $$[QT_INSTALL_BINS] #一定不要忘了方括号
@@ -127,28 +148,30 @@
 - 在 Windows 平台上使用`MinGW`编译 Qt 时不能使用`JOM`，也不能开启 LTO，否则会报错，不清楚具体的原因
 - 在 Windows 平台上如果想要嵌入 Manifest 文件，可以插入到资源文件中，但我试过几次，效果都不理想，可能是方法有问题
 - 编译 Qt 时常用的参数：
-   ```text
-   -opensource：选择开源版 Qt，许可协议为 LGPLv3/GPLv3
-   -confirm-license：同意许可协议
-   -debug：生成调试版本
-   -release：生成发布版本
-   -debug-and-release：同时生成调试版本和发布版本
-   -shared：生成动态库（.dll/.so）（默认）
-   -static：生成静态库（.lib/.a）
-   -static-runtime：静态链接运行时（仅限 MSVC，相当于 -MT/-MTd）
-   -platform：选择目标平台
-   -xplatform：选择目标平台（交叉编译时）
-   -optimize-size：为大小优化（MSVC：O1，GCC：Os，Clang：Oz）
-   -ltcg：启用 LTCG/LTO
-   -silent：隐藏不必要的信息，仅输出警告和错误
-   -nomake：不构建某部分，仅可在 libs，tools，examples 和 tests 这四者中选择
-   -skip：跳过某模块的构建，例如 qt3d，qtactiveqt 和 qtandroidextras 等
-   -prefix：指定安装目录
-   -linker：指定链接器，仅可在 bfd，gold 和 lld 这三者中选择（仅限 Linux 平台）
-   -pch：启用预编译头（自动）
-   -warnings-are-errors：把警告视为错误
-   -opengl：仅可在 es2，desktop 和 dynamic 这三者中选择，其中，Windows 平台默认为 dynamic，Linux 平台默认为 desktop
-   ```
+   | 参数 | 作用 |
+   | --- | --- |
+   | -opensource | 选择开源版 Qt，许可协议为 LGPLv3/GPLv3 |
+   | -confirm-license | 同意许可协议。加上这个参数会跳过同意许可协议这个步骤。 |
+   | -debug | 生成调试版本 |
+   | -release | 生成发布版本 |
+   | -debug-and-release | 同时生成调试版本和发布版本 |
+   | -force-debug-info | 即使是发布版本也生成调试信息 |
+   | -shared | 生成动态库（.dll/.so）（默认） |
+   | -static | 生成静态库（.lib/.a） |
+   | -static-runtime | 静态链接运行时（仅限 MSVC，相当于 -MT/-MTd） |
+   | -platform \<platform> | 选择目标平台（Windows默认MSVC，Linux默认G++） |
+   | -xplatform \<platform> | 选择目标平台（交叉编译时） |
+   | -optimize-size | 为大小优化（MSVC：O1，GCC：Os，Clang：Oz） |
+   | -ltcg | 启用 LTCG/LTO |
+   | -silent | 隐藏不必要的信息，仅输出警告和错误 |
+   | -nomake \<part> | 不构建某部分，仅可在 libs，tools，examples 和 tests 这四者中选择 |
+   | -skip \<repository> | 跳过某模块的构建，例如 qt3d，qtactiveqt 和 qtandroidextras 等 |
+   | -no-feature-\<feature> | Qt Lite Project的功能，去掉某特性的支持，可以进一步裁剪Qt的大小，例如 `-no-feature-clipboard` |
+   | -prefix \<path> | 指定安装目录 |
+   | -linker \<linker> | 指定链接器，仅可在 bfd，gold 和 lld 这三者中选择（仅限 Linux 平台） |
+   | -pch | 启用预编译头（自动） |
+   | -warnings-are-errors | 把警告视为错误 |
+   | -opengl \<version> | 选择默认的OpenGL版本。仅可在 es2，desktop 和 dynamic 这三者中选择，其中，Windows 平台默认为 dynamic，Linux 平台默认为 desktop |
 - 在 Linux 平台上交叉编译 Windows 版 Qt 时，需要安装`glibc`。Ubuntu 平台上的包名为`libc6-dev-i386`，`libc6-dev-amd64`，`libc6-dev-i386-cross`，`libc6-dev-amd64-cross`，`libc6-dev-i386-amd64-cross`和`libc6-dev-amd64-i386-cross`（写了这么多是因为我不知道具体是哪（几）个，只好都列出来）。
 - <del>在 Linux 平台上交叉编译 Windows 版 Qt 时，如果报找不到`<EGL/egl.h>`的错误，需要安装额外的包。Ubuntu 平台上的包名为`freeglut3-dev`，`libgl1-mesa-glx`，`libglu1-mesa`，`libgles2-mesa`，`libgl1-mesa-dev`，`libglu1-mesa-dev`和`libgles2-mesa-dev`（写了这么多是因为我不知道具体是哪（几）个，只好都列出来）。</del>
 - 在 Linux 平台上使用 MinGW 交叉编译 Windows 版 Qt 时，可以启用 LTO，但`-fno-fat-lto-objects`参数会导致报错（原因未知），因此要修改特定的`mkspec`的部分条目，去掉这个参数
@@ -160,7 +183,7 @@
    # https://bugreports.qt.io/browse/QTBUG-75415
    export QT_MESSAGE_PATTERN="$(echo '[%{time boot}] %{if-warning}\e[1;33m%{endif}%{if-fatal}\e[31m%{endif}%{if-critical}\e[31m%{endif}%{appname}(%{pid} %{threadid})(%{function})\e[0m:%{if-category} %{category}:%{endif}\t%{message}')"
    ```
-   在Qt中使用`qSetMessagePattern()`也可以设置输出模式，但要注意以下几点：
+   在Qt中使用`void qSetMessagePattern(const QString &pattern)`也可以设置输出模式，但要注意以下几点：
    - 经过我在 Ubuntu 19.04 上的测试，`$(echo ...)`不是必要的，不加它仍然可以改变控制台字体的颜色，加不加完全不影响，加了它反而会在控制台把它作为文字输出
    - **【待确认】**在 Ubuntu 19.04 上测试，【如果使用`qSetMessagePattern()`设置消息模式，要直接使用`Raw String`，不要使用`QStringLiteral`或者`QLatin1String`包裹，否则那几个转义字符会被转换成一般的文字而被输出而不是作为控制字符起作用】，但第二次测试时又不会被`QStringLiteral`和`QLatin1String`影响了，非常奇怪，不知道为什么，以后自己使用时多加注意
 - Qt创建快捷方式（Windows）或符号链接（UNIX）：
@@ -317,3 +340,217 @@
   QMetaObject::invokeMethod(rootObject, "methodName", Q_ARG(QVariant, methodParameter1), Q_ARG(QVariant, methodParameterN));
   ```
   注意：如果函数带参数，不管其参数都是什么类型，在调用时一定统一使用`QVariant`，否则调用无法成功。这不是Bug，这是Qt官方文档中所提到的注意事项。
+- 使程序默认请求管理员权限
+  ```text
+  QMAKE_LFLAGS += /MANIFESTUAC:\"level=\'requireAdministrator\' uiAccess=\'false\'\"
+  ```
+- Qt5开启高DPI缩放支持（Qt6默认开启，不需要手动设置）
+  ```cpp
+  // 一定要在Q(Core|Gui)Application构造前执行，否则不会生效
+  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+  ```
+- 样式表更改：设置样式表、移除样式表、刷新样式表
+  ```cpp
+  // 使用setStyleSheet设置样式表，如果传一个空字符串，能移除样式表
+  void QApplication::setStyleSheet(const QString &sheet);
+  void QWidget::setStyleSheet(const QString &sheet);
+  // 移除样式表
+  void QStyle::unpolish(QWidget *widget);
+  void QStyle::unpolish(QApplication *application);
+  // 刷新样式表
+  void QStyle::polish(QWidget *widget);
+  void QStyle::polish(QApplication *application);
+  void QStyle::polish(QPalette &palette);
+  ```
+- 使用Qt内置的标准图标
+  ```cpp
+  QIcon QStyle::standardIcon(QStyle::StandardPixmap standardIcon, const QStyleOption *option = ..., const QWidget *widget = ...) const
+  ```
+  注：`QStyle::StandardPixmap`这个枚举里包含很多很常用的标准图标，比如最小化按钮，最大化按钮以及关闭按钮等，尽量多利用，不要再费心费力去第三方网站上找或者自己绘制相关的图片素材了。
+- 对`QLCDNumber`控件设置样式，需要将`QLCDNumber`的`segmentStyle`设置为`flat`（`void setSegmentStyle(QLCDNumber::SegmentStyle);`
+）。
+- 使用inherits判断是否属于某种类
+  ```cpp
+  QTimer *timer = new QTimer(this);
+  timer->inherits("QTimer");          // returns true
+  timer->inherits("QObject");         // returns true
+  timer->inherits("QAbstractButton"); // returns false
+  ```
+- 如果出现`Z-order assignment: " is not a valid widget.`这样的错误提示，用记事本打开对应的.ui文件，找到`<zorder></zorder>`为空的地方，删除即可。
+- `QComboBox`的`addItem`方法的第二个参数可以给对应的item添加一个数据，并可以用`itemData`这个方法将之取出。
+  ```cpp
+  void QComboBox::addItem(const QString &text, const QVariant &userData = QVariant());
+  QVariant QComboBox::itemData(int index, int role = Qt::UserRole) const;
+  ```
+- 如果用了`QWebEngine`模块，发布程序的时候必须带上**QtWebEngineProcess.exe**，**translations文件夹**以及**resources文件夹**。
+- `QCoreApplication::setAttribute(Qt::AA_NativeWindows);`或`QWidget::setAttribute(Qt::WA_NativeWindow);`可以让每个控件都拥有独立的句柄。
+- Qt Creator的配置文件存放在`%APPDATA%\QtProject`，如果发现Qt Creator出问题了，可以将这个文件夹删除，然后重新打开Qt Creator即可。
+- `QMediaPlayer`依赖本地解码器，默认状态下仅支持非常有限的格式，Windows平台上下载*K-Lite Codec Pack*或者*LAV Filters*安装即可解决。但`QMediaPlayer`官方没有提供开启硬件解码的接口，默认全部软件解码，对CPU的占用较高。
+- `QPushButton`左对齐文字，需要设置样式表`QPushButton{text-align:left;}`。
+- 使用SQLite数据库时如果不想产生数据库文件，可以创建内存数据库：
+  ```cpp
+  QSqlDatabase sqlDatabase = QSqlDatabase::addDatabase(QLatin1String("QSQLITE"));
+  sqlDatabase.setDatabaseName(QLatin1String(":memory:"));
+  ```
+- Qt5提供了`QScroller`这个类直接将控件滚动：
+  ```cpp
+  ui->listWidget->setHorizontalScrollMode(QListWidget::ScrollPerPixel);
+  QScroller::grabGesture(ui->listWidget, QScroller::LeftMouseButtonGesture);
+  ```
+- 如果运行程序出现`Fault tolerant heap shim applied to current process. This is usually due to previous crashes.`这个错误：
+
+  打开注册表，找到`HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers`，选中`Layers`键值，从右侧列表中删除自己的那个程序路径即可。
+- 获取系统窗口标题栏高度：
+  ```cpp
+  int QStyle::pixelMetric(QStyle::PM_TitleBarHeight);
+  ```
+  注：`PM_TitleBarHeight`是`QStyle::PixelMetric`这个枚举里的一个，这个枚举里还包含很多系统标准控件的尺寸，都可以用`int QStyle::pixelMetric(QStyle::PixelMetric metric, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const;`这个函数获取。
+- 获取桌面的总尺寸以及可用尺寸（即去掉任务栏后的尺寸）：
+  ```cpp
+  QRect QWidget::screen()->geometry();
+  QRect QWidget::screen()->availableGeometry();
+  // 其他还有 QWindow 这个类也支持 QScreen *QWindow::screen() const 这个函数，除此之外再没有其他的类支持这个函数了。
+  ```
+  注：一定不要再用`QDesktopWidget`这个类了，这个类早就废弃了，会在以后的版本中移除。
+- 调用系统默认的程序打开一个文件或网址：
+  ```text
+  // 如果url是一个本地文件，则调用对应的程序打开。例如，如果url指向了一个word文档，则调用Word或WPS打开它。
+  // 如果url是一个网址，则调用默认浏览器打开。
+  [static] bool QDesktopServices::openUrl(const QUrl &url);
+  ```
+- 在保存文件时，尽量使用`QSaveFile`这个类而不是传统的`QFile`，因为`QSaveFile`会在保存前创建一个临时文件，在保存前的一切操作都是作用于那个临时文件，只有写入操作正常完成了才会替换旧的文件，所以不会损坏当前的文件。而`QFile`是直接对当前文件进行操作，因此如果遇到突发情况（例如计算机突然断电等），可能会损坏当前文件。
+
+  注意：`QSaveFile`的用法与`QFile`基本相同，但前者没有`void close()`函数，而是用`bool QSaveFile::commit()`这个函数代替了它。只有执行了`commit`这个函数，对文件所作的一切修改才会生效。
+- 判断一个文件是否为快捷方式/软链接，并获取其所指向的目标：
+  ```cpp
+  // Windows
+  bool QFileInfo::isShortcut() const;
+  // Unix（包括macOS和iOS）
+  bool QFileInfo::isSymLink() const;
+  // 获取快捷方式/软链接指向的目标
+  QString QFileInfo::symLinkTarget() const;
+  ```
+  注意：Windows平台尽量不要用`isSymLink`这个函数进行判断，虽然目前（5.14）暂时可以代替`isShortcut`，但此行为已被废弃，Qt会在以后的版本中去掉这个行为。
+- 遍历文件夹下的所有文件：
+  ```cpp
+  QVector<QString> Widget::getFolderContents(const QString &folderPath) const {
+      if (folderPath.isEmpty() || !QFileInfo::exists(folderPath) || !QFileInfo(folderPath).isDir()) {
+          return {};
+      }
+      const QFileInfo dirInfo(folderPath);
+      const QDir dir(dirInfo.isSymLink() ? dirInfo.symLinkTarget() : dirInfo.canonicalFilePath());
+      const auto fileInfoList = dir.entryInfoList(QDir::Files | QDir::Readable | QDir::Hidden | QDir::System, QDir::Name);
+      const auto folderInfoList = dir.entryInfoList(QDir::Dirs | QDir::Readable | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot, QDir::Name);
+      if (fileInfoList.isEmpty() && folderInfoList.isEmpty()) {
+          return {};
+      }
+      QVector<QString> stringList = {};
+      if (!fileInfoList.isEmpty()) {
+          for (const auto &fileInfo : fileInfoList) {
+              stringList.append(QDir::toNativeSeparators(fileInfo.isSymLink() ? fileInfo.symLinkTarget() : fileInfo.canonicalFilePath()));
+          }
+      }
+      if (!folderInfoList.isEmpty()) {
+          for (const auto &folderInfo : folderInfoList) {
+              const QVector<QString> _fileList = getFolderContents(folderInfo.isSymLink() ? folderInfo.symLinkTarget() : folderInfo.canonicalFilePath());
+              if (!_fileList.isEmpty()) {
+                  stringList.append(_fileList);
+              }
+          }
+      }
+      return stringList;
+  }
+  ```
+  注：尽量使用`QString QFileInfo::canonicalFilePath() const;`这个函数而不是`QString QFileInfo::absoluteFilePath() const;`或者`QString QFileInfo::filePath() const;`，因为`canonicalFilePath`这个函数会尽可能的解析路径，不会包含`.`、`..`或任何快捷方式/软链接，而且返回的是完整的绝对路径，而后两个函数不会解析的如此彻底。
+- 连接信号和槽函数时参数重载：
+  ```cpp
+  connect(buttonGroup, qOverload<int>(&QButtonGroup::buttonClicked), [=](int id){ /* ... */ });
+  connect(buttonGroup, qOverload<QAbstractButton *>(&QButtonGroup::buttonClicked), [=](QAbstractButton *button){ /* ... */ });
+  connect(echoComboBox, qOverload<int>(&QComboBox::activated), this, &Window::echoChanged);
+  ```
+- Qt内置的常用数学函数
+  ```cpp
+  // 返回t的绝对值
+  T qAbs(const T &t);
+  // 返回两者中的最大值或最小值
+  const T &qMin(const T &a, const T &b);
+  const T &qMax(const T &a, const T &b);
+  // 返回一个最接近的整数
+  int qRound(...);
+  qint64 qRound64(...); // 返回64位的整数
+  // 返回一个不超过v的最大的整数
+  int qFloor(qreal v);
+  // 相当于qMax(min, qMin(val, max))，即将val限制在min和max之间
+  const T &qBound(const T &min, const T &val, const T &max);
+  ```
+- 设置Qt默认的图形引擎
+  ```cpp
+  // 使用 OpenGL（调用桌面版 OpenGL，性能仅次于调用 ANGLE）
+  QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+  // 使用 OpenGL ES（调用 ANGLE，性能最好）
+  QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+  // 使用 Mesa llvmpipe（软件模拟显卡，性能很差）
+  QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+  ```
+  注：
+
+  - 以上代码必须在`Q(Core|Gui)Application`构造前使用，否则不会生效。
+  - 也可以通过设置环境变量来实现这个功能（即不写任何代码）：将`QT_OPENGL`设置为`desktop`、`angle`或`software`。
+- 设置Qt默认使用的OpenGL版本：
+  ```cpp
+  QSurfaceFormat surfaceFormat;
+  // 此处以4.6版本为例
+  surfaceFormat.setMajorVersion(4);
+  surfaceFormat.setMinorVersion(6);
+  // 使用 QSurfaceFormat::CoreProfile 来禁用老旧的或废弃的 API
+  surfaceFormat.setProfile(QSurfaceFormat::CompatibilityProfile);
+  QSurfaceFormat::setDefaultFormat(surfaceFormat);
+  ```
+  注：以上代码必须在`Q(Core|Gui)Application`构造前使用，否则不会生效。
+- 如何使能进行翻译的字符串都被`tr`函数包裹，不被遗漏：
+
+  在全局定义`QT_NO_CAST_FROM_ASCII`这个宏，之后在编译时任何没有被`QLatin1String`包裹的字符串都会被提示出来。
+- 在Linux平台发布Qt程序：
+  - 将所有用到的动态库都复制到二进制文件所在的文件夹（按照Windows平台的组织方式和结构）
+  - 将以下脚本保存到二进制文件所在的文件夹下，并重命名为二进制文件的名字（不包括后缀名，脚本的后缀名一直都是.sh）：
+    ```sh
+    #!/bin/sh
+    appname=`basename $0 | sed s,\.sh$,,`
+    dirname=`dirname $0`
+    tmp="${dirname#?}"
+    if [ "${dirname%$tmp}" != "/" ]; then
+      dirname=$PWD/$dirname
+    fi
+    LD_LIBRARY_PATH=$dirname
+    export LD_LIBRARY_PATH
+    $dirname/$appname "$@"
+    ```
+  - 每次运行程序都要改为执行这个脚本，不能直接运行二进制文件，否则无法正常启动程序。
+- 如何动态的从外部文件加载资源（仅限使用*RCC*工具制作的资源文件）：
+  ```text
+  // 加载资源文件。其中 mapRoot 参数为资源加载后的根节点。
+  [static] bool QResource::registerResource(const QString &rccFileName, const QString &mapRoot = QString());
+  // 卸载资源文件
+  [static] bool QResource::unregisterResource(const QString &rccFileName, const QString &mapRoot = QString());
+  ```
+- 如何生成随机数
+  ```cpp
+  const quint32 value32 = QRandomGenerator::global()->generate();
+  const quint64 value64 = QRandomGenerator::global()->generate64();
+  // 生成一个在lowest和highest之间的随机数
+  const int value = QRandomGenerator::global()->bounded(int lowest, int highest);
+  ```
+- 无边框窗口
+  - 支持`QMainWindow`（稍微改一下也能支持QWidget），原生Windows+macOS效果，不支持Linux：https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window
+  - 支持`QMainWindow`、`QWidget`以及Qt Quick，仅支持原生Windows效果，不能跨平台：https://github.com/qtdevs/FramelessHelper
+- Qt Quick获取窗口
+  ```cpp
+  QQmlApplicationEngine qmlApplicationEngine;
+  qmlApplicationEngine.load(QUrl(QLatin1String("qrc:///qml/main.qml")));
+  auto *window = qobject_cast<QWindow *>(qmlApplicationEngine.rootObjects().at(0));
+  ```
+  注：在使用`QQuickView`时，由于`QQuickView`本身就是继承自`QWindow`，因此可以直接对其本身进行操作。
+- 限制程序只运行一个实例：
+  - QtSingleApplication（Qt Solutions是Qt4时代的商用模块，后来开源，但已不再维护，用起来还是没什么问题的，Qt Creator就一直在用这个）：https://github.com/qtproject/qt-solutions/tree/master/qtsingleapplication
+  - SingleApplication（基于`QtSingleApplication`修改而来，做了很多改进，还在活跃开发中）：https://github.com/itay-grudev/SingleApplication
