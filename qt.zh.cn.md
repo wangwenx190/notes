@@ -118,6 +118,7 @@
 - 可以用`qtConfig`来判断 Qt 在编译时有没有开启某特性，例如：`qtConfig(draganddrop)`。全部特性可以使用`configure -list-features`查看。
 - 资源文件别名：`<file alias="cut-img.png">images/cut.png</file>`。可以通过`alias`来给`.qrc`文件中的资源文件起别名，优点在于可以不依赖于文件的实际路径。
 - `qmake`获取 Qt 相关的文件夹路径：
+
    | 变量 | 作用 |
    | --- | --- |
    | QT_HOST_BINS | 主机的可执行程序所在的路径 |
