@@ -545,7 +545,7 @@
   const int value = QRandomGenerator::global()->bounded(int lowest, int highest);
   ```
 - 无边框窗口
-  - 支持`QMainWindow`（稍微改一下也能支持QWidget），原生Windows+macOS效果，不支持Linux：https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window
+  - 支持`QMainWindow`（稍微改一下也能支持`QWidget`），原生Windows+macOS效果，不支持Linux：https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window
   - 支持`QMainWindow`、`QWidget`以及Qt Quick，仅支持原生Windows效果，不能跨平台：https://github.com/qtdevs/FramelessHelper
 - Qt Quick获取窗口
   ```cpp
