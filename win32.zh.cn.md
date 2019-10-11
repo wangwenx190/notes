@@ -6,11 +6,12 @@
 - 自定义开始屏幕磁贴：https://docs.microsoft.com/en-us/previous-versions/windows/apps/dn449733(v=win.10)
 - 如何使用API将文件（夹）移动到回收站而不是直接彻底删除：
   ```cpp
+  // 头文件：shellapi.h
+  // 库文件：Shell32.lib（Shell32.dll）
   // 示例代码，请注意修改
   BOOL MoveToRecycleBin(LPCTSTR pszPath, BOOL bDelete)
   {
-    SHFILEOPSTRUCT shDelFile;
-    memset(&shDelFile, 0, sizeof(SHFILEOPSTRUCT));
+    SHFILEOPSTRUCT shDelFile{sizeof(SHFILEOPSTRUCT)};
     shDelFile.fFlags |= FOF_SILENT; // don't report progress
     shDelFile.fFlags |= FOF_NOERRORUI; // don't report errors
     shDelFile.fFlags |= FOF_NOCONFIRMATION; // don't confirm delete
@@ -71,6 +72,7 @@
 - 以管理员权限启动程序：
   ```cpp
   // 头文件：shellapi.h
+  // 库文件：Shell32.lib（Shell32.dll）
   SHELLEXECUTEINFO sei{sizeof(SHELLEXECUTEINFO)};
   sei.lpVerb = TEXT("runas"); // 这一行是关键，有了这一行才能以管理员权限执行
   sei.lpFile = TEXT("notepad.exe"); // 待启动程序的路径
