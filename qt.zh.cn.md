@@ -140,6 +140,7 @@
    | QT_INSTALL_TRANSLATIONS | Qt翻译文件所在的路径 |
    | QT_SYSROOT | the sysroot used by the target build environment |
    | QT_VERSION | the Qt version. We recommend that you query Qt module specific version numbers by using $$QT.<module>.version variables instead. |
+
    获取方法：`$$[var_name]`。例如：
    ```bash
    bin_dir = $$[QT_INSTALL_BINS] #一定不要忘了方括号
