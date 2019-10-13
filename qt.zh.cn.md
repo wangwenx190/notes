@@ -26,7 +26,11 @@
   | 启用异常处理 | `/EHsc` | `-fexceptions`（clang-cl：与MSVC相同） | `-fexceptions` | `-fexceptions`（icl：与MSVC相同） | `CONFIG += exceptions` |
   | 禁用异常处理 | `/EHs-c-`（或留空，不加任何参数） | `-fno-exceptions`（clang-cl：与MSVC相同） | `-fno-exceptions` | `-fno-exceptions`（icl：与MSVC相同） | `CONFIG += exceptions_off` |
   | 启用RTTI | `/GR` | `-frtti`（clang-cl：与MSVC相同） | `-frtti` | `-frtti`（icl：与MSVC相同） | `CONFIG += rtti` |
-  | 禁用RTTI | `/GR-` | `-fno-rtti`（clang-cl：与MSVC相同） | `-fno-rtti` | `-fno-rtti`（icl：与MSVC相同） | `CONFIG += rtti_off` |
+  | 禁用RTTI | `/GR-`（或留空，不加任何参数） | `-fno-rtti`（clang-cl：与MSVC相同） | `-fno-rtti` | `-fno-rtti`（icl：与MSVC相同） | `CONFIG += rtti_off` |
+  | 最高警告级别 | - | - | - | - | `CONFIG += warn_on` |
+  | 关闭警告 | - | - | - | - | `CONFIG += warn_off` |
+  | 关闭C语言编译器扩展 | - | - | - | - | `CONFIG += strict_c` |
+  | 关闭C++语言编译器扩展 | - | - | - | - | `CONFIG += strict_c++` |
 - `opengl32sw.dll`这个文件是用软件模拟的显卡，针对的是没有显卡的机器，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件，能极大减小发布大小
 - 发布 Windows 平台的 Qt 程序时可以使用 Qt 官方提供的`windeployqt`程序，这个小程序会自动检测并复制相关的 dll 到你的程序文件夹，非常方便。但它无法检测第三方库，必须自行查找并复制。而且这个工具会复制一些多余的 Qt 的 dll，但极难判断究竟哪些是真的无用，因此就不要管了。
 
@@ -748,3 +752,10 @@
   具体的原理是小文件Qt会将其编译为C++代码，然后与项目其他的源文件一起编译和链接，大文件会直接生成.obj文件，不参与编译过程，只参与最后的链接过程。
 - 如果需要窗口无边框，但是又需要保留操作系统的边框特性，例如可以自由拉伸边框和窗口阴影等，可以使用 `setWindowFlags(Qt::CustomizeWindowHint);`。注意一定要用`setWindowFlags`而不是`setWindowFlag`，因为`CustomizeWindowHint`这个Flag会与其他Flag冲突，这些Flag并存时会导致`CustomizeWindowHint`失效，用前者正好可以顺便清除其他Flag。
 - Qt Quick在Linux平台无法播放视频：`sudo apt install libpulse-dev`即可解决
+- 判断一个类是否是`QWidget`或`QWindow`（或它们的派生类）：
+  ```cpp
+  // 与inherits("QWidget")等效，但速度比其快得多
+  bool QObject::isWidgetType() const;
+  // 与inherits("QWindow")等效，但速度比其快得多
+  bool QObject::isWindowType() const;
+  ```
