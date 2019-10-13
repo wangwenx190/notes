@@ -53,21 +53,26 @@
 - 如果你开发的程序不是很大，不推荐使用 Qt 提供的`Installer Framework`(`IFW`)打包，因为这个`IFW`是 Qt 静态编译的，因此文件会比较大，哪怕什么文件都不打包，也会有**20MB**左右的大小，得不偿失。当然，如果你的程序很大，几百兆甚至更大，就可以用它了。小软件推荐：[NSIS](https://sourceforge.net/projects/nsis/)，[Inno Setup](http://jrsoftware.org/isinfo.php)，[WiX Toolset](http://wixtoolset.org/)（制作**MSI**安装包专用）。不推荐：Install Shield（授权费非常昂贵，软件非常臃肿，打包出的安装程序较大，界面不容易定制。不信自己装一个试试），Install Anywhere（与前者是同一个公司的，因此缺点也差不多），Advanced Installer（有授权费），Vice Installer（远古软件），Wise Installation System（远古软件），Smart Install Maker（基本就是个玩具）以及其他任何不知名小软件
 - 尽量不要链接`ICU`(`International Components for Unicode`)，虽然它提供了对世界上大多数国家和地区的语言和文字支持，功能非常强大，但文件太大，裁剪前**20~30MB**左右，裁剪后也有**10MB**左右，实际上一般程序根本用不到这种变态级别的国际化支持，所以不推荐使用这个库。Qt 官方也早已去掉了对它的依赖。在配置时给一个`-no-icu`参数就可以禁用`ICU`支持。
 - Qt 5.13系列添加了对`Schannel`的支持，可以在配置时通过`-schannel`来启用，以此去掉对`OpenSSL`的依赖（如果完全不需要`OpenSSL`的支持，需要在配置时给一个`-no-openssl`参数来禁用`OpenSSL`）
-- `Qt Remote Objects`模块是用来做`进程间通信`（`IPC`）的，对于 Qt 程序来说非常好用
 - 区分调试版本和发布版本：`CONFIG(debug, debug|release)`（debug时返回true），`CONFIG(release, debug|release)`（release时返回true），`contains(CONFIG, debug)`（debug时返回true），`contains(CONFIG, release)`（release时返回true），或者更简单的`debug:`和`release:`。在代码中，可以通过`#ifdef _DEBUG`来判断，但请注意，发布版本并没有`_RELEASE`这样的宏。
 - 区分 Qt 是静态链接还是动态链接的：`CONFIG(static, static|shared)`，`CONFIG(shared, static|shared)`，`contains(CONFIG, static)`，`contains(CONFIG, shared)`，`static:`，`shared:`。在代码中，可以通过`#ifdef QT_STATIC`和`#ifdef QT_SHARED`来判断。
 - 区分32位还是64位：`contains(QMAKE_TARGET.arch, x86_64)`，`contains(QMAKE_HOST.arch, x86_64)`，`contains(QT_ARCH, x86_64)`，以上三条语句在编译64位程序时返回true。其中`x86_64`替换为其他架构，例如`i386`，也是可行的，只不过判断的就不一定是64位了。在代码中，Windows 平台上可以通过`#ifdef WIN64`或`#ifdef _WIN64`来判断是不是64位，不要用`WIN32`来判断，因为`WIN32`这个会在两个架构上都有定义。
 - 区分应用程序和库：`contains(TEMPLATE, app)`，`contains(TEMPLATE, lib)`
 - Windows 平台上添加图标及属性信息：
-   ```bash
-   VERSION = 1.2.3 #设置版本，这个是全平台通用的。其中，只有 Windows 平台上的版本号是4位的，其他平台都是3位
+   ```text
+   VERSION = 1.2.3 #设置版本，只有这个变量是全平台通用的。其中，只有 Windows 平台上的版本号是4位的，其他平台都是3位
    RC_ICONS = "../res/icon.ico" #设置图标
-   RC_FILE = "../res/eg.rc" #设置资源文件。此语句会与此处其他语句冲突，请注意
+   #RC_CODEPAGE = "" #语言代码页
+   RC_LANG = 0x0004 #语言，请参考：https://docs.microsoft.com/en-us/windows/win32/intl/language-identifier-constants-and-strings
    QMAKE_TARGET_PRODUCT = "My app name" #设置产品名称
    QMAKE_TARGET_DESCRIPTION = "My app description" #设置文件说明
    QMAKE_TARGET_COPYRIGHT = "My copyright info" #设置版权
    QMAKE_TARGET_COMPANY = "My company name" #设置公司
    ```
+   如果你有一个已经编写好的资源文件（.rc文件），可以用以下语句使用：
+   ```text
+   RC_FILE = "../res/eg.rc" #设置资源文件。此语句会与以上所有语句冲突，请注意
+   ```
+   注意：同一个exe文件最多只能有一个资源文件。
 - 修改二进制文件输出目录：`DESTDIR = $$PWD/bin`，在 Windows 平台上，dll 文件专有一个`DLLDESTDIR`。
 - `.qmake.conf`文件：将此文件放在`.pro`文件所在的文件夹中，qmake会自动加载这个文件，并且会在加载`.pro`文件前先加载它，因此可以将一些通用的配置写到这个文件中
 - `qt.conf`文件：将此文件放在你开发的程序所在的文件夹中，可以修改 Qt 加载某些库和翻译文件（`.qm`文件）的路径，个别场景会用到这个文件，具体请查看 Qt 帮助文档。在代码中也可以动态获取，例如，可以使用`QLibraryInfo::location(QLibraryInfo::TranslationsPath)`来获取`qt.conf`文件中指定的翻译文件的路径，但就算文件中没有指定，或者这个文件根本不存在，Qt 自身也会提供一个默认路径，例如，插件默认为`plugins`文件夹，翻译文件默认为`translations`文件夹等。**注意：如果你是在Qt Creator中运行你的Qt程序（例如你正在调试你的程序），那么`QLibraryInfo::location()`返回的就是当前正在使用的Qt Kit的相关路径，而不是你自己在qt.conf中所设置的路径。换句话说，在这个时候这个函数不会返回你应用程序所在文件夹的路径了。但只要不是用Qt Creator运行，就没有这个问题。**
@@ -103,7 +108,7 @@
    #string2: this is an apple
    ```
 - 子项目：
-   ```bash
+   ```text
    TEMPLATE = subdirs #此句不可缺少
    CONFIG -= ordered #这一句看你项目的具体情况，“CONFIG += ordered”的意思是让qmake按照你在.pro文件中书写的顺序来生成项目
    project1.file = src/pro1.pro #指定子项目的路径
@@ -153,28 +158,28 @@
 
    | 参数 | 作用 |
    | --- | --- |
-   | -opensource | 选择开源版 Qt，许可协议为 LGPLv3/GPLv3 |
-   | -confirm-license | 同意许可协议。加上这个参数会跳过同意许可协议这个步骤。 |
-   | -debug | 生成调试版本 |
-   | -release | 生成发布版本 |
-   | -debug-and-release | 同时生成调试版本和发布版本 |
-   | -force-debug-info | 即使是发布版本也生成调试信息 |
-   | -shared | 生成动态库（.dll/.so）（默认） |
-   | -static | 生成静态库（.lib/.a） |
-   | -static-runtime | 静态链接运行时（仅限 MSVC，相当于 -MT/-MTd） |
-   | -platform \<platform> | 选择目标平台（Windows默认MSVC，Linux默认G++） |
-   | -xplatform \<platform> | 选择目标平台（交叉编译时） |
-   | -optimize-size | 为大小优化（MSVC：O1，GCC：Os，Clang：Oz） |
-   | -ltcg | 启用 LTCG/LTO |
-   | -silent | 隐藏不必要的信息，仅输出警告和错误 |
-   | -nomake \<part> | 不构建某部分，仅可在 libs，tools，examples 和 tests 这四者中选择 |
-   | -skip \<repository> | 跳过某模块的构建，例如 qt3d，qtactiveqt 和 qtandroidextras 等 |
-   | -no-feature-\<feature> | Qt Lite Project的功能，去掉某特性的支持，可以进一步裁剪Qt的大小，例如 `-no-feature-clipboard` |
-   | -prefix \<path> | 指定安装目录 |
-   | -linker \<linker> | 指定链接器，仅可在 bfd，gold 和 lld 这三者中选择（仅限 Linux 平台） |
-   | -pch | 启用预编译头（自动） |
-   | -warnings-are-errors | 把警告视为错误 |
-   | -opengl \<version> | 选择默认的OpenGL版本。仅可在 es2，desktop 和 dynamic 这三者中选择，其中，Windows 平台默认为 dynamic，Linux 平台默认为 desktop |
+   | `-opensource` | 编译开源版本，许可协议为 LGPLv3/GPLv3 |
+   | `-confirm-license` | 同意许可协议。加上这个参数会跳过手动同意许可协议这个步骤。 |
+   | `-debug` | 编译调试版本 |
+   | `-release` | 编译发布版本 |
+   | `-debug-and-release` | 同时编译调试版本和发布版本 |
+   | `-force-debug-info` | 即使是发布版本也生成调试信息 |
+   | `-shared` | 编译为动态库（.dll/.so）（默认） |
+   | `-static` | 编译为静态库（.lib/.a） |
+   | `-static-runtime` | 静态链接运行时（仅限 MSVC，相当于 -MT/-MTd） |
+   | `-platform <platform>` | 设置目标平台（Windows默认MSVC，Linux默认G++） |
+   | `-xplatform <platform>` | 设置目标平台（交叉编译时） |
+   | `-optimize-size` | 为大小优化（MSVC：O1，GCC：Os，Clang：Oz） |
+   | `-ltcg` | 启用 LTCG/LTO |
+   | `-silent` | 隐藏不必要的信息，仅输出警告和错误 |
+   | `-nomake <part>` | 不构建某部分，仅可在 libs，tools，examples 和 tests 这四者中选择 |
+   | `-skip <repository>` | 跳过某模块的构建，例如 qt3d，qtactiveqt 和 qtandroidextras 等 |
+   | `-no-feature-<feature>` | Qt Lite Project的功能，去掉某特性的支持，可以进一步裁剪Qt的大小，例如 `-no-feature-clipboard` |
+   | `-prefix <path>` | 指定安装目录 |
+   | `-linker <linker>` | 指定链接器，仅可在 bfd，gold 和 lld 这三者中选择（仅限 Linux 平台） |
+   | `-pch` | 启用预编译头（自动） |
+   | `-warnings-are-errors` | 把警告视为错误 |
+   | `-opengl <api>` | 选择默认的OpenGL版本。仅可在 es2，desktop 和 dynamic 这三者中选择，其中，Windows 平台默认为 dynamic，Linux 平台默认为 desktop |
 - 在 Linux 平台上交叉编译 Windows 版 Qt 时，需要安装`glibc`。Ubuntu 平台上的包名为`libc6-dev-i386`，`libc6-dev-amd64`，`libc6-dev-i386-cross`，`libc6-dev-amd64-cross`，`libc6-dev-i386-amd64-cross`和`libc6-dev-amd64-i386-cross`（写了这么多是因为我不知道具体是哪（几）个，只好都列出来）。
 - <del>在 Linux 平台上交叉编译 Windows 版 Qt 时，如果报找不到`<EGL/egl.h>`的错误，需要安装额外的包。Ubuntu 平台上的包名为`freeglut3-dev`，`libgl1-mesa-glx`，`libglu1-mesa`，`libgles2-mesa`，`libgl1-mesa-dev`，`libglu1-mesa-dev`和`libgles2-mesa-dev`（写了这么多是因为我不知道具体是哪（几）个，只好都列出来）。</del>
 - 在 Linux 平台上使用 MinGW 交叉编译 Windows 版 Qt 时，可以启用 LTO，但`-fno-fat-lto-objects`参数会导致报错（原因未知），因此要修改特定的`mkspec`的部分条目，去掉这个参数
@@ -200,7 +205,7 @@
   ```text
   [static] void QGuiApplication::setOverrideCursor(const QCursor &cursor);
   [static] void QGuiApplication::restoreOverrideCursor();
-  特别的，设置为“Qt::BlankCursor”可以隐藏鼠标指针。
+  // 特别的，设置为“Qt::BlankCursor”可以隐藏鼠标指针。
   ```
 - 如何将`std::cout`、`std::cerr`、`qDebug`、`qWarning`、`qCritical`和`qInfo`输出的调试信息重定向到某一个Widget中：
 
@@ -214,6 +219,45 @@
   qDebug("Application version: %ls", qUtf16Printable(qApp->applicationVersion()));
   ```
   其中，第一种方式比较方便，但第二种方式性能更好（根据Qt官方开发人员所说），具体使用哪种方式，请自行取舍。
+- Qt5将Qt默认的日志输出函数（`qInfo`、`qDebug`、`qWarning`、`qCritical`以及`qFatal`）设置为自己的函数：`QtMessageHandler qInstallMessageHandler(QtMessageHandler handler);`。其中，`handler`为一个全局函数的指针，返回值为当前回调函数的指针。
+  ```cpp
+  #include <qapplication.h>
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+  {
+      QByteArray localMsg = msg.toLocal8Bit();
+      const char *file = context.file ? context.file : "";
+      const char *function = context.function ? context.function : "";
+      switch (type) {
+      case QtDebugMsg:
+          fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+          break;
+      case QtInfoMsg:
+          fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+          break;
+      case QtWarningMsg:
+          fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+          break;
+      case QtCriticalMsg:
+          fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+          break;
+      case QtFatalMsg:
+          fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+          break;
+      }
+  }
+
+  int main(int argc, char *argv[])
+  {
+      qInstallMessageHandler(myMessageOutput);
+      QApplication application(argc, argv);
+      ...
+      return QApplication::exec();
+  }
+  ```
+  这个函数的作用是可以修改日志输出的格式，但它最大的用途是可以利用自定义的回调函数将日志信息写入到文件。
 - Qt 5（说Qt5是因为不知道Qt6会不会改）在使用`qInstallMessageHandler`设置回调函数时，不能通过常规方法设置为类的成员函数，一般都是设置为全局函数，如果非要设置为一个类的成员函数，请参考以下示例：
   ```cpp
   // mylogger.h
@@ -278,7 +322,7 @@
   ```text
   TARGET = $$qtLibraryTarget(目标文件名)
   ```
-  `qtLibraryTarget`这个qmake函数会自动添加平台对应的调试版后缀（发布版本不会添加后缀）。不要用`qt5LibraryTarget`，这个函数除了添加后缀，还会添加`Qt5`这个前缀，是Qt自己的库才需要的函数。
+  `qtLibraryTarget`这个qmake函数会自动添加平台对应的调试版后缀（发布版本不会添加后缀），如果是Linux平台，这个函数还会添加lib前缀。不要用`qt5LibraryTarget`，这个函数除了添加后缀，还会添加`Qt5`这个前缀，是Qt自己的库才需要的函数。
 - Qt计划废弃`QStringLiteral`，以后尽量使用`u"..." (→ QStringView)`或者`QLatin1String`代替。其中，`QLatin1String`已经支持`.arg(arg1, ..., argN)`了，已经不存在不使用它的理由了。推荐使用`QLatin1String`的原因是因为它仅仅是对`const char *`的简单封装，性能仅次于直接使用`const char *`。`QString::fromLatin1()`=`QLatin1String`，不推荐使用前者是因为前者打字比较多。`QStringLiteral`性能也不错，但它完整的构建了一个`QString`对象，因此性能也比`QLatin1String`差不少。除非是对性能不敏感的项目，否则一定不要直接用`QString`，这个形式性能最差。如果是对性能不敏感的项目，那么就推荐统一无脑使用`QString`，性能虽然不行，但格式统一，方便管理和理解。
 - 使用*QString*时尽量使用*multiArgs*，即`.arg(arg1, ..., argN)`，以前那种分开的写法已经废弃了，不要再用了。`QLatin1String`和`QStringView`也支持这个特性。
 - <del>如果在编译Qt或编译Qt的插件时开启`guard:cf`（MSVC专属特性，类MSVC编译器也都支持），Qt会无法加载动态插件（.dll），部分静态插件（.lib）也会因为这个特性而无法加载成功，导致使用Qt开发的程序在启动时崩溃，但在不涉及Qt插件的加载和使用时，编译出的exe大概率是能正常运行的，原因暂时未知，因此先不要启用这个特性。</del>
@@ -320,7 +364,7 @@
       return false;
     }
   #ifdef Q_OS_WINDOWS
-  #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+  #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     const auto windowHandle = widget->windowHandle();
     if (windowHandle == nullptr) {
       return false;
@@ -373,24 +417,30 @@
   注：`QStyle::StandardPixmap`这个枚举里包含很多很常用的标准图标，比如最小化按钮，最大化按钮以及关闭按钮等，尽量多利用，不要再费心费力去第三方网站上找或者自己绘制相关的图片素材了。
 - 对`QLCDNumber`控件设置样式，需要将`QLCDNumber`的`segmentStyle`设置为`flat`（`void setSegmentStyle(QLCDNumber::SegmentStyle);`
 ）。
-- 使用inherits判断是否属于某种类
+- 使用`inherits`函数判断是否属于某个类
   ```cpp
   QTimer *timer = new QTimer(this);
   timer->inherits("QTimer");          // returns true
   timer->inherits("QObject");         // returns true
   timer->inherits("QAbstractButton"); // returns false
   ```
-- 如果出现`Z-order assignment: " is not a valid widget.`这样的错误提示，用记事本打开对应的.ui文件，找到`<zorder></zorder>`为空的地方，删除即可。
+- 如何解决`Z-order assignment: " is not a valid widget.`这样的错误：
+
+  用记事本打开对应的.ui文件，找到`<zorder></zorder>`为空的地方，删除即可。
 - `QComboBox`的`addItem`方法的第二个参数可以给对应的item添加一个数据，并可以用`itemData`这个方法将之取出。
   ```cpp
   void QComboBox::addItem(const QString &text, const QVariant &userData = QVariant());
   QVariant QComboBox::itemData(int index, int role = Qt::UserRole) const;
   ```
 - 如果用了`QWebEngine`模块，发布程序的时候必须带上**QtWebEngineProcess.exe**，**translations文件夹**以及**resources文件夹**。
-- `QCoreApplication::setAttribute(Qt::AA_NativeWindows);`或`QWidget::setAttribute(Qt::WA_NativeWindow);`可以让每个控件都拥有独立的句柄。
+- 如何使每个控件都拥有独立的句柄：
+
+  `QCoreApplication::setAttribute(Qt::AA_NativeWindows);`或`QWidget::setAttribute(Qt::WA_NativeWindow);`。
 - Qt Creator的配置文件存放在`%APPDATA%\QtProject`，如果发现Qt Creator出问题了，可以将这个文件夹删除，然后重新打开Qt Creator即可。
-- `QMediaPlayer`依赖本地解码器，默认状态下仅支持非常有限的格式，Windows平台上下载*K-Lite Codec Pack*或者*LAV Filters*安装即可解决。但`QMediaPlayer`官方没有提供开启硬件解码的接口，默认全部软件解码，对CPU的占用较高。
-- `QPushButton`左对齐文字，需要设置样式表`QPushButton{text-align:left;}`。
+- `QMediaPlayer`依赖本地解码器，默认状态下仅支持非常有限的格式，Windows平台上下载[*K-Lite Codec Pack*](http://www.codecguide.com/download_k-lite_codec_pack_mega.htm)或者[*LAV Filters*](https://github.com/Nevcairiel/LAVFilters/releases/latest)安装即可解决。但`QMediaPlayer`官方没有提供开启硬件解码的接口，默认全部软件解码，对CPU的占用较高。
+- 如何使`QPushButton`的文字左对齐：
+
+  设置样式表`QPushButton{text-align:left;}`。
 - 使用SQLite数据库时如果不想产生数据库文件，可以创建内存数据库：
   ```cpp
   QSqlDatabase sqlDatabase = QSqlDatabase::addDatabase(QLatin1String("QSQLITE"));
@@ -401,7 +451,7 @@
   ui->listWidget->setHorizontalScrollMode(QListWidget::ScrollPerPixel);
   QScroller::grabGesture(ui->listWidget, QScroller::LeftMouseButtonGesture);
   ```
-- 如果运行程序出现`Fault tolerant heap shim applied to current process. This is usually due to previous crashes.`这个错误：
+- 如何解决`Fault tolerant heap shim applied to current process. This is usually due to previous crashes.`这样的错误：
 
   打开注册表，找到`HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers`，选中`Layers`键值，从右侧列表中删除自己的那个程序路径即可。
 - 获取系统窗口标题栏高度：
@@ -411,8 +461,8 @@
   注：`PM_TitleBarHeight`是`QStyle::PixelMetric`这个枚举里的一个，这个枚举里还包含很多系统标准控件的尺寸，都可以用`int QStyle::pixelMetric(QStyle::PixelMetric metric, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const;`这个函数获取。
 - 获取桌面的总尺寸以及可用尺寸（即去掉任务栏后的尺寸）：
   ```cpp
-  QRect QWidget::screen()->geometry();
-  QRect QWidget::screen()->availableGeometry();
+  QRect QWidget::screen()->geometry() const; // 总尺寸
+  QRect QWidget::screen()->availableGeometry() const; // 可用尺寸
   // 其他还有 QWindow 这个类也支持 QScreen *QWindow::screen() const 这个函数，除此之外再没有其他的类支持这个函数了。
   ```
   注：一定不要再用`QDesktopWidget`这个类了，这个类早就废弃了，会在以后的版本中移除。
@@ -484,7 +534,7 @@
   qint64 qRound64(...); // 返回64位的整数
   // 返回一个不超过v的最大的整数
   int qFloor(qreal v);
-  // 相当于qMax(min, qMin(val, max))，即将val限制在min和max之间
+  // 相当于qMax(min, qMin(val, max))，即：如果val在min和max之间，则返回其本身，如果val超过了max，则返回max，如果val小于min，则返回min。
   const T &qBound(const T &min, const T &val, const T &max);
   ```
 - 设置Qt默认的图形引擎
@@ -493,13 +543,13 @@
   QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   // 使用 OpenGL ES（调用 ANGLE，性能最好）
   QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
-  // 使用 Mesa llvmpipe（软件模拟显卡，性能很差）
+  // 使用 Mesa llvmpipe（软件模拟显卡，性能很差，正常情况下尽量不要使用）
   QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
   ```
   注：
 
   - 以上代码必须在`Q(Core|Gui)Application`构造前使用，否则不会生效。
-  - 也可以通过设置环境变量来实现这个功能（即不写任何代码）：将`QT_OPENGL`设置为`desktop`、`angle`或`software`。
+  - 也可以通过设置环境变量来实现这个功能（即不写任何代码）：将`QT_OPENGL`设置为`desktop`、`angle`或`software`。当使用ANGLE时，设置`QT_ANGLE_PLATFORM`这个环境变量为`d3d11`、`d3d9`或`warp`可以修改ANGLE默认使用的DirectX版本。
 - 设置Qt默认使用的OpenGL版本：
   ```cpp
   QSurfaceFormat surfaceFormat;
@@ -510,10 +560,10 @@
   surfaceFormat.setProfile(QSurfaceFormat::CompatibilityProfile);
   QSurfaceFormat::setDefaultFormat(surfaceFormat);
   ```
-  注：以上代码必须在`Q(Core|Gui)Application`构造前使用，否则不会生效。
+  注：以上代码必须在`Q(Core|Gui)Application`构造前使用，否则不会生效。【？？？待确认？？？】
 - 如何使能进行翻译的字符串都被`tr`函数包裹，不被遗漏：
 
-  在全局定义`QT_NO_CAST_FROM_ASCII`这个宏，之后在编译时任何没有被`QLatin1String`包裹的字符串都会被提示出来。
+  在全局定义`QT_NO_CAST_FROM_ASCII`这个宏，之后在编译时任何没有被`QLatin1String`包裹的字符串都会被提示出来（或直接报错？不太确定）。
 - 在Linux平台发布Qt程序：
   - 将所有用到的动态库都复制到二进制文件所在的文件夹（按照Windows平台的组织方式和结构）
   - 将以下脚本保存到二进制文件所在的文件夹下，并重命名为二进制文件的名字（不包括后缀名，脚本的后缀名一直都是.sh）：
@@ -539,15 +589,23 @@
   ```
 - 如何生成随机数
   ```cpp
+  // 生成一个32位随机数（正整数）
   const quint32 value32 = QRandomGenerator::global()->generate();
+  // 生成一个64位随机数（正整数）
   const quint64 value64 = QRandomGenerator::global()->generate64();
-  // 生成一个在lowest和highest之间的随机数
+  // 生成一个小于highest的随机数（整数）
+  const int value = QRandomGenerator::global()->bounded(int highest);
+  // 生成一个在lowest和highest之间的随机数（整数）
   const int value = QRandomGenerator::global()->bounded(int lowest, int highest);
+  // 生成一个大于等于0且小于highest的随机数（正整数）
+  const quint32 value = QRandomGenerator::global()->bounded(quint32 highest);
+  // 生成一个在lowest和highest之间的随机数（正整数）
+  const quint32 value = QRandomGenerator::global()->bounded(quint32 lowest, quint32 highest);
   ```
-- 无边框窗口
+- 无边框窗口：自定义标题栏+8向拉伸+窗口阴影
   - 支持`QMainWindow`（稍微改一下也能支持`QWidget`），原生Windows+macOS效果，不支持Linux：https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window
   - 支持`QMainWindow`、`QWidget`以及Qt Quick，仅支持原生Windows效果，不能跨平台：https://github.com/qtdevs/FramelessHelper
-- Qt Quick获取窗口
+- Qt Quick获取正在显示QML文档的系统窗口
   ```cpp
   QQmlApplicationEngine qmlApplicationEngine;
   qmlApplicationEngine.load(QUrl(QLatin1String("qrc:///qml/main.qml")));
@@ -555,5 +613,138 @@
   ```
   注：在使用`QQuickView`时，由于`QQuickView`本身就是继承自`QWindow`，因此可以直接对其本身进行操作。
 - 限制程序只运行一个实例：
-  - QtSingleApplication（Qt Solutions是Qt4时代的商用模块，后来开源，但已不再维护，用起来还是没什么问题的，Qt Creator就一直在用这个）：https://github.com/qtproject/qt-solutions/tree/master/qtsingleapplication
-  - SingleApplication（基于`QtSingleApplication`修改而来，做了很多改进，还在活跃开发中）：https://github.com/itay-grudev/SingleApplication
+  - `QtSingleApplication`（*Qt Solutions*是Qt4时代的商用模块，后来开源，但已不再维护，用起来还是没什么问题的，Qt Creator就一直在用这个）：https://github.com/qtproject/qt-solutions/tree/master/qtsingleapplication
+
+    原理是使用`Qt Network`模块的`QLocalServer`以及`QLocalSocket`建立一个本地服务器，实现进程间通信。由于`Qt Network`模块是跨平台的，所以这个项目理论上也是能跨平台的。
+  - `SingleApplication`（基于`QtSingleApplication`修改而来，做了很多改进，还在活跃开发中）：https://github.com/itay-grudev/SingleApplication
+
+    使用了TCP/IP以及共享内存等多种技术，理论上也是跨平台的。
+- 进程间通信（IPC）：7种方式
+  - 4种跨平台方式：
+    - Qt Remote Objects（QtRO）：使用`Qt Remote Objects`模块实现
+    - TCP/IP：使用`Qt Network`模块的`QLocalServer`以及`QLocalSocket`实现
+    - 共享内存：使用`Qt Core`模块的`QSharedMemory`或`QSystemSemaphore`/`QSemaphore`实现
+    - QProcess
+  - 3种平台独有方式：
+    - Windows：消息
+
+      发送消息：`LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);`
+      ```cpp
+      // 头文件：winuser.h (include Windows.h)
+      // 库文件：User32.lib（User32.dll）
+      // 此处的“Demo program”为程序窗口的标题，注意标题一定不能变，否则会获取不到窗口的句柄
+      const HWND hwnd = FindWindow(nullptr, TEXT("Demo program"));
+      if (IsWindow(hwnd)) {
+        const QString message = QLatin1String("My message");
+        const QByteArray data = message.toUtf8();
+        COPYDATASTRUCT copydata;
+        // 此处的“10000”为用户自定义的消息类型，可以为其他数值，但要注意一定不要与系统或其他程序的消息类型重复了。
+        copydata.dwData = ULONG_PTR(10000);
+        copydata.lpData = data.data();
+        copydata.cbData = data.size();
+        SendMessage(hwnd, WM_COPYDATA, reinterpret_cast<WPARAM>(effectiveWinId()), reinterpret_cast<LPARAM>(&copydata));
+      }
+      ```
+      接收消息：重写`[virtual protected] bool QWidget::nativeEvent(const QByteArray &eventType, void *message, long *result);`函数
+      ```cpp
+      bool nativeEvent(const QByteArray &eventType, void *message, long *result) {
+        const auto *param = static_cast<MSG *>(message);
+        switch (param->message) {
+          case WM_COPYDATA: {
+            const auto *cds = reinterpret_cast<COPYDATASTRUCT *>(param->lParam);
+            // 此处的“10000”为用户自定义的消息类型，可以为其他数值，但要注意一定要与发送消息时函数所用的数值相同。
+            if (cds->dwData == ULONG_PTR(10000)) {
+              const QString strMessage = QString::fromUtf8(reinterpret_cast<char *>(cds->lpData), cds->cbData);
+              QMessageBox::information(this, tr("Received message"), strMessage);
+              *result = 1;
+              return true;
+            }
+          }
+        }
+        return QWidget::nativeEvent(eventType, message, result);
+      }
+      ```
+    - Linux：D-Bus
+    - Linux：Session Management
+- 下载文件
+- 计算文件哈希值
+  ```cpp
+  QFile file(QLatin1String("D:/setup.exe"));
+  file.open(QFile::ReadOnly);
+  QCryptographicHash cryptographicHash(QCryptographicHash::Sha256);
+  cryptographicHash.addData(file.readAll());
+  file.close();
+  const QString hash = QLatin1String(cryptographicHash.result().toHex());
+  ```
+- Qt框架下的服务程序
+
+  请参考：https://github.com/qtproject/qt-solutions/tree/master/qtservice
+
+  支持 Windows + Unix 平台，但已经不维护了，是一个比较老的代码库。用还是能用的，只不过可能用了不少现在看来已经非常过时的技术。
+- 获取部分硬件信息
+- 获取操作系统的详细信息
+- 修改`qInfo`、`qDebug`、`qWarning`、`qCritical`以及`qFatal`输出信息时的默认格式：`void qSetMessagePattern(const QString &pattern);`
+
+  | 占位符 | 描述 |
+  | ----- | ---- |
+  | `%{appname}` | `QCoreApplication::applicationName()` |
+  | `%{category}` | 日志类别 |
+  | `%{file}` | 源文件路径 |
+  | `%{function}` | 函数名 |
+  | `%{line}` | 行号 |
+  | `%{message}` | 日志实际的消息 |
+  | `%{pid}` | `QCoreApplication::applicationPid()` |
+  | `%{threadid}` | 当前进程的系统ID（如果能获取到） |
+  | `%{qthreadptr}` | 当前`QThread`的指针（`QThread::currentThread()`的返回值） |
+  | `%{type}` | 日志类型：“debug”，“warning”，“critical”或“fatal” |
+  | `%{time process}` | 输出日志时的时间，以进程启动以来的秒数为基准 |
+  | `%{time boot}` | 输出日志时的时间，以系统启动以来的秒数为基准 |
+  | `%{time [format]}` | 输出日志时的系统时间，以`format`为输出格式 |
+  | `%{backtrace [depth=N] [separator="..."]}` | 暂时不太了解 |
+- 读写XML文件
+- 读写JSON文件
+- 读写INI文件
+- 读写注册表
+- Windows开启：任务栏进度条，图标+任务栏小按钮+任务栏任务列表（最近打开，常用任务等）
+- lupdate工具
+- lrelease
+- lconvert
+- rcc
+- 显示任务栏图标+自定义任务栏菜单
+- 多线程：3种方式
+  - Qt Concurrent
+  - `void QObject::moveToThread(QThread *targetThread);`
+  - 重写`QThread`的`run`函数：`[virtual protected] void QThread::run();`
+- Qt Creator添加自定义注释/协议模板：
+
+  打开 Qt Creator，菜单选择：工具 -> 选项 -> 文本编辑器 -> 片段，点击“添加”按钮，添加新的“片段”。其中，“触发”为这个片段的触发条件，即当用户输入一个特定的字符串时提示是否插入这个片段的完整版。“触发种类”可以随便填写，这是为了方便用户记忆和区分而设置的。
+
+  Qt Creator支持关键字替换：
+
+  | 关键字 | 意义 |
+  | ---- | ----- |
+  | `%YEAR%` | 年 |
+  | `%MONTH%` | 月 |
+  | `%DAY%` | 日 |
+  | `%DATE%` | 日期 |
+  | `%USER%` | 用户名 |
+  | `%FILENAME%` | 文件名 |
+  | `%CLASS%` | 类名（如果可获得） |
+  | `%$VARIABLE%` | 环境变量`VARIABLE`的内容 |
+- 截图：`QPixmap QWidget::grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));`
+- Windows平台使GUI程序显示控制台窗口：
+  - QMake：`CONFIG += cmdline`
+  - CMake：在`add_executable`时不要添加`WIN32`，即要`add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES} ${FORMS})`而不要`add_executable(${PROJECT_NAME} WIN32 ${HEADERS} ${SOURCES} ${FORMS})`
+
+  具体的原理是不要让程序的子系统为`WINDOWS`，也不要让程序的入口点为`(w)WinMainCRTStartup`。
+- 当想要注释大段的内容时，建议用 `#if 0` 和 `#endif` 将代码块包起来，而不是将该段代码选中然后全部 `//` ，想要取消注释时只要把`0`改成`1`即可，效率大大提升。
+- 在使用`QFile`的过程中，不建议频繁的打开文件写入然后再关闭文件，比如间隔5ms输出日志，IO性能瓶颈很大，这种情况建议先打开文件不要关闭，等待合适的时机比如析构函数中或者日期变了需要重新变换日志文件的时候关闭文件。不然短时间内大量的打开关闭文件会很卡，文件越大越卡。
+- 有时候在界面上加了弹簧，需要动态改变弹簧对应的拉伸策略，对应方法为`changeSize`，很多人会选择使用`set`开头去找，找不到的。
+- Qt中继承`QWidget`之后，样式表不起作用：在构造函数中调用`this->setAttribute(Qt::WA_StyledBackground);`即可解决
+- Qt默认不支持大资源文件，需要的话要手动开启：
+  - QMake：`CONFIG += resources_big`
+  - CMake：`qt5_add_big_resources(<VAR> file1.qrc [file2.qrc ...] [OPTIONS ...])`
+
+  具体的原理是小文件Qt会将其编译为C++代码，然后与项目其他的源文件一起编译和链接，大文件会直接生成.obj文件，不参与编译过程，只参与最后的链接过程。
+- 如果需要窗口无边框，但是又需要保留操作系统的边框特性，例如可以自由拉伸边框和窗口阴影等，可以使用 `setWindowFlags(Qt::CustomizeWindowHint);`。注意一定要用`setWindowFlags`而不是`setWindowFlag`，因为`CustomizeWindowHint`这个Flag会与其他Flag冲突，这些Flag并存时会导致`CustomizeWindowHint`失效，用前者正好可以顺便清除其他Flag。
+- Qt Quick在Linux平台无法播放视频：`sudo apt install libpulse-dev`即可解决
