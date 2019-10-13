@@ -671,7 +671,7 @@
     - Linux：D-Bus
     - Linux：Session Management
 - 下载文件
-- 计算文件哈希值
+- 计算文件哈希值：`QCryptographicHash`
   ```cpp
   QFile file(QLatin1String("D:/setup.exe"));
   file.open(QFile::ReadOnly);
@@ -680,11 +680,11 @@
   file.close();
   const QString hash = QLatin1String(cryptographicHash.result().toHex());
   ```
-- Qt框架下的服务程序
+- Qt框架下的服务程序（Windows services与Unix daemons）
 
   请参考：https://github.com/qtproject/qt-solutions/tree/master/qtservice
 
-  支持 Windows + Unix 平台，但已经不维护了，是一个比较老的代码库。用还是能用的，只不过可能用了不少现在看来已经非常过时的技术。
+  支持 Windows + Unix 平台，但早已经停止维护了（2011年左右），是一个比较老的代码库。用还是能用的，只不过可能用了不少现在看来已经非常过时的技术。
 - 获取部分硬件信息
 - 获取操作系统的详细信息
 - 修改`qInfo`、`qDebug`、`qWarning`、`qCritical`以及`qFatal`输出信息时的默认格式：`void qSetMessagePattern(const QString &pattern);`
@@ -698,7 +698,7 @@
   | `%{line}` | 行号 |
   | `%{message}` | 日志实际的消息 |
   | `%{pid}` | `QCoreApplication::applicationPid()` |
-  | `%{threadid}` | 当前进程的系统ID（如果能获取到） |
+  | `%{threadid}` | The system-wide ID of current thread (if it can be obtained) |
   | `%{qthreadptr}` | 当前`QThread`的指针（`QThread::currentThread()`的返回值） |
   | `%{type}` | 日志类型：“debug”，“warning”，“critical”或“fatal” |
   | `%{time process}` | 输出日志时的时间，以进程启动以来的秒数为基准 |
@@ -723,9 +723,9 @@
 
   打开 Qt Creator，菜单选择：工具 -> 选项 -> 文本编辑器 -> 片段，点击“添加”按钮，添加新的“片段”。其中，“触发”为这个片段的触发条件，即当用户输入一个特定的字符串时提示是否插入这个片段的完整版。“触发种类”可以随便填写，这是为了方便用户记忆和区分而设置的。
 
-  Qt Creator支持关键字替换：
+  Qt Creator支持占位符自动替换：
 
-  | 关键字 | 意义 |
+  | 占位符 | 描述 |
   | ---- | ----- |
   | `%YEAR%` | 年 |
   | `%MONTH%` | 月 |
