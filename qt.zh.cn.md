@@ -975,7 +975,7 @@
   - QMake：`CONFIG += resources_big`
   - CMake：`qt5_add_big_resources(<VAR> file1.qrc [file2.qrc ...] [OPTIONS ...])`
 
-  具体的原理是小文件Qt会将其编译为C++代码，然后与项目其他的源文件一起编译和链接，大文件会直接生成.obj文件，不参与编译过程，只参与最后的链接过程。
+  具体的原理是处理小文件时rcc会将其翻译为C++代码，然后与项目其他的源文件一起参与编译和链接过程，而处理大文件时rcc会直接生成.obj文件，不参与编译过程，只参与最后的链接过程。
 - 如果需要窗口无边框，但是又需要保留操作系统的边框特性，例如可以自由拉伸边框和窗口阴影等，可以使用 `setWindowFlags(Qt::CustomizeWindowHint);`。注意一定要用`setWindowFlags`而不是`setWindowFlag`，因为`CustomizeWindowHint`这个Flag会与其他Flag冲突，这些Flag并存时会导致`CustomizeWindowHint`失效，用前者正好可以顺便清除其他Flag。
 - Qt Quick在Linux平台无法播放视频：`sudo apt install libpulse-dev`即可解决
 - 判断一个类是否是`QWidget`或`QWindow`（或它们的派生类）：
