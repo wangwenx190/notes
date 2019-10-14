@@ -81,7 +81,7 @@
 - `.qmake.conf`文件：将此文件放在`.pro`文件所在的文件夹中，qmake会自动加载这个文件，并且会在加载`.pro`文件前先加载它，因此可以将一些通用的配置写到这个文件中
 - `qt.conf`文件：将此文件放在你开发的程序所在的文件夹中，可以修改 Qt 加载某些库和翻译文件（`.qm`文件）的路径，个别场景会用到这个文件，具体请查看 Qt 帮助文档。在代码中也可以动态获取，例如，可以使用`QLibraryInfo::location(QLibraryInfo::TranslationsPath)`来获取`qt.conf`文件中指定的翻译文件的路径，但就算文件中没有指定，或者这个文件根本不存在，Qt 自身也会提供一个默认路径，例如，插件默认为`plugins`文件夹，翻译文件默认为`translations`文件夹等。**注意：如果你是在Qt Creator中运行你的Qt程序（例如你正在调试你的程序），那么`QLibraryInfo::location()`返回的就是当前正在使用的Qt Kit的相关路径，而不是你自己在qt.conf中所设置的路径。换句话说，在这个时候这个函数不会返回你应用程序所在文件夹的路径了。但只要不是用Qt Creator运行，就没有这个问题。**
 - `QFile`无法在不存在的文件夹中创建文件，只能在已经存在的路径中新建或修改文件。如果路径不存在，可以使用`QDir::mkpath`创建，使用这个API，路径中任何不存在的文件夹都会被创建。
-- 区分操作系统：编译时可以通过`Q_OS_WINDOWS`（Qt 5.14 添加，早期版本请使用`Q_OS_WIN`代替），`Q_OS_WINRT`，`Q_OS_LINUX`，`Q_OS_MACOS`（不要使用`Q_OS_MAC`，已废弃），`Q_OS_MINGW`，`Q_OS_CYGWIN`，`Q_OS_ANDROID`和`Q_OS_IOS`等宏来区分，运行时可以通过`QOperatingSystemVersion`这个类（Qt 5.9 添加，可以直接获取到当前系统的可读版本，例如“Windows 8.1”，也可以用具体的静态常量`QOperatingSystemVersion::Windows8_1`等来区分正在运行的系统，非常方便好用。官方推荐使用此类）或`QSysInfo`这个类（只能获取到纯数字的版本号，例如“10.0.17763.152”，但能获取一些前者不能获取到的信息。但尽量不要用这个类，官方推荐使用前者）来获取
+- 区分操作系统：编译时可以通过`Q_OS_WINDOWS`（Qt 5.14 添加，早期版本请使用`Q_OS_WIN`代替），`Q_OS_WINRT`，`Q_OS_LINUX`，`Q_OS_MACOS`（不要使用`Q_OS_MAC`，已废弃），`Q_OS_MINGW`，`Q_OS_CYGWIN`，`Q_OS_ANDROID`和`Q_OS_IOS`等宏来区分，运行时可以通过`QOperatingSystemVersion`这个类来获取
 - 区分编译器：编译时可以通过`Q_CC_MSVC`，`Q_CC_GNU`（GCC，G++，MinGW），`Q_CC_INTEL`（ICC），`Q_CC_CLANG`等宏来区分
 - 交叉编译：`configure -xplatform win32-clang-g++ -device-option CROSS_COMPILE=x86_64-w64-mingw32-`，其中，`CROSS_COMPILE`参数前面没有`-`，它前面还要跟一个单独的`-device-option`，而且`x86_64-w64-mingw32-`末尾的`-`不能丢
 - 在 Windows 平台上编译 Qt 时，如果没有显式的指定，所有第三方库都会用 Qt 自带的。而在 Linux 平台上相反，Qt 会自动使用系统中已经存在的第三方库，默认是不会使用自带的第三方库的。
@@ -223,7 +223,7 @@
   qDebug("Application version: %ls", qUtf16Printable(qApp->applicationVersion()));
   ```
   其中，第一种方式比较方便，但第二种方式性能更好（根据Qt官方开发人员所说），具体使用哪种方式，请自行取舍。
-- Qt5将Qt默认的日志输出函数（`qInfo`、`qDebug`、`qWarning`、`qCritical`以及`qFatal`）设置为自己的函数：`QtMessageHandler qInstallMessageHandler(QtMessageHandler handler);`。其中，`handler`为一个全局函数的指针，返回值为当前回调函数的指针。
+- Qt5将Qt默认的日志输出函数（`qInfo`、`qDebug`、`qWarning`、`qCritical`以及`qFatal`）设置为自己的函数：`QtMessageHandler qInstallMessageHandler(QtMessageHandler handler);`。其中，`handler`为一个全局函数的指针，返回值为当前回调函数的指针。使用`qInstallMessageHandler(nullptr)`来恢复Qt默认的回调函数。
   ```cpp
   #include <qapplication.h>
   #include <stdio.h>
@@ -675,6 +675,7 @@
   ```cpp
   QFile file(QLatin1String("D:/setup.exe"));
   file.open(QFile::ReadOnly);
+  // 其他算法请参考 QCryptographicHash::Algorithm 这个枚举。
   QCryptographicHash cryptographicHash(QCryptographicHash::Sha256);
   cryptographicHash.addData(file.readAll());
   file.close();
@@ -687,6 +688,26 @@
   支持 Windows + Unix 平台，但早已经停止维护了（2011年左右），是一个比较老的代码库。用还是能用的，只不过可能用了不少现在看来已经非常过时的技术。
 - 获取部分硬件信息
 - 获取操作系统的详细信息
+  ```text
+  // 返回Qt的完整架构。例如：i386-little_endian-ilp32
+  [static] QString QSysInfo::buildAbi();
+  // 返回Qt面向的CPU的完整架构。
+  [static] QString QSysInfo::buildCpuArchitecture();
+  // 返回当前正在运行的CPU的完整架构。
+  [static] QString QSysInfo::currentCpuArchitecture();
+  // 返回Qt面向的操作系统的内核类型（同时也是当前操作系统的内核类型）
+  [static] QString QSysInfo::kernelType();
+  // 返回当前操作系统的内核版本。
+  [static] QString QSysInfo::kernelVersion();
+  // 返回当前计算机的主机名
+  [static] QString QSysInfo::machineHostName();
+  // 返回更加易读的产品名（内核类型+内核版本，但会更易读。例如：Windows 10 Version 1903）
+  [static] QString QSysInfo::prettyProductName();
+  // 返回当前操作系统的产品名。例如：android、osx、ios、tvos、watchos、darwin、debian、winrt或windows
+  [static] QString QSysInfo::productType();
+  // 返回当前操作系统的产品版本。例如：16.10（Ubuntu 16.10）
+  [static] QString QSysInfo::productVersion();
+  ```
 - 修改`qInfo`、`qDebug`、`qWarning`、`qCritical`以及`qFatal`输出信息时的默认格式：`void qSetMessagePattern(const QString &pattern);`
 
   | 占位符 | 描述 |
@@ -706,15 +727,220 @@
   | `%{time [format]}` | 输出日志时的系统时间，以`format`为输出格式 |
   | `%{backtrace [depth=N] [separator="..."]}` | 暂时不太了解 |
 - 读写XML文件
+
+  读取XML：`QXmlStreamReader`
+  ```cpp
+  QXmlStreamReader xml;
+  while (xml.readNextStartElement()) {
+    if (xml.name() == QLatin1String("folder")) {
+      const bool folded = (xml.attributes().value(QLatin1String("folded")) != QLatin1String("no"));
+      const QString title = xml.readElementText();
+      // ...
+    }
+    else if (xml.name() == QLatin1String("bookmark"))
+      // ...
+    else if (xml.name() == QLatin1String("separator"))
+      // ...
+    else
+      xml.skipCurrentElement();
+  }
+  ```
+  写入XML：`QXmlStreamWriter`
+  ```cpp
+  // 默认的文本编码是 UTF-8
+  QXmlStreamWriter stream(&output);
+  // 开启自动格式化：自动缩进之类的。默认是关闭的。建议开启。
+  stream.setAutoFormatting(true);
+  stream.writeStartDocument();
+  // ...
+  stream.writeStartElement(QLatin1String("bookmark"));
+  stream.writeAttribute(QLatin1String("href"), QLatin1String("http://qt-project.org/"));
+  stream.writeTextElement(QLatin1String("title"), QLatin1String("Qt Project"));
+  stream.writeEndElement(); // bookmark
+  // ...
+  stream.writeEndDocument();
+  ```
+  注意：`QXmlStreamReader`和`QXmlStreamWriter`的性能优化的很好，Qt官方也推荐在操作XML文件时使用这两个类，但使用它们有一个不能忽略的前提条件，那就是被操作的XML文件一定要有良好的格式。
 - 读写JSON文件
+
+  读取：
+  ```cpp
+  QFile file(QLatin1String("D:/test.json"));
+  file.open(QFile::ReadOnly | QFile::Text);
+  QJsonDocument jsonDocument(QJsonDocument::fromJson(file.readAll()));
+  file.close();
+  QJsonObject mainJsonObject = jsonDocument.object();
+  if (mainJsonObject.contains(QLatin1String("shouldDelete")) && mainJsonObject[QLatin1String("shouldDelete")].isBool()) {
+    const bool shouldDelete = mainJsonObject[QLatin1String("shouldDelete")].toBool();
+  }
+  if (mainJsonObject.contains(QLatin1String("authors")) && mainJsonObject[QLatin1String("authors")].isArray()) {
+    QJsonArray jsonArray = mainJsonObject[QLatin1String("authors")].toArray();
+    // ...
+  }
+  ```
+  写入：
+  ```cpp
+  QJsonObject mainJsonObject;
+  mainJsonObject[QLatin1String("path")] = QLatin1String("D:/sssss");
+  mainJsonObject[QLatin1String("length")] = 256;
+  mainJsonObject[QLatin1String("shouldDelete")] = false;
+  QJsonArray jsonArray;
+  for (int i = 0; i != 20; ++i) {
+    QJsonObject jsonObject;
+    jsonObject[QLatin1String("author")] = QLatin1String("wangwenx190");
+    jsonObject[QLatin1String("index")] = i;
+  }
+  mainJsonObject[QLatin1String("authors")] = jsonArray;
+  QFile file(QLatin1String("D:/test.json"));
+  file.open(QFile::WriteOnly | QFile::Text | QFile::Truncate);
+  QJsonDocument jsonDocument(mainJsonObject);
+  // 默认编码为 UTF-8
+  file.write(jsonDocument.toJson());
+  file.close();
+  ```
 - 读写INI文件
-- 读写注册表
-- Windows开启：任务栏进度条，图标+任务栏小按钮+任务栏任务列表（最近打开，常用任务等）
-- lupdate工具
-- lrelease
-- lconvert
-- rcc
-- 显示任务栏图标+自定义任务栏菜单
+  ```cpp
+  // 读写一个已有的ini文件。Windows 和 Unix 平台上通用。
+  QSettings settings("/home/petra/misc/myapp.ini", QSettings::IniFormat);
+  // 在macOS和iOS平台上，plist文件相当于ini文件，但属于原生格式，因此要用QSettings::NativeFormat。
+  QSettings settings("/Users/petra/misc/myapp.plist", QSettings::NativeFormat);
+  // 让Qt自动创建一个ini文件
+  QSettings settings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(), QCoreApplication::applicationName());
+  // 写入：任何QVariant支持的类型都可以写入。
+  settings.setValue("mainwindow/size", win->size());
+  settings.setValue("mainwindow/fullScreen", win->isFullScreen());
+  settings.setValue("outputpanel/visible", panel->isVisible());
+  // 以下代码等价于上面的三行代码：“void QSettings::beginGroup(const QString &prefix);”与“void QSettings::endGroup();”的用法
+  settings.beginGroup("mainwindow");
+  settings.setValue("size", win->size());
+  settings.setValue("fullScreen", win->isFullScreen());
+  settings.endGroup();
+  settings.beginGroup("outputpanel");
+  settings.setValue("visible", panel->isVisible());
+  settings.endGroup();
+  // 注：层级的嵌套是允许的。
+  // 读取：QVariant QSettings::value(const QString &key, const QVariant &defaultValue = QVariant()) const;
+  int margin = settings.value("editor/wrapMargin", 80).toInt();
+  // 写入数组
+  struct Login {
+    QString userName;
+    QString password;
+  };
+  QList<Login> logins;
+  QSettings settings;
+  settings.beginWriteArray("logins");
+  for (int i = 0; i < logins.size(); ++i) {
+    settings.setArrayIndex(i);
+    settings.setValue("userName", list.at(i).userName);
+    settings.setValue("password", list.at(i).password);
+  }
+  settings.endArray();
+  // 读取数组
+  struct Login {
+      QString userName;
+      QString password;
+  };
+  QList<Login> logins;
+  QSettings settings;
+  int size = settings.beginReadArray("logins");
+  for (int i = 0; i < size; ++i) {
+    settings.setArrayIndex(i);
+    Login login;
+    login.userName = settings.value("userName").toString();
+    login.password = settings.value("password").toString();
+    logins.append(login);
+  }
+  settings.endArray();
+  // 获取所有子键（遍历每一个子键）
+  QStringList QSettings::allKeys() const;
+  // 获取当前节点下的所有子键（只获取顶级子键，不会遍历子键的子键，也不会获取当前节点下的数组）
+  QStringList QSettings::childKeys() const;
+  // 获取当前节点下的所有数组（只获取顶级数组，不会遍历到底）
+  QStringList QSettings::childGroups() const;
+  // 删除某一个子键
+  void QSettings::remove(const QString &key);
+  // 删除QSettings对象的所有内容
+  void QSettings::clear();
+  ```
+- 读写注册表：`QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office",  QSettings::NativeFormat);`
+
+  注：某些特殊的或重要的键值没有管理员权限无法修改，例如`HKEY_LOCAL_MACHINE`等，如果发现无法写入或修改注册表的某个键值，先看是不是权限的原因，不是的话再去看是不是程序本身有bug，实在找不到问题根源再去怀疑是不是Qt本身的bug。
+- Windows：任务栏进度条，图标+任务栏小按钮+任务栏任务列表（最近打开，常用任务等）
+- lupdate：将源码中能进行翻译的字符串制作为Qt Linguist专用的.ts翻译文件
+
+  用法：`lupdate [options] [project-file]...`或`lupdate [options] [source-file|path|@lst-file]... -ts ts-files|@lst-file`
+
+  常用参数：
+
+  | 参数 | 描述 |
+  | --- | ---- |
+  | `-no-obsolete` | 去除所有废弃的和消失的翻译文本 |
+  | `-no-ui-lines` | 不要记录待翻译文本在.ui文件里的行号 |
+  | `-ts <ts-file>...` | 指定输出文件。允许有多个输出文件 |
+
+  ```bash
+  # 扫描QMake工程文件（.pro）。不推荐，因为当处理大型项目时速度特别慢。
+  lupdate myproject.pro
+  # 扫描单个源码文件
+  lupdate main.qml -ts main_en.ts
+  # 扫描rcc资源脚本文件（.qrc）
+  lupdate application.qrc -ts myapp_en.ts
+  # 扫描所有扩展名为.qml的文件
+  lupdate -extensions qml -ts myapp_en.ts
+  # 扫描多个文件
+  lupdate qml.qrc filevalidator.cpp -ts myapp_en.ts
+  # 生成多个翻译文件
+  lupdate qml.qrc filevalidator.cpp -ts myapp_en.ts myapp_fr.ts
+  ```
+- lrelease：将.ts文件编译为.qm文件，起到压缩和加密的作用。
+
+  用法：`lrelease [options] -project project-file`或`lrelease [options] ts-files [-qm qm-file]`
+
+  常用参数：
+
+  | 参数 | 描述 |
+  | --- | --- |
+  | `-idbased` | 使用ID而不是源码文本作为消息索引 |
+  | `-compress` | 压缩.qm文件 |
+  | `-nounfinished` | 去除未完成的翻译文本 |
+  | `-removeidentical` | 去除与源码文本完全相同的翻译文本（即翻译了和没翻译一样的文本） |
+
+  ```bash
+  # 扫描QMake工程文件（.pro）。不推荐，因为当处理大型项目时速度特别慢。
+  lrelease myproject.pro
+  # 扫描单个翻译文件
+  lrelease.exe main_en.ts
+  # 扫描多个翻译文件
+  lrelease.exe main_en.ts languages\main_fr.ts
+  ```
+- lconvert：将多个.qm文件合并为一个（重复的条目会自动合并）。
+
+  用法：`lconvert [options] <infile> [<infile>...]`
+
+  常用参数：
+
+  | 参数 | 描述 |
+  | --- | --- |
+  | `-i <infile>`/`-input-file <infile>` | 指定输入文件（这个参数可以有多个，意为有多个输入文件） |
+  | `-o <outfile>`/`-output-file <outfile>` | 指定输出文件 |
+  | `-no-obsolete` | 去除废弃的翻译文本 |
+  | `-no-untranslated` | 去除未翻译的文本 |
+- rcc：Qt专用的资源编译器
+
+  用法：`rcc [options] <inputs>`
+
+  常用参数：
+
+  | 参数 | 描述 |
+  | --- | ---- |
+  | `-o, --output <file>` | 指定输出文件 |
+  | `--name <name>` | 使用`name`创建一个外部的初始化函数 |
+  | `--root <path>` | 设置资源文件的根节点（添加到资源文件自己的根节点之前，如果有的话） |
+  | `--compress-algo <algo>` | 设置压缩算法，可选值为`zstd`（推荐，三者中压缩率和解压速度最优）、`zlib`和`none` |
+  | `--compress <level>` | 设置压缩级别。zstd：1~19，zlib：1~9。数字越大，压缩率越高 |
+  | `--threshold <level>` | 设置压缩阈值（临界值），可取值为1~100，只有文件大小的减小量超过原文件大小的`level %`，rcc才会压缩它，否则直接存储而不进行压缩。默认值为70 |
+  | `--binary` | 输出一个二进制文件以便动态加载（可以视为经过压缩和加密的外部资源文件） |
+- 显示托盘图标+自定义托盘菜单+弹出消息
 - 多线程：3种方式
   - Qt Concurrent
   - `void QObject::moveToThread(QThread *targetThread);`
@@ -744,7 +970,7 @@
 - 当想要注释大段的内容时，建议用 `#if 0` 和 `#endif` 将代码块包起来，而不是将该段代码选中然后全部 `//` ，想要取消注释时只要把`0`改成`1`即可，效率大大提升。
 - 在使用`QFile`的过程中，不建议频繁的打开文件写入然后再关闭文件，比如间隔5ms输出日志，IO性能瓶颈很大，这种情况建议先打开文件不要关闭，等待合适的时机比如析构函数中或者日期变了需要重新变换日志文件的时候关闭文件。不然短时间内大量的打开关闭文件会很卡，文件越大越卡。
 - 有时候在界面上加了弹簧，需要动态改变弹簧对应的拉伸策略，对应方法为`changeSize`，很多人会选择使用`set`开头去找，找不到的。
-- Qt中继承`QWidget`之后，样式表不起作用：在构造函数中调用`this->setAttribute(Qt::WA_StyledBackground);`即可解决
+- Qt中继承`QWidget`之后，样式表不起作用：在构造函数中调用`setAttribute(Qt::WA_StyledBackground);`即可解决
 - Qt默认不支持大资源文件，需要的话要手动开启：
   - QMake：`CONFIG += resources_big`
   - CMake：`qt5_add_big_resources(<VAR> file1.qrc [file2.qrc ...] [OPTIONS ...])`
@@ -759,3 +985,6 @@
   // 与inherits("QWindow")等效，但速度比其快得多
   bool QObject::isWindowType() const;
   ```
+- 获取Qt版本：
+  - 编译时版本：`QT_VERSION_STR`宏（这个宏返回的是编译程序时所链接的Qt库的版本，这个值在编译完成后永远不会改变）
+  - 运行时版本：`const char *qVersion();`函数（这个函数返回的是当前加载的Qt库的版本，它可能会在程序运行期间发生改变）
