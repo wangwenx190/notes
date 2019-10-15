@@ -1041,7 +1041,7 @@
     // 头文件：winuser.h (include Windows.h)
     // 库文件：User32.lib（User32.dll）
     // 下面这一段到 SetForegroundWindow 函数之前的代码要在较早的地方执行，例如在程序的 main 函数里。
-    // 这一段代码是为了确保 SetForegroundWindow 能执行成功而设置的，在前置窗口前执行一次就足够了，不是每次需要前置窗口时都要执行的。
+    // 这一段代码是为了确保 SetForegroundWindow 能执行成功而设置的，在前置窗口前执行过一次就足够了（如果需要的话），不是每次前置窗口都要执行的。
     DWORD dwTimeout = -1;
     SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
     if (dwTimeout >= 100) {
@@ -1049,7 +1049,7 @@
       SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     }
     // 如果窗口被隐藏了，先显示出来 -> 如果被最小化了，再恢复原始大小 -> 接下来的事情请看以下代码
-    // 下面这一行代码每次要前置窗口都要执行一次。
+    // 下面这一行代码每次前置窗口时都要执行一次，与上面那一段不一样。
     SetForegroundWindow(hwnd); // 此处的hwnd是待前置窗口的句柄
     ```
   - 其他平台：Qt提供的方法
