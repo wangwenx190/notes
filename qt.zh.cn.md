@@ -490,6 +490,8 @@
   ```
   注意：Windows平台尽量不要用`isSymLink`这个函数进行判断，虽然目前（5.14）暂时可以代替`isShortcut`，但此行为已被废弃，Qt会在以后的版本中去掉这个行为。
 - 遍历文件夹下的所有文件：
+
+  注意事项：由于是遍历文件夹下的所有文件（包括所有子文件夹），因此当文件数量很多时，函数执行的时间会比较长，进而导致用户体验不好，所以尽量在协程或多线程中使用这个函数，尽量不要直接在UI线程中阻塞式的调用。
   ```cpp
   QVector<QString> Widget::getFolderContents(const QString &folderPath) const {
       if (folderPath.isEmpty() || !QFileInfo::exists(folderPath) || !QFileInfo(folderPath).isDir()) {
@@ -671,6 +673,37 @@
     - Linux：D-Bus
     - Linux：Session Management
 - 下载文件
+  ```cpp
+  QNetworkAccessManager manager;
+  connect(&manager, &QNetworkAccessManager::finished, this, [](QNetworkReply *reply){
+    if (reply->error()) {
+      // 处理错误
+    } else {
+      // 暂时还不知道在下载文件时怎么处理重定向，先跳过这种情况
+      const int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+      if ((statusCode == 301) || (statusCode == 302) || (statusCode == 303) || (statusCode == 305) || (statusCode == 307) || (statusCode == 308)) {
+        // 处理重定向
+        QVariant target = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+        if (target.isValid()) {
+          QUrl redirectUrl = target.toUrl();
+          if (redirectUrl.isRelative()) {
+            QUrl requestUrl = reply->request().url();
+            redirectUrl = requestUrl.resolved(redirectUrl);
+            QTextStream(stderr) << tr("Redirected to: ") << redirectUrl.toDisplayString() << endl;
+          }
+        }
+      } else {
+        QFile file(QLatin1String("D:/test.dat"));
+        file.open(QFile::WriteOnly | QFile::Append);
+        file.write(reply->readAll());
+        file.close();
+      }
+    }
+  });
+  const QUrl url = QUrl::fromEncoded("https://download.qt.io/balabalabala.dat");
+  QNetworkRequest request(url);
+  manager.get(request);
+  ```
 - 计算文件哈希值：`QCryptographicHash`
   ```cpp
   QFile file(QLatin1String("D:/setup.exe"));
@@ -760,7 +793,7 @@
   // ...
   stream.writeEndDocument();
   ```
-  注意：`QXmlStreamReader`和`QXmlStreamWriter`的性能优化的很好，Qt官方也推荐在操作XML文件时使用这两个类，但使用它们有一个不能忽略的前提条件，那就是被操作的XML文件一定要有良好的格式，例如有正确的缩进以及正确对应的标签（tag）等，文档一定不能是损坏的。
+  注意：`QXmlStreamReader`和`QXmlStreamWriter`的性能优化的很好，Qt官方也推荐在操作XML文件时使用这两个类，但使用它们有一个不能忽略的前提条件，那就是被操作的XML文件一定要有良好的格式，例如有正确的缩进以及完好的标签（tag）等，文档本身一定不能是损坏的。
 - 读写JSON文件
 
   读取：
@@ -862,7 +895,7 @@
   // 删除QSettings对象的所有内容
   void QSettings::clear();
   ```
-- 读写注册表：`QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office",  QSettings::NativeFormat);`
+- 读写注册表：`QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office", QSettings::NativeFormat);`
 
   注：某些特殊的或重要的键值没有管理员权限无法修改，例如`HKEY_LOCAL_MACHINE`等，如果发现无法写入或修改注册表的某个键值，先看是不是权限的原因，不是的话再去看是不是程序本身有bug，实在找不到问题根源再去怀疑是不是Qt本身的bug。
 - Windows：任务栏进度条，图标+任务栏小按钮+任务栏任务列表（最近打开，常用任务等）
@@ -961,7 +994,18 @@
   | `%FILENAME%` | 文件名 |
   | `%CLASS%` | 类名（如果可获得） |
   | `%$VARIABLE%` | 环境变量`VARIABLE`的内容 |
-- 截图：`QPixmap QWidget::grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));`
+- 截图：
+  - 截取程序自身的窗口：
+    ```cpp
+    QPixmap QWidget::grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));
+    ```
+    `rectangle`有效时截取其指定范围内的图像，无效时截取整个窗口（默认）。
+  - 截取其他程序的窗口或截屏：
+    ```cpp
+    // QPixmap QScreen::grabWindow(WId window, int x = 0, int y = 0, int width = -1, int height = -1);
+    QGuiApplication::primaryScreen()->grabWindow(nullptr);
+    ```
+    `grabWindow`函数第一个参数传一个窗口句柄`window`就能对此屏幕上的指定窗口进行截图，传一个空指针则对整个屏幕进行截图。后四个参数则能设置截图范围，若范围无效则对整个窗口或屏幕进行截图（默认）。
 - Windows平台使GUI程序显示控制台窗口：
   - QMake：`CONFIG += cmdline`
   - CMake：在`add_executable`时不要添加`WIN32`，即要`add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES} ${FORMS})`而不要`add_executable(${PROJECT_NAME} WIN32 ${HEADERS} ${SOURCES} ${FORMS})`
@@ -998,6 +1042,7 @@
     DWORD dwTimeout = -1;
     SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
     if (dwTimeout >= 100) {
+      // 下面这一行语句因为要读写INI文件，因此可能会导致执行此语句时卡顿两三秒
       SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     }
     // 此处的hwnd是窗口的句柄
@@ -1040,7 +1085,9 @@
     show();
   }
   ```
-- 窗口最小化后恢复原始大小，窗口假死：重载`[virtual protected] void QWidget::showEvent(QShowEvent *event)`。
+- 窗口最小化后恢复原始大小，窗口假死：
+
+  在窗口显示前激活窗口的`Qt::WA_Mapped`属性。
   ```cpp
   void QWidget::showEvent(QShowEvent *event) {
     setAttribute(Qt::WA_Mapped);
