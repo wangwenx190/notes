@@ -1124,5 +1124,22 @@
   ```
   使用这种连接方式，有三个很明显的优点：
   1. 如果信号或槽函数的函数名打错了或函数签名不匹配，根本就不能通过编译，因此能在编译期就发现问题并加以解决。
-  2. 使用的是函数指针，省却了根据字符串查找信号和槽函数的过程，速度有所提高。
+  2. 使用的是函数指针，省却了根据字符串查找信号和槽函数的过程，运行速度有所提高。
   3. 使用的是函数指针而不是字符串，节约了部分内存。而且由于不再构建`QString`对象，性能也有所提高。
+- 很多控件都带有`viewport`，比如`QTextEdit`/`QTableWidget`/`QScrollArea`，有时候对这些控件直接进行修改的时候发现不起作用，其实是需要对其`viewport`进行设置，比如设置滚动条区域背景透明，需要使用`scrollArea->viewport()->setStyleSheet("background-color:transparent;");`而不是`scrollArea->setStyleSheet("QScrollArea{background-color:transparent;}");`
+- 启用了鼠标跟踪的时候（`setMouseTracking(true)`），如果该窗体上面还有其他控件，当鼠标移到其他控件上面的时候，父类的鼠标移动事件就会识别不到了，此时需要用到HoverMove事件，需要先设置`setAttribute(Qt::WA_Hover);`
+- Qt封装的日期时间类`QDateTime`非常强大，可以在字符串和日期时间之间相互转换，也可以在（毫）秒数和日期时间之间相互转换，还可以在自1970-01-01T00:00:00.000经过的（毫）秒数和日期时间之间相互转换等。
+  ```cpp
+  QDateTime dateTime;
+  QString str1 = dateTime.currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+  // 从字符串转换为毫秒（需完整的年月日时分秒）
+  qint64 msecs = dateTime.fromString("2011-09-10 12:07:50:541", "yyyy-MM-dd hh:mm:ss:zzz").toMSecsSinceEpoch();
+  // 从字符串转换为秒（需完整的年月日时分秒）
+  qint64 secs = dateTime.fromString("2011-09-10 12:07:50:541", "yyyy-MM-dd hh:mm:ss:zzz").toSecsSinceEpoch();
+  // 从毫秒转换到年月日时分秒（字符串）
+  QString str2 = dateTime.fromMSecsSinceEpoch(1315193829218).toString("yyyy-MM-dd hh:mm:ss:zzz");
+  // 从秒（若有zzz，则为000）转换到年月日时分秒（字符串）
+  QString str3 = dateTime.fromSecsSinceEpoch(1315193829).toString("yyyy-MM-dd hh:mm:ss[:zzz]");
+  ```
+- 在使用`QList`、`QVector`以及`QByteArray`等链表或者数组的过程中，如果只需要取值不需要赋值，建议使用`const T &at(int i) const`而不是`[]`操作符，因为前者的速度远超后者（常数时间复杂度）。
+- 在使用`QLineEdit`的时候，如果想要实现将输入的格式和内容限定为IP地址、MAC地址以及序列号等特殊需求，可以将`void QLineEdit::setInputMask(const QString &inputMask);`与`void QLineEdit::setValidator(const QValidator *v);`搭配使用，前者用来限定输入的格式，后者用来限定输入的内容，非常简单方便和高效。
