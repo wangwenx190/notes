@@ -1048,9 +1048,17 @@
       // 下面这一行语句因为要读写INI文件，因此可能会导致执行此语句时卡顿两三秒
       SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     }
-    // 如果窗口被隐藏了，先显示出来 -> 如果被最小化了，再恢复原始大小 -> 接下来的事情请看以下代码
-    // 下面这一行代码每次前置窗口时都要执行一次，与上面那一段不一样。
-    SetForegroundWindow(hwnd); // 此处的hwnd是待前置窗口的句柄
+    // 下面这一段代码每次前置窗口时都要执行一次，与上面那一段不一样。
+    // 下面出现的hWnd是待前置窗口的句柄
+    HWND hForeWnd = GetForegroundWindow(); // 获取当前前置窗口的句柄
+    DWORD dwForeID = GetWindowThreadProcessId(hForeWnd, nullptr); // 获取当前前置窗口的进程ID
+    DWORD dwCurID = GetCurrentThreadId(); // 获取程序自身的进程ID
+    ShowWindow(hWnd, SW_SHOWNORMAL); // 如果窗口隐藏了或最小化了，先将它显示出来/还原默认大小
+    AttachThreadInput(dwCurID, dwForeID, TRUE); // 连接两个进程的输入焦点
+    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 修改窗口Z序，将窗口置顶（暂时）
+    SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 取消置顶（为了防止影响到别的窗口的Z序；虽然已经取消了置顶，但已经跑到前面的窗口是不会再回到底下去了）
+    SetForegroundWindow(hWnd); // 设置为前置的窗口
+    AttachThreadInput(dwCurID, dwForeID, FALSE); // 断开两个进程的输入焦点
     ```
   - 其他平台：Qt提供的方法
     ```cpp
@@ -1061,8 +1069,8 @@
     }
     // QWindow 没有 isActiveWindow 函数，请使用 isActive 函数代替。
     if (!isActiveWindow()) {
-      // 取消窗口的最小化状态并激活它
-      setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
+      // 取消窗口的最小化状态
+      setWindowStates(windowStates() & ~Qt::WindowMinimized);
     }
     if (!isActiveWindow()) {
       raise();
@@ -1099,3 +1107,12 @@
     QWidget::showEvent(event);
   }
   ```
+- 连接信号和槽函数时，尽量使用函数指针
+  ```cpp
+  connect(ui->pushButton_close, &QPushButton::clicked, this, QWidget::close);
+  // 信号或槽函数的参数需要重载时，请参考上面提到的 qOverload 函数。
+  ```
+  使用这种连接方式，有三个很明显的优点：
+  1. 如果信号或槽函数的函数名打错了或函数签名不匹配，根本就不能通过编译，因此能在编译期就发现问题并加以解决。
+  2. 使用的是函数指针，省却了根据字符串查找信号和槽函数的过程，速度有所提高。
+  3. 使用的是函数指针而不是字符串，节约了部分内存。而且由于不再构建`QString`对象，性能也有所提高。
