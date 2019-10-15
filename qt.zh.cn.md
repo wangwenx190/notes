@@ -1040,6 +1040,7 @@
     ```cpp
     // 头文件：winuser.h (include Windows.h)
     // 库文件：User32.lib（User32.dll）
+    // 如果窗口被隐藏了，先显示出来 -> 如果被最小化了，先恢复原始大小 -> 接下来的事情请看以下代码
     DWORD dwTimeout = -1;
     SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
     if (dwTimeout >= 100) {
@@ -1051,7 +1052,8 @@
     ```
   - 其他平台：Qt提供的方法
     ```cpp
-    // 如果窗口被隐藏了，先显示出来。QWindow 没有 isHidden 函数，请使用 isVisible 函数代替。
+    // 如果窗口被隐藏了，先显示出来。
+    // QWindow 没有 isHidden 函数，请使用 isVisible 函数代替。
     if (isHidden()) {
       show();
     }
