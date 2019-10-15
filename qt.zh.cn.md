@@ -760,7 +760,7 @@
   // ...
   stream.writeEndDocument();
   ```
-  注意：`QXmlStreamReader`和`QXmlStreamWriter`的性能优化的很好，Qt官方也推荐在操作XML文件时使用这两个类，但使用它们有一个不能忽略的前提条件，那就是被操作的XML文件一定要有良好的格式。
+  注意：`QXmlStreamReader`和`QXmlStreamWriter`的性能优化的很好，Qt官方也推荐在操作XML文件时使用这两个类，但使用它们有一个不能忽略的前提条件，那就是被操作的XML文件一定要有良好的格式，例如有正确的缩进以及正确对应的标签（tag）等，文档一定不能是损坏的。
 - 读写JSON文件
 
   读取：
@@ -976,7 +976,9 @@
   - CMake：`qt5_add_big_resources(<VAR> file1.qrc [file2.qrc ...] [OPTIONS ...])`
 
   具体的原理是处理小文件时rcc会将其翻译为C++代码，然后与项目其他的源文件一起参与编译和链接过程，而处理大文件时rcc会直接生成.obj文件，不参与编译过程，只参与最后的链接过程。
-- 如果需要窗口无边框，但是又需要保留操作系统的边框特性，例如可以自由拉伸边框和窗口阴影等，可以使用 `setWindowFlags(Qt::CustomizeWindowHint);`。注意一定要用`setWindowFlags`而不是`setWindowFlag`，因为`CustomizeWindowHint`这个Flag会与其他Flag冲突，这些Flag并存时会导致`CustomizeWindowHint`失效，用前者正好可以顺便清除其他Flag。
+- 如果需要窗口无边框，但是又需要保留操作系统的边框特性，例如可以自由拉伸边框和窗口阴影等，可以使用 `setWindowFlags(Qt::Window | Qt::CustomizeWindowHint);`。注意一定要用`setWindowFlags`而不是`setWindowFlag`，因为`CustomizeWindowHint`这个Flag会与其他Flag冲突，这些Flag并存时会导致`CustomizeWindowHint`失效，用前者正好可以顺便清除其他Flag。
+
+  注：`setWindowFlag(s)`是`QWidget`独有的函数，`QWindow`请使用`setFlag(s)`。
 - Qt Quick在Linux平台无法播放视频：`sudo apt install libpulse-dev`即可解决
 - 判断一个类是否是`QWidget`或`QWindow`（或它们的派生类）：
   ```cpp
@@ -988,3 +990,60 @@
 - 获取Qt版本：
   - 编译时版本：`QT_VERSION_STR`宏（这个宏返回的是编译程序时所链接的Qt库的版本，这个值在编译完成后永远不会改变）
   - 运行时版本：`const char *qVersion();`函数（这个函数返回的是当前加载的Qt库的版本，它可能会在程序运行期间发生改变）
+- 将最小化或被其他窗口挡住的窗口移到最前：
+  - Windows：Win32 API
+    ```cpp
+    // 头文件：winuser.h (include Windows.h)
+    // 库文件：User32.lib（User32.dll）
+    DWORD dwTimeout = -1;
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
+    if (dwTimeout >= 100) {
+      SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    }
+    // 此处的hwnd是窗口的句柄
+    SetForegroundWindow(hwnd);
+    ```
+  - 其他平台：Qt提供的方法
+    ```cpp
+    // 如果窗口被隐藏了，先显示出来。QWindow 没有 isHidden 函数，请使用 isVisible 函数代替。
+    if (isHidden()) {
+      show();
+    }
+    // QWindow 没有 isActiveWindow 函数，请使用 isActive 函数代替。
+    if (!isActiveWindow()) {
+      // 取消窗口的最小化状态并激活它
+      setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
+    }
+    if (!isActiveWindow()) {
+      raise();
+      // QWindow 没有 activateWindow 函数，请使用 requestActivate 函数代替。
+      activateWindow();
+    }
+    ```
+  - 另一种思路：先将窗口置顶，这样一来窗口肯定会跑到最前端，然后再取消置顶，恢复默认的设置。置顶和取消置顶这两个操作要有一定的时间间隔，如果间隔太短，很有可能会没有效果（因为来不及置顶。置顶稍微需要点时间）。
+
+    按照我以前的经验，置顶和取消置顶都会导致窗口被隐藏，要手动重新将之显示出来（可能是Qt的bug？），所以用这个方法会导致窗口明显闪烁一到两次，体验不太好。如果没有这个问题，那么这个思路是最简单有效的方法。
+- 窗口如何置顶？置顶后如何取消置顶？
+  ```cpp
+  // 置顶
+  setWindowFlag(Qt::WindowStaysOnTopHint);
+  // 取消置顶
+  setWindowFlag(Qt::WindowStaysOnTopHint, false);
+  // QWindow 没有 setWindowFlag 函数，请使用 setFlag 函数代替。
+  ```
+- 窗口置顶或置底/执行`setWindowState(s)`后窗口消失不见：可能是Qt的bug。
+
+  解决方法：窗口只是单纯的不可见了，重新将窗口显示出来即可。
+  ```cpp
+  // QWindow 没有 isHidden 函数，请使用 isVisible 函数代替
+  if (isHidden()) {
+    show();
+  }
+  ```
+- 窗口最小化后恢复原始大小，窗口假死：重载`[virtual protected] void QWidget::showEvent(QShowEvent *event)`。
+  ```cpp
+  void QWidget::showEvent(QShowEvent *event) {
+    setAttribute(Qt::WA_Mapped);
+    QWidget::showEvent(event);
+  }
+  ```
