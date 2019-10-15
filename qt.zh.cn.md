@@ -571,7 +571,7 @@
 
   在全局定义`QT_NO_CAST_FROM_ASCII`这个宏，之后在编译时任何没有被`QLatin1String`包裹的字符串都会被提示出来（或直接报错？不太确定）。
 - 在Linux平台发布Qt程序：
-  - 将所有用到的动态库都复制到二进制文件所在的文件夹（按照Windows平台的组织方式和结构）
+  - 将所有用到的动态库都复制到二进制文件所在的文件夹。可以使用一个叫`linuxdeployqt`的第三方小工具（Qt官方没有提供类似的工具）：<https://github.com/probonopd/linuxdeployqt>
   - 将以下脚本保存到二进制文件所在的文件夹下，并重命名为二进制文件的名字（不包括后缀名，脚本的后缀名一直都是.sh）：
     ```sh
     #!/bin/sh
@@ -675,8 +675,9 @@
 - 下载文件
   ```cpp
   QNetworkAccessManager manager;
-  connect(&manager, &QNetworkAccessManager::finished, this, [](QNetworkReply *reply){
-    if (reply->error()) {
+  connect(&manager, &QNetworkAccessManager::finished, this, [](QNetworkReply *reply) {
+    // 重定向不会导致错误的发生
+    if (reply->error() != QNetworkReply::NoError) {
       // 处理错误
     } else {
       // 暂时还不知道在下载文件时怎么处理重定向，先跳过这种情况
@@ -689,8 +690,8 @@
           if (redirectUrl.isRelative()) {
             QUrl requestUrl = reply->request().url();
             redirectUrl = requestUrl.resolved(redirectUrl);
-            QTextStream(stderr) << tr("Redirected to: ") << redirectUrl.toDisplayString() << endl;
           }
+          QTextStream(stderr) << tr("Redirected to: ") << redirectUrl.toDisplayString() << endl;
         }
       } else {
         QFile file(QLatin1String("D:/test.dat"));
