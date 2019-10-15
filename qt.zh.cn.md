@@ -1049,14 +1049,27 @@
       SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     }
     // 下面这一段代码每次前置窗口时都要执行一次，与上面那一段不一样。
-    // 下面出现的hWnd是待前置窗口的句柄
+    HWND hWnd = reinterpret_cast<HWND>(effectiveWinId()); // 获取程序当前活动窗口的句柄
     HWND hForeWnd = GetForegroundWindow(); // 获取当前前置窗口的句柄
     DWORD dwForeID = GetWindowThreadProcessId(hForeWnd, nullptr); // 获取当前前置窗口的进程ID
     DWORD dwCurID = GetCurrentThreadId(); // 获取程序自身的进程ID
-    ShowWindow(hWnd, SW_SHOWNORMAL); // 如果窗口隐藏了或最小化了，先将它显示出来/还原默认大小
+    // 如果窗口被隐藏了，先显示出来
+    if (IsWindowVisible(hWnd) != TRUE) {
+      // 此处一定要用 SW_SHOW，用其他的值会意外改变窗口的状态
+      ShowWindow(hWnd, SW_SHOW);
+    }
+    WINDOWPLACEMENT wndpmt;
+    if (GetWindowPlacement(hWnd, &wndpmt) != FALSE) {
+      // 如果窗口被最小化了，还原回去
+      if (wndpmt.showCmd == SW_SHOWMINIMIZED) {
+        // 此处一定要用 SW_RESTORE，用 SW_SHOW 不能恢复被最小化的窗口，用 SW_SHOWNORMAL 会导致窗口被无条件的还原为原始大小，即使在最小化之前处于最大化的状态
+        ShowWindow(hWnd, SW_RESTORE);
+      }
+    }
     AttachThreadInput(dwCurID, dwForeID, TRUE); // 连接两个进程的输入焦点
-    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 修改窗口Z序，将窗口置顶（暂时）
-    SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 取消置顶（为了防止影响到别的窗口的Z序；虽然已经取消了置顶，但已经跑到前面的窗口是不会再回到底下去了）
+    // 经过测试，以下两行不是必需的，没有也能达到预期效果，只不过加上会更加保险
+    // SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 修改窗口Z序，将窗口置顶（暂时）
+    // SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 取消置顶（为了防止影响到别的窗口的Z序；虽然已经取消了置顶，但已经跑到前面的窗口是不会再回到底下去了）
     SetForegroundWindow(hWnd); // 设置为前置的窗口
     AttachThreadInput(dwCurID, dwForeID, FALSE); // 断开两个进程的输入焦点
     ```
