@@ -1067,7 +1067,7 @@
       }
     }
     AttachThreadInput(dwCurID, dwForeID, TRUE); // 连接两个进程的输入焦点
-    // 经过测试，以下两行不是必需的，没有也能达到预期效果，只不过加上会更加保险
+    // 经过我的测试，以下两行不是必需的，没有这两行也能达到预期效果，只不过加上会更加保险
     // SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 修改窗口Z序，将窗口置顶（暂时）
     // SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 取消置顶（为了防止影响到别的窗口的Z序；虽然已经取消了置顶，但已经跑到前面的窗口是不会再回到底下去了）
     SetForegroundWindow(hWnd); // 设置为前置的窗口
@@ -1080,18 +1080,15 @@
     if (isHidden()) {
       show();
     }
+    setWindowStates(windowStates() & ~Qt::WindowMinimized);
     // QWindow 没有 isActiveWindow 函数，请使用 isActive 函数代替。
-    if (!isActiveWindow()) {
-      // 取消窗口的最小化状态
-      setWindowStates(windowStates() & ~Qt::WindowMinimized);
-    }
     if (!isActiveWindow()) {
       raise();
       // QWindow 没有 activateWindow 函数，请使用 requestActivate 函数代替。
       activateWindow();
     }
     ```
-  - 另一种思路：先将窗口置顶，这样一来窗口肯定会跑到最前端，然后再取消置顶，恢复默认的设置。置顶和取消置顶这两个操作要有一定的时间间隔，如果间隔太短，很有可能会没有效果（因为来不及置顶。置顶稍微需要点时间）。
+  - 另一种思路：先将窗口置顶，这样一来窗口肯定会跑到最前端，然后再取消置顶，恢复默认的设置。置顶和取消置顶这两个操作要有一定的时间间隔，如果间隔太短，很可能会没有效果（因为来不及置顶，置顶稍微需要点时间）。
 
     按照我以前的经验，置顶和取消置顶都会导致窗口被隐藏，要手动重新将之显示出来（可能是Qt的bug？），所以用这个方法会导致窗口明显闪烁一到两次，体验不太好。如果没有这个问题，那么这个思路是最简单有效的方法。
 - 窗口如何置顶？置顶后如何取消置顶？
