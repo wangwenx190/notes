@@ -103,7 +103,7 @@
     在`add_executable`或`add_library`（仅限动态库）时将.rc文件作为源文件一起加入即可。
 
    注意：同一个exe文件最多只能有一个资源脚本，如果要嵌入多个文件作为资源到二进制文件中，要将它们写入到同一个资源脚本中。
-- 修改二进制文件输出目录：`DESTDIR = $$PWD/bin`，在 Windows 平台上，dll 文件专有一个`DLLDESTDIR`。
+- QMake修改二进制文件输出目录：`DESTDIR = $$PWD/bin`，在 Windows 平台上，dll 文件专有一个`DLLDESTDIR`。
 - `.qmake.conf`文件：将此文件放在`.pro`文件所在的文件夹中，qmake会自动加载这个文件，并且会在加载`.pro`文件前先加载它，因此可以将一些通用的配置写到这个文件中
 - `qt.conf`文件：将此文件放在你开发的程序所在的文件夹中，可以修改 Qt 加载某些库和翻译文件（`.qm`文件）的路径，个别场景会用到这个文件，具体请查看 Qt 帮助文档。在代码中也可以动态获取，例如，可以使用`QLibraryInfo::location(QLibraryInfo::TranslationsPath)`来获取`qt.conf`文件中指定的翻译文件的路径，但就算文件中没有指定，或者这个文件根本不存在，Qt 自身也会提供一个默认路径，例如，插件默认为`plugins`文件夹，翻译文件默认为`translations`文件夹等。**注意：如果你是在Qt Creator中运行你的Qt程序（例如你正在调试你的程序），那么`QLibraryInfo::location()`返回的就是当前正在使用的Qt Kit的相关路径，而不是你自己在qt.conf中所设置的路径。换句话说，在这个时候这个函数不会返回你应用程序所在文件夹的路径了。但只要不是用Qt Creator运行，就没有这个问题。**
 - `QFile`无法在不存在的文件夹中创建文件，只能在已经存在的路径中新建或修改文件。如果路径不存在，可以使用`bool QDir::mkpath(const QString &dirPath) const`创建，使用这个API，路径中任何不存在的文件夹都会被创建。
