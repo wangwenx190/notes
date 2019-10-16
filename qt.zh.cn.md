@@ -34,7 +34,7 @@
   | 关闭警告 | - | - | - | - | `CONFIG += warn_off` |
   | 关闭C语言编译器扩展 | - | - | - | - | `CONFIG += strict_c` |
   | 关闭C++语言编译器扩展 | - | - | - | - | `CONFIG += strict_c++` |
-  | 开启UTF-8支持 | - | - | - | - | - |
+  | 开启UTF-8支持 | `/utf-8` | `-finput-charset=UTF-8 -fexec-charset=UTF-8`（clang-cl：与MSVC相同） | `-finput-charset=UTF-8 -fexec-charset=UTF-8` | `-option,cpp,--unicode_source_kind,UTF-8`（icl：`/Qoption,cpp,--unicode_source_kind,UTF-8`） | - |
 - `opengl32sw.dll`这个文件是用软件模拟的显卡，针对的是没有显卡的机器，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件，能极大减小发布大小
 - 发布 Windows 平台的 Qt 程序时可以使用 Qt 官方提供的`windeployqt`程序，这个小程序会自动检测并复制相关的 dll 到你的程序文件夹，非常方便。但它无法检测第三方库，必须自行查找并复制。而且这个工具会复制一些多余的 Qt 的 dll，但极难判断究竟哪些是真的无用，因此就不要管了。
 
@@ -714,6 +714,7 @@
 - 无边框窗口：自定义标题栏+8向拉伸+窗口阴影
   - 支持`QMainWindow`（稍微改一下也能支持`QWidget`），原生Windows+macOS效果，不支持Linux：<https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window>
   - 支持`QMainWindow`、`QWidget`以及Qt Quick，仅支持原生Windows效果，不能跨平台：<https://github.com/qtdevs/FramelessHelper>
+  - 支持Qt大多数的类，跨平台，但不支持任何系统原生效果：<https://github.com/feiyangqingyun/QWidgetDemo/tree/master/framelesswidget>
 - Qt Quick获取正在显示QML文档的系统窗口
 
   ```cpp
@@ -1273,7 +1274,7 @@
   2. 使用的是函数指针，省却了根据字符串查找信号和槽函数的过程，运行速度有所提高。
   3. 使用的是函数指针而不是字符串，节约了部分内存。而且由于不再构建`QString`对象，性能也有所提高。
 - 很多控件都带有`viewport`，比如`QTextEdit`/`QTableWidget`/`QScrollArea`，有时候对这些控件直接进行修改的时候发现不起作用，其实是需要对其`viewport`进行设置，比如设置滚动条区域背景透明，需要使用`scrollArea->viewport()->setStyleSheet("background-color:transparent;");`而不是`scrollArea->setStyleSheet("QScrollArea{background-color:transparent;}");`
-- 启用了鼠标跟踪的时候（`setMouseTracking(true)`），如果该窗体上面还有其他控件，当鼠标移到其他控件上面的时候，父类的鼠标移动事件就会识别不到了，此时需要用到HoverMove事件，需要先设置`setAttribute(Qt::WA_Hover);`
+- 启用了鼠标跟踪的时候（`setMouseTracking(true)`），如果该窗体上面还有其他控件，当鼠标移到其他控件上面的时候，父类的鼠标移动事件就会识别不到了，此时需要用到`HoverMove`事件，需要先设置`setAttribute(Qt::WA_Hover);`
 - Qt封装的日期时间类`QDateTime`非常强大，可以在字符串和日期时间之间相互转换，也可以在（毫）秒数和日期时间之间相互转换，还可以在自1970-01-01T00:00:00.000经过的（毫）秒数和日期时间之间相互转换等。
 
   ```cpp
@@ -1290,8 +1291,151 @@
   ```
 
 - 在使用`QList`、`QVector`以及`QByteArray`等链表或者数组的过程中，如果只需要取值不需要赋值，建议使用`const T &at(int i) const`而不是`[]`操作符，因为前者的速度远超后者（常数时间复杂度）。
-- 在使用`QLineEdit`的时候，如果想要实现将输入的格式和内容限定为IP地址、MAC地址以及序列号等特殊需求，可以将`void QLineEdit::setInputMask(const QString &inputMask);`与`void QLineEdit::setValidator(const QValidator *v);`搭配使用，前者用来限定输入的格式，后者用来限定输入的内容，非常简单方便和高效。
+- 在使用`QLineEdit`的时候，如果想要实现将输入的格式和内容限定为*IP地址*、*MAC地址*以及*序列号*等特殊需求，可以将`void QLineEdit::setInputMask(const QString &inputMask);`与`void QLineEdit::setValidator(const QValidator *v);`搭配使用，前者用来限定输入的格式，后者用来限定输入的内容，非常简单方便和高效。
 - 尽量使用`QString QFileInfo::canonicalFilePath() const;`这个函数而不是`QString QFileInfo::absoluteFilePath() const;`或者`QString QFileInfo::filePath() const;`，因为`canonicalFilePath`这个函数会尽可能的解析路径，不会包含`.`、`..`或任何快捷方式/软链接，而且返回的是完整的绝对路径，而后两个函数不会解析的如此彻底。
 - Qt界面文字乱码：
   - 不要直接在源码（C++和QML）中使用非拉丁字母（注释除外），非拉丁字母一定要用`tr`（QML：`qsTr`）函数包裹起来。
   - 编译器开启`UTF-8`支持。
+- 修改程序字体
+
+  ```cpp
+  // const QFont &QWidget::font() const
+  // [static] QFont QApplication::font()
+  // [static] QFont QGuiApplication::font()
+  QFont font = QGuiApplication::font(); // 获取程序的默认字体
+  font.setFamily(QLatin1String("Times New Roman")); // 设置字体族
+  font.setBold(true); // 加粗
+  font.setItalic(true); // 斜体
+  font.setPointSize(16); // 设置字号。这个函数能自适应DPI，不要用setPixelSize
+  font.setUnderline(true); // 下划线
+  // void QWidget::setFont(const QFont &)
+  // [static] void QApplication::setFont(const QFont &font, const char *className = nullptr)
+  // [static] void QGuiApplication::setFont(const QFont &font)
+  QGuiApplication::setFont(font); // 应用修改后的字体
+  ```
+
+- 根据Qt的事件过滤器获取各种事件并进行相应的处理
+
+  重载`[virtual] bool QObject::eventFilter(QObject *watched, QEvent *event)`函数
+
+  ```cpp
+  bool MainWindow::eventFilter(QObject *object, QEvent *event) {
+    Q_UNUSED(object)
+    switch (event->type()) {
+    case QEvent::ApplicationFontChange:
+      // 默认程序字体发生改变
+      break;
+    case QEvent::ApplicationStateChange:
+      // 程序的状态发生改变：激活、未激活
+      break;
+    case QEvent::ApplicationWindowIconChange:
+      // 程序的图标发生改变
+      break;
+    case QEvent::Clipboard:
+      // 剪贴板的内容发生改变
+      break;
+    case QEvent::Close:
+      // Widget 被关闭（QCloseEvent）
+      break;
+    case QEvent::CursorChange:
+      // Widget 的光标发生改变
+      break;
+    case QEvent::DragEnter:
+      // 在拖放过程中，鼠标进入 Widget（QDragEnterEvent）
+      break;
+    case QEvent::DragLeave:
+      // 在拖放过程中，鼠标离开 Widget（QDragLeaveEvent）
+      break;
+    case QEvent::DragMove:
+      // 正在拖放过程中（QDragMoveEvent）
+      break;
+    case QEvent::Drop:
+      // 拖放过程已经完成（QDropEvent）
+      break;
+    case QEvent::Enter:
+      // 鼠标进入 Widget 的边界（QEnterEvent）
+      break;
+    case QEvent::FileOpen:
+      // 请求打开文件（QFileOpenEvent）
+      break;
+    case QEvent::FocusIn:
+      // Widget 或 Window 获得键盘焦点（QFocusEvent）
+      break;
+    case QEvent::FocusOut:
+      // Widget 或 Window 失去键盘焦点（QFocusEvent）
+      break;
+    case QEvent::FontChange:
+      // Widget 的字体发生改变
+      break;
+    case QEvent::Hide:
+      // Widget 被隐藏（QHideEvent）
+      break;
+    case QEvent::HoverEnter:
+      // 鼠标进入了一个 hover widget（QHoverEvent）
+      break;
+    case QEvent::HoverLeave:
+      // 鼠标离开了一个 hover widget（QHoverEvent）
+      break;
+    case QEvent::HoverMove:
+      // 鼠标在一个 hover widget 内移动（QHoverEvent）
+      break;
+    case QEvent::KeyPress:
+      // 按键按下（QKeyEvent）
+      break;
+    case QEvent::KeyRelease:
+      // 按键释放（QKeyEvent）
+      break;
+    case QEvent::LanguageChange:
+      // 程序的翻译发生改变
+      break;
+    case QEvent::Leave:
+      // 鼠标离开 Widget 的边界
+      break;
+    case QEvent::LocaleChange:
+      // 系统区域发生改变
+      break;
+    case QEvent::MouseButtonDblClick:
+      // 鼠标双击【要注意判断是左键还是右键】（QMouseEvent）
+      break;
+    case QEvent::MouseButtonPress:
+      // 鼠标按下【要注意判断是左键还是右键】（QMouseEvent）
+      break;
+    case QEvent::MouseButtonRelease:
+      // 鼠标释放（QMouseEvent）
+      break;
+    case QEvent::MouseMove:
+      // 鼠标移动（QMouseEvent）
+      break;
+    case QEvent::Move:
+      // Widget 的位置发生改变（QMoveEvent）
+      break;
+    case QEvent::Resize:
+      // Widget 的大小发生改变（QResizeEvent）
+      break;
+    case QEvent::Show:
+      // Widget 被显示（QShowEvent）
+      break;
+    case QEvent::Timer:
+      // 常规计时器事件（QTimerEvent）
+      break;
+    case QEvent::Wheel:
+      // 鼠标滚轮发生滚动（QWheelEvent）
+      break;
+    case QEvent::WindowIconChange:
+      // 窗口图标发生改变
+      break;
+    case QEvent::WindowStateChange:
+      // 窗口状态发生改变【最大化、最小化、全屏、还原默认】（QWindowStateChangeEvent）
+      break;
+    case QEvent::WindowTitleChange:
+      // 窗口标题发生改变
+      break;
+    default:
+      // 还有很多其他的事件类型，请自行查阅
+      break;
+    }
+    return QMainWindow::eventFilter(object, event);
+  }
+  ```
+
+- 适合Qt项目的*Crash Handler*框架
