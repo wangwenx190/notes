@@ -1338,7 +1338,7 @@
       // Widget 被关闭（QCloseEvent）
       break;
     case QEvent::CursorChange:
-      // Widget 的光标发生改变
+      // Widget 的鼠标指针发生改变
       break;
     case QEvent::DragEnter:
       // 在拖放过程中，鼠标进入 Widget（QDragEnterEvent）
