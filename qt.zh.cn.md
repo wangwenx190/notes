@@ -383,6 +383,8 @@
 
   `qtLibraryTarget`这个qmake函数会自动添加平台对应的调试版后缀（发布版本不会添加后缀），如果是Linux平台，这个函数还会添加lib前缀。不要用`qt5LibraryTarget`，这个函数除了添加后缀，还会添加`Qt5`这个前缀，是Qt自己的库才需要的函数。
 - Qt计划废弃`QStringLiteral`，以后尽量使用`u"..." (→ QStringView)`或者`QLatin1String`代替。其中，`QLatin1String`已经支持`.arg(arg1, ..., argN)`了，已经不存在不使用它的理由了。推荐使用`QLatin1String`的原因是因为它仅仅是对`const char *`的简单封装，性能仅次于直接使用`const char *`。`QString::fromLatin1()`=`QLatin1String`，不推荐使用前者是因为前者打字比较多。`QStringLiteral`性能也不错，但它完整的构建了一个`QString`对象，因此性能也比`QLatin1String`差不少。除非是对性能不敏感的项目，否则一定不要直接用`QString`，这个形式性能最差。如果是对性能不敏感的项目，那么就推荐统一无脑使用`QString`，性能虽然不行，但格式统一，方便管理和理解。
+
+  顾名思义，`QLatin1String`针对的是拉丁字符，如果是非拉丁字符，是不能用这个宏的。
 - 使用*QString*时尽量使用*multiArgs*，即`.arg(arg1, ..., argN)`，以前那种分开的写法已经废弃了，不要再用了。`QLatin1String`和`QStringView`也支持这个特性。
 - 编译Qt时，如果禁用异常处理，会导致*Qt 3D*，*Qt Location*，*Qt Quick 3D*和*Qt XmlPatterns*无法编译，这四个仓库在编译时都需要开启异常处理，请注意。如果必须禁用异常处理，可以在配置Qt时使用`-skip`参数来跳过这四个仓库。已经编译完成的Qt库不受影响，可以随意开启和关闭异常处理。
 - 编译Qt时，如果使用了`Ofast`优化级别（Clang，GCC和ICC都支持，只有MSVC和类MSVC编译器才不支持），会导致Qt的*sqlite*插件无法编译。这个插件不支持高于`O3`的优化级别。然而这个是*QtCore*模块中无法禁用或者跳过的基础插件，如果编译出错就会中断整个Qt的编译，因此只能通过修改这个插件的.pro/.pri文件来规避这个问题（使用自定义的`QMAKE_CFLAGS_RELEASE`和`QMAKE_CXXFLAGS_RELEASE`）。已经编译完成的Qt库不受影响，可以随意调整优化级别。
@@ -1279,6 +1281,7 @@
 
   ```cpp
   QDateTime dateTime;
+  // 获取当前日期和时间，并转换为字符串
   QString str1 = dateTime.currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
   // 从字符串转换为毫秒（需完整的年月日时分秒）
   qint64 msecs = dateTime.fromString("2011-09-10 12:07:50:541", "yyyy-MM-dd hh:mm:ss:zzz").toMSecsSinceEpoch();
@@ -1294,7 +1297,7 @@
 - 在使用`QLineEdit`的时候，如果想要实现将输入的格式和内容限定为*IP地址*、*MAC地址*以及*序列号*等特殊需求，可以将`void QLineEdit::setInputMask(const QString &inputMask);`与`void QLineEdit::setValidator(const QValidator *v);`搭配使用，前者用来限定输入的格式，后者用来限定输入的内容，非常简单方便和高效。
 - 尽量使用`QString QFileInfo::canonicalFilePath() const;`这个函数而不是`QString QFileInfo::absoluteFilePath() const;`或者`QString QFileInfo::filePath() const;`，因为`canonicalFilePath`这个函数会尽可能的解析路径，不会包含`.`、`..`或任何快捷方式/软链接，而且返回的是完整的绝对路径，而后两个函数不会解析的如此彻底。
 - Qt界面文字乱码：
-  - 不要直接在源码（C++和QML）中使用非拉丁字母（注释除外），非拉丁字母一定要用`tr`（QML：`qsTr`）函数包裹起来。
+  - 不要直接在源码（C++和QML）中使用非英文半角字符（注释除外），非英文半角字符一定要用`tr`（QML：`qsTr`）函数包裹起来。如果实在不需要翻译，则用`QStringLiteral`包裹。
   - 编译器开启`UTF-8`支持。
 - 修改程序字体
 
@@ -1306,7 +1309,7 @@
   font.setFamily(QLatin1String("Times New Roman")); // 设置字体族
   font.setBold(true); // 加粗
   font.setItalic(true); // 斜体
-  font.setPointSize(16); // 设置字号。这个函数能自适应DPI，不要用setPixelSize
+  font.setPointSize(16); // 设置字号。setPointSize能自适应DPI，不要用setPixelSize，后者不能
   font.setUnderline(true); // 下划线
   // void QWidget::setFont(const QFont &)
   // [static] void QApplication::setFont(const QFont &font, const char *className = nullptr)
@@ -1323,7 +1326,7 @@
     Q_UNUSED(object)
     switch (event->type()) {
     case QEvent::ApplicationFontChange:
-      // 默认程序字体发生改变
+      // 程序默认字体发生改变
       break;
     case QEvent::ApplicationStateChange:
       // 程序的状态发生改变：激活、未激活
