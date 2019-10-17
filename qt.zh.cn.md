@@ -1452,3 +1452,23 @@
   ```
 
 - 适合Qt项目的*Crash Handler*框架
+- `QDialog`窗口默认会阻塞整个应用程序的执行，如果不想这样，可以进行以下设置：
+
+  ```cpp
+  QDialog dialog;
+  // 这行代码是关键，具体请查阅Qt官方手册
+  dialog.setWindowModality(Qt::WindowModal);
+  dialog.exec();
+  ```
+
+- 删除Qt对象时，强烈建议使用`void QObject::deleteLater()`而不是直接`delete`，因为`deleteLater`会选择在合适的时机进行释放，而`delete`会立即释放，很可能会导致程序出错崩溃。
+- 如果要批量删除Qt对象，或删除一个容器里包含的所有对象，可以用`qDeleteAll`：
+
+  ```cpp
+  // 容器里存放的全部元素必须都是指针
+  QVector<QPushButton *> buttons;
+  // 按照需求获取要删除的对象，并将其填充到容器中
+  qDeleteAll(buttons);
+  // qDeleteAll 不会删除容器里面的元素本身，它只会对里面的对象调用 delete，因此我们要手动清空容器
+  buttons.clear();
+  ```
