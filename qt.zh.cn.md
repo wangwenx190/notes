@@ -82,21 +82,31 @@
   - QMake：
 
      ```text
-     VERSION = 1.2.3 #设置版本，只有这个变量是全平台通用的。其中，只有 Windows 平台上的版本号是4位的，其他平台都是3位
-     RC_ICONS = "../res/icon.ico" #设置图标
-     #RC_CODEPAGE = "" #语言代码页
-     RC_LANG = 0x0004 #语言，请参考：https://docs.microsoft.com/en-us/windows/win32/intl/language-identifier-constants-and-strings
-     QMAKE_TARGET_PRODUCT = "My app name" #设置产品名称
-     QMAKE_TARGET_DESCRIPTION = "My app description" #设置文件说明
-     QMAKE_TARGET_COPYRIGHT = "My copyright info" #设置版权
-     QMAKE_TARGET_COMPANY = "My company name" #设置公司
+     # 设置版本。只有这个变量是全平台通用的。其中，只有 Windows 平台上的版本号是4位的，其他平台都是3位
+     VERSION = 1.2.3
+     # 设置图标。必须为.ico格式，且最大 256x256
+     RC_ICONS = "../res/icon.ico"
+     # 设置代码页
+     #RC_CODEPAGE = ""
+     # 设置语言。具体的值请参考：https://docs.microsoft.com/en-us/windows/win32/intl/language-identifier-constants-and-strings
+     RC_LANG = 0x0004
+     # 设置产品名称
+     QMAKE_TARGET_PRODUCT = "My app name"
+     # 设置文件说明
+     QMAKE_TARGET_DESCRIPTION = "My app description"
+     # 设置版权
+     QMAKE_TARGET_COPYRIGHT = "My copyright info"
+     # 设置公司
+     QMAKE_TARGET_COMPANY = "My company name"
      ```
 
      如果你有一个已经编写好的资源脚本（.rc文件），可以用以下语句使用：
 
      ```text
-     RC_FILE = "../res/eg.rc" #设置资源脚本文件。此语句会与以上所有语句冲突，请注意
+     RC_FILE = "../res/eg.rc"
      ```
+
+     注意：这两者只能二选一，设置了资源脚本就不能再单独设置图标或其他属性信息了，这两者是冲突的。
 
   - CMake：
 
@@ -107,7 +117,7 @@
 - `.qmake.conf`文件：将此文件放在`.pro`文件所在的文件夹中，qmake会自动加载这个文件，并且会在加载`.pro`文件前先加载它，因此可以将一些通用的配置写到这个文件中
 - `qt.conf`文件：将此文件放在你开发的程序所在的文件夹中，可以修改 Qt 加载某些库和翻译文件（`.qm`文件）的路径，个别场景会用到这个文件，具体请查看 Qt 帮助文档。在代码中也可以动态获取，例如，可以使用`QLibraryInfo::location(QLibraryInfo::TranslationsPath)`来获取`qt.conf`文件中指定的翻译文件的路径，但就算文件中没有指定，或者这个文件根本不存在，Qt 自身也会提供一个默认路径，例如，插件默认为`plugins`文件夹，翻译文件默认为`translations`文件夹等。**注意：如果你是在Qt Creator中运行你的Qt程序（例如你正在调试你的程序），那么`QLibraryInfo::location()`返回的就是当前正在使用的Qt Kit的相关路径，而不是你自己在qt.conf中所设置的路径。换句话说，在这个时候这个函数不会返回你应用程序所在文件夹的路径了。但只要不是用Qt Creator运行，就没有这个问题。**
 - `QFile`无法在不存在的文件夹中创建文件，只能在已经存在的路径中新建或修改文件。如果路径不存在，可以使用`bool QDir::mkpath(const QString &dirPath) const`创建，使用这个API，路径中任何不存在的文件夹都会被创建。
-- 区分操作系统：编译时可以通过`Q_OS_WINDOWS`（Qt 5.14 添加，早期版本请使用`Q_OS_WIN`代替），`Q_OS_WINRT`，`Q_OS_LINUX`，`Q_OS_MACOS`（不要使用`Q_OS_MAC`，已废弃），`Q_OS_MINGW`，`Q_OS_CYGWIN`，`Q_OS_ANDROID`和`Q_OS_IOS`等宏来区分，运行时可以通过`QOperatingSystemVersion`这个类来获取
+- 区分操作系统：编译时可以通过`Q_OS_WINDOWS`（Qt 5.14 添加，早期版本请使用`Q_OS_WIN`代替），`Q_OS_WINRT`，`Q_OS_LINUX`，`Q_OS_MACOS`（不要使用`Q_OS_MAC`，已废弃），`Q_OS_MINGW`，`Q_OS_ANDROID`和`Q_OS_IOS`等宏来区分，运行时可以通过`QOperatingSystemVersion`或`QSysInfo`这两个类来获取
 - 区分编译器：编译时可以通过`Q_CC_MSVC`，`Q_CC_GNU`（GCC，G++，MinGW），`Q_CC_INTEL`（ICC），`Q_CC_CLANG`等宏来区分
 - 交叉编译：`configure -xplatform win32-clang-g++ -device-option CROSS_COMPILE=x86_64-w64-mingw32-`，其中，`CROSS_COMPILE`参数前面没有`-`，它前面还要跟一个单独的`-device-option`，而且`x86_64-w64-mingw32-`末尾的`-`不能丢
 - 在 Windows 平台上编译 Qt 时，如果没有显式的指定，所有第三方库都会用 Qt 自带的。而在 Linux 平台上相反，Qt 会自动使用系统中已经存在的第三方库，默认是不会使用自带的第三方库的。
@@ -233,7 +243,7 @@
 
   在Qt中使用`void qSetMessagePattern(const QString &pattern)`也可以设置输出模式，但要注意以下几点：
 
-  - 经过我在 Ubuntu 19.04 上的测试，`$(echo ...)`不是必要的，不加它仍然可以改变控制台字体的颜色，加不加完全不影响，加了它反而会在控制台把它作为文字输出
+  - 经过我在 Ubuntu 19.04 上的测试，`$(echo ...)`不是必需的，不加它仍然可以改变控制台字体的颜色，加了它反而会在控制台把它作为文字输出
   - **【待确认】**在 Ubuntu 19.04 上测试，【如果使用`qSetMessagePattern()`设置消息模式，要直接使用`Raw String`，不要使用`QStringLiteral`或者`QLatin1String`包裹，否则那几个转义字符会被转换成一般的文字而被输出而不是作为控制字符起作用】，但第二次测试时又不会被`QStringLiteral`和`QLatin1String`影响了，非常奇怪，不知道为什么，以后自己使用时多加注意
 - Qt创建快捷方式（Windows）或符号链接（UNIX）：
 
