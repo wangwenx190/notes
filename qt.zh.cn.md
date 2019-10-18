@@ -553,11 +553,12 @@
   打开注册表，找到`HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers`，选中`Layers`键值，从右侧列表中删除自己的那个程序路径即可。
 - 获取系统窗口标题栏高度：
 
-  ```cpp
-  int QStyle::pixelMetric(QStyle::PM_TitleBarHeight);
+  ```text
+  // 把 PM_TitleBarHeight 作为 pixelMetric 函数的第一个参数即可获取标题栏的高度
+  [pure virtual] int QStyle::pixelMetric(QStyle::PixelMetric metric, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const
   ```
 
-  注：`PM_TitleBarHeight`是`QStyle::PixelMetric`这个枚举里的一个，这个枚举里还包含很多系统标准控件的尺寸，都可以用`int QStyle::pixelMetric(QStyle::PixelMetric metric, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const;`这个函数获取。
+  注：`PM_TitleBarHeight`是`QStyle::PixelMetric`这个枚举里的一个，这个枚举里还包含很多系统标准控件的尺寸，都可以通过这个函数获取。这个函数的第二个和第三个参数都不要管，用默认值就可以了。
 - 获取桌面的总尺寸以及可用尺寸（即去掉任务栏后的尺寸）：
 
   ```cpp
@@ -1472,3 +1473,37 @@
   // qDeleteAll 不会删除容器里面的元素本身，它只会对里面的对象调用 delete，因此我们要手动清空容器
   buttons.clear();
   ```
+
+- 读写文本数据时推荐使用`QTextStream`。这个类优化的很好，读写速度很快，比直接用`QFile`进行读写快得多。而且用这个类还能设置字符编码（`void QTextStream::setCodec(QTextCodec *codec)`以及`void QTextStream::setCodec(const char *codecName)`），还支持很多其他的功能，没有理由不用它。具体用法请查阅Qt官方手册。
+  - 读写文件
+
+    ```cpp
+    QFile data(QLatin1String("data.txt"));
+    data.open(QFile::WriteOnly | QFile::Text | QFile::Truncate);
+    QTextStream out(&data);
+    out << 233 << endl;
+    data.close();
+    data.open(QFile::ReadOnly | QFile::Text);
+    int res = -1;
+    out >> res;
+    data.close();
+    ```
+
+  - 读写控制台
+
+    ```cpp
+    // 从标准输入流（控制台）读取数据
+    QTextStream in(stdin);
+    QString line;
+    while (in.readLineInto(&line)) {
+      // 进行处理
+    }
+    // 输出到标准输出流（控制台）
+    QTextStream out(stdout);
+    out << "An output message from QTextStream." << endl;
+    // 输出到标准错误流（控制台）
+    QTextStream err(stderr);
+    err << "An error message from QTextStream." << endl;
+    ```
+
+- 读写二进制数据时推荐使用`QDataStream`
