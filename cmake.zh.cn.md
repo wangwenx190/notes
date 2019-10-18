@@ -1,5 +1,7 @@
 # CMake
+
 ## 常用内部变量
+
 | 变量 | 作用 | 示例 |
 | --- | ---- | ---- |
 | CMAKE_C_STANDARD | C标准，可取的值为`90`，`99`和`11` | set(CMAKE_C_STANDARD 11) |
@@ -45,9 +47,12 @@
 | CMAKE_INTERPROCEDURAL_OPTIMIZATION | 是否开启*链接时间代码生成*（*LTCG*） | set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON) |
 
 注：
+
 1. 如何设置这些变量：除了使用`set`命令，也可以在cmake命令中使用，如`cmake -DCMAKE_BUILD_TYPE=Release`，此举可覆盖CMakeLists.txt中的设置
 2. 如何获取这些变量：使用`${变量名}`的方式获取，例如`${CMAKE_CXX_COMPILER}`可以获取到默认的C++编译器
+
 ## 常用命令
+
 | 命令 | 作用 | 示例 |
 | --- | ---- | ---- |
 | **cmake_minimum_required**(VERSION 版本号) | 指定cmake的最低版本，这个选项也影响着cmake使用的各种策略 | cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR) |
@@ -66,9 +71,12 @@
 | **add_compile_definitions**(定义1 定义2 ...) | 添加预处理器定义。此为全局指令，针对不同的目标，可以使用`target_compile_definitions` | - |
 | **add_compile_options**(选项1 选项2 ...) | 添加编译选项。此为全局指令，针对不同的目标，可以使用`target_compile_options` | - |
 | **add_link_options**(选项1 选项2 ...) | 添加链接选项。此为全局指令，针对不同的目标，可以使用`target_link_options` | - |
-| **install**(类型 路径 [CONFIGURATIONS Debug\|Release] 路径) | 安装文件和文件夹，即将指定的文件及文件夹复制到指定的位置。类型可取的值为`TARGETS`，`FILES`和`DIRECTORY`（常用），其中`TARGETS`用于脚本中已经存在的target，其后的路径可以直接用target的名字，`FILES`即一般文件，`DIRECTORY`为文件夹。<del>在使用`Ninja`作为构建工具时，还必须开启`CMAKE_INSTALL_WITH_RPATH`，即`set(CMAKE_INSTALL_WITH_RPATH ON)`，否则构建会失败</del> | - |
+| **install**(类型 路径 [CONFIGURATIONS Debug\|Release] 路径) | 安装文件和文件夹，即将指定的文件及文件夹复制到指定的位置。类型可取的值为`TARGETS`，`FILES`和`DIRECTORY`（常用），其中`TARGETS`用于脚本中已经存在的target，其后的路径可以直接用target的名字，`FILES`即一般文件，`DIRECTORY`为文件夹。 | - |
+
 ## 杂项
+
 - cmake支持的编译器的名称为`AppleClang`，`Clang`，`GNU`，`MSVC`，`SunPro`和`Intel`，可以通过`CMAKE_CXX_COMPILER_ID`这个变量获取到，并可以通过`STREQUAL`这个函数来进行字符串的比较，**大小写敏感**。编译器版本号可以通过`CMAKE_CXX_COMPILER_VERSION`这个变量获取到，可以使用`VERSION_LESS`和`VERSION_GREATER`来比较版本号。示例：
+
    ```cmake
    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8.0)
@@ -80,8 +88,10 @@
        endif()
    endif()
    ```
+
 - 为 VS 生成：`cmake -G"Visual Studio 16 2019" -AWin32/x64 [-Thost=x86/x64]`
 - 交叉编译（以Clang为例）：
+
    ```cmake
    set(CMAKE_SYSTEM_NAME Windows) #设置目标系统
    set(CMAKE_SYSTEM_PROCESSOR x86_64) #设置目标架构
@@ -91,7 +101,9 @@
    set(CMAKE_CXX_COMPILER clang++) #设置C++编译器
    set(CMAKE_CXX_COMPILER_TARGET ${triple}) #设置C++编译器triple
    ```
+
 - 编译Qt程序：
+
    ```cmake
    cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
    project(qtdemo VERSION 1.2.3 LANGUAGES CXX)
@@ -119,10 +131,12 @@
    install(DIRECTORY ${PROJECT_SOURCE_DIR}/themes DESTINATION bin/themes)
    install(FILES ${PROJECT_SOURCE_DIR}/i18n/*.qm DESTINATION bin/translations)
    ```
+
    注：如果想使用自己构建的Qt套件，可以使用`CMAKE_PREFIX_PATH`指定Qt套件的路径，例如：`cmake -DCMAKE_PREFIX_PATH=~/qt/clang64 ..`
 - CMake中支持的生成器的名称为`Borland Makefiles`，`MSYS Makefiles`，`MinGW Makefiles`，`NMake Makefiles`，`NMake Makefiles JOM`，`Unix Makefiles`，`Watcom WMake`，`Ninja`，`Visual Studio 10 2010`，`Visual Studio 11 2012`，`Visual Studio 12 2013`，`Visual Studio 14 2015`，`Visual Studio 15 2017`，`Visual Studio 16 2019`，`Green Hills MULTI`和`Xcode`等
 - CMake支持的架构的名称为`Win32`，`x64`，`ARM`和`ARM64`等（以VS为例）
 - 如何判断平台：
+
    ```cmake
    #方法一：
    message("Current operating system is ${CMAKE_SYSTEM}")
@@ -145,16 +159,20 @@
    endif()
    #其他CMake预定义的宏还有WINDOWS_STORE、MINGW、CYGWIN、ANDROID和IOS等
    ```
+
 - 如何为调试版本和发布版本的可执行程序设置不同后缀：
+
    ```cmake
    # 设置 CMAKE_DEBUG_POSTFIX 或 CMAKE_RELEASE_POSTFIX 也可，这样就不用为每个target都设置后缀了
    set_target_properties(${TARGET_NAME} PROPERTIES DEBUG_POSTFIX "_d")
    set_target_properties(${TARGET_NAME} PROPERTIES RELEASE_POSTFIX "_r")
    ```
+
 - 注释：
   - 单行注释：`#`开头
   - 多行注释：使用`#[[`开头，`]]`结尾
 - Qt添加翻译文件：
+
   ```cmake
   find_package(Qt5 COMPONENTS LinguistTools)
   set(CMAKE_AUTOMOC ON)
@@ -174,8 +192,10 @@
   target_link_libraries(demo Qt5::XXX)
   endif()
   ```
-  注：根据 https://bugreports.qt.io/browse/QTBUG-41736 ，qt5_create_translation这个宏会在make clean或rebuild时把全部ts文件都删掉后再重新生成，这意味着已经翻译好的文本会全部丢失，已有的解决方法也已经失效，而Qt官方也没有针对这个问题进行修复，因此不建议再使用这个宏了，还是手动生成ts文件再搭配qt5_add_translation比较保险。
+
+  注：根据 <https://bugreports.qt.io/browse/QTBUG-41736> ，qt5_create_translation这个宏会在make clean或rebuild时把全部ts文件都删掉后再重新生成，这意味着已经翻译好的文本会全部丢失，已有的解决方法也已经失效，而Qt官方也没有针对这个问题进行修复，因此不建议再使用这个宏了，还是手动生成ts文件再搭配qt5_add_translation比较保险。
 - 如何通过CMake直接进行构建和安装过程（即让CMake自行调用设定的生成工具）：
+
   ```cmake
   # Configure
   cmake <path-to-your-top-level-source-code-dir>
@@ -184,11 +204,15 @@
   # Install
   cmake --install <path-to-your-project's-top-level-binary-dir>
   ```
+
 - 显式指定CMake二进制文件夹和源码文件夹
+
   ```cmake
   cmake -S <path-to-top-level-source-code-dir> -B <path-to-top-level-binary-dir>
   ```
+
 - 如何使CMake自动复制MSVC的运行时DLL到指定位置：
+
   ```cmake
   # 包含对应的CMake模块。注：此模块为MSVC专用。
   include(InstallRequiredSystemLibraries)
@@ -203,7 +227,9 @@
   # 可以通过下面这个变量来设置要将所有DLL复制到什么地方，在Windows平台默认是bin，其他平台默认是lib。非必需。
   set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION bin64)
   ```
+
 - Qt程序编译完成后自动执行`win(mac)deployqt`工具
+
   ```cmake
   # 第一步，先获取win(mac)deployqt的路径
   find_package(Qt5 COMPONENTS Core REQUIRED)
@@ -217,7 +243,9 @@
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${DEPLOYQT_EXECUTABLE} "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>")
   endif()
   ```
+
 - 判断并启用*链接时间代码生成*/*链接时间优化*（即*LTCG*/*LTO*/*IPO*）
+
   ```cmake
   # CMake的早期版本（3.9以前）只支持ICC for Linux开启IPO，下面一行的作用是开启对其他编译器的兼容支持
   # cmake_policy(SET CMP0069 NEW)
@@ -234,8 +262,10 @@
     message(WARNING "IPO is not supported: ${error_message}")
   endif()
   ```
+
   把CMake变量`CMAKE_INTERPROCEDURAL_OPTIMIZATION`设置为`ON`可以在全局范围内无条件启用IPO，但如果编译器不支持，会报错。
 - 遍历文件夹下的所有源码文件：
+
   ```cmake
   file(GLOB_RECURSE HEADERS FOLLOW_SYMLINKS LIST_DIRECTORIES false CONFIGURE_DEPENDS *.h)
   file(GLOB_RECURSE SOURCES FOLLOW_SYMLINKS LIST_DIRECTORIES false CONFIGURE_DEPENDS *.cpp)

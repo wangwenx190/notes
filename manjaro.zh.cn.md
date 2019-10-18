@@ -1,6 +1,8 @@
-## Manjaro
+# Manjaro
+
 - 先安装`plasma-wayland-session`这个包，注销，左下角切换桌面会话为**Wayland**，重新登录。
 - 包管理
+
   ```text
   pacman -S [options] <package_name>：安装指定软件包。常用的可选的选项为，“--needed”，不重新安装已经为最新的软件包，和“--noconfirm”，不询问确认。
   pacman -R <package_name>：删除指定软件包，但保留其全部已经安装的依赖关系
@@ -27,19 +29,24 @@
   pacman -U /path/to/package/package_name-version.pkg.tar.xz：安装一个本地包（不从源里下载）
   pacman -U http://www.example.com/repo/example.pkg.tar.xz：安装一个远程包（不在 pacman 配置的源里面）
   ```
+
 - 更新系统（即更新所有软件）
+
   ```bash
   pacman -Syu
   pacman -Su
   ```
+
 - 添加中文社区加速镜像源：
-  1. 所有有效的加速服务器列表：https://github.com/archlinuxcn/mirrorlist-repo 。可将 https://github.com/archlinuxcn/mirrorlist-repo/blob/master/archlinuxcn-mirrorlist 中所有的服务器信息都写入到一个叫`archlinuxcn`（没有后缀名）的文本文件中，保存到`/etc/pacman.d/`，此操作**需要管理员权限**。
+  1. 所有有效的加速服务器列表：<https://github.com/archlinuxcn/mirrorlist-repo> 。可将 <https://github.com/archlinuxcn/mirrorlist-repo/blob/master/archlinuxcn-mirrorlist> 中所有的服务器信息都写入到一个叫`archlinuxcn`（没有后缀名）的文本文件中，保存到`/etc/pacman.d/`，此操作**需要管理员权限**。
   2. 打开`/etc/pacman.conf`，在文件结尾添加一下内容：
+
      ```text
      [archlinuxcn]
      SigLevel = Optional TrustedOnly
      Include = /etc/pacman.d/archlinuxcn
      ```
+
      此操作**需要管理员权限**。
   3. `sudo pacman -Syy`
   4. 安装`archlinuxcn-keyring`这个软件包
@@ -52,6 +59,7 @@
   - Virtual Box：`virtualbox`
   - GCC/G++：`base-devel`自带
 - 为bash脚本添加可执行权限：
+
   ```bash
   chmod 777 ./test.sh
   ```

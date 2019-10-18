@@ -738,7 +738,7 @@
 
   注：在使用`QQuickView`时，由于`QQuickView`本身就是继承自`QWindow`，因此可以直接对其本身进行操作。
 - 限制程序只运行一个实例：
-  - `QtSingleApplication`（*Qt Solutions*是Qt4时代的商用模块，后来开源，但已不再维护，用起来还是没什么问题的，Qt Creator就一直在用这个）：<https://github.com/qtproject/qt-solutions/tree/master/qtsingleapplication>
+  - `QtSingleApplication`（Qt Solutions Component: Single Application。*Qt Solutions*是Qt4时代的商用模块，后来开源，但已不再维护，用起来还是没什么问题的，Qt Creator就一直在用这个）：<https://github.com/qtproject/qt-solutions/tree/master/qtsingleapplication>
 
     原理是使用`Qt Network`模块的`QLocalServer`以及`QLocalSocket`建立一个本地服务器，实现进程间通信。由于`Qt Network`模块是跨平台的，所以这个项目理论上也是能跨平台的。
   - `SingleApplication`（基于`QtSingleApplication`修改而来，做了很多改进，还在活跃开发中）：<https://github.com/itay-grudev/SingleApplication>
@@ -844,9 +844,12 @@
 
 - Qt框架下的服务程序（Windows services与Unix daemons）
 
-  请参考：<https://github.com/qtproject/qt-solutions/tree/master/qtservice>
+  - `QtService`（Qt Solutions Component: Service）：<https://github.com/qtproject/qt-solutions/tree/master/qtservice>
 
-  支持 Windows + Unix 平台，但早已经停止维护了（2011年左右），是一个比较老的代码库。用还是能用的，只不过可能用了不少现在看来已经非常过时的技术。
+    支持 Windows + Unix 平台，但早已经停止维护了（2011年左右），是一个比较老的代码库。用还是能用的，只不过可能用了不少现在看来已经非常过时的技术。
+  - `QtService`：<https://github.com/Skycoder42/QtService>
+
+    支持 Windows + Linux + macOS
 - 获取部分硬件信息
 - 获取操作系统的详细信息
 
@@ -1474,19 +1477,23 @@
   buttons.clear();
   ```
 
-- 读写文本数据时推荐使用`QTextStream`。这个类优化的很好，读写速度很快，比直接用`QFile`进行读写快得多。而且用这个类还能设置字符编码（`void QTextStream::setCodec(QTextCodec *codec)`以及`void QTextStream::setCodec(const char *codecName)`），还支持很多其他的功能，没有理由不用它。具体用法请查阅Qt官方手册。
+- 读写文本数据时推荐使用`QTextStream`。这个类优化的很好，读写速度很快，比直接用`QFile`进行读写快得多。而且用这个类还能设置字符编码，还支持很多其他的功能，没有理由不用它。具体用法请查阅Qt官方手册。
   - 读写文件
 
     ```cpp
-    QFile data(QLatin1String("data.txt"));
-    data.open(QFile::WriteOnly | QFile::Text | QFile::Truncate);
-    QTextStream out(&data);
+    QFile file(QLatin1String("data.txt"));
+    file.open(QFile::WriteOnly | QFile::Text | QFile::Truncate);
+    QTextStream out(&file);
+    // GB 18030-2000 是最新的简体中文国家标准。GBK 和 GB 2312 是老国标了，不要再用了。
+    // QTextStream 的默认文本编码为 UTF-8，不用显式指定。
+    // 关于其他Qt所支持的文本编码，请参考 QTextCodec 类。
+    out.setCodec("GB18030");
     out << 233 << endl;
-    data.close();
-    data.open(QFile::ReadOnly | QFile::Text);
+    file.close();
+    file.open(QFile::ReadOnly | QFile::Text);
     int res = -1;
     out >> res;
-    data.close();
+    file.close();
     ```
 
   - 读写控制台
@@ -1506,4 +1513,64 @@
     err << "An error message from QTextStream." << endl;
     ```
 
-- 读写二进制数据时推荐使用`QDataStream`
+- 读写二进制数据时推荐使用`QDataStream`。
+
+  这个类是用来读写二进制数据流的，而二进制数据流的内容是不能被第三方软件读取的，因此其常见用途为读写软件独有的文档/数据格式。
+
+  C++的基本类型都是支持的，`QBrush`、`QColor`、`QDateTime`、`QFont`、`QPixmap`、`QString`以及`QVariant`等Qt自己的类型也都支持。请查看Qt手册的`Serializing Qt Data Types`章节来获取`QDataStream`支持的所有Qt类型。
+
+  随着Qt版本的升级，`QDataStream`也会升级版本，不同版本的`QDataStream`所输出的内容是不能互相兼容的，因此在读写数据之前，一定要先确认好`QDataStream`的版本。
+  - 写
+
+    ```cpp
+    QFile file("my_doc.abc");
+    file.open(QFile::WriteOnly);
+    QDataStream out(&file);
+    // Write a header with a "magic number" and a version
+    out << (quint32)0xA0B0C0D0;
+    out << (qint32)123;
+    out.setVersion(QDataStream::Qt_5_14);
+    // Write the data
+    out << lots_of_interesting_data;
+    file.close();
+    ```
+
+  - 读
+
+    ```cpp
+    QFile file("my_doc.abc");
+    file.open(QFile::ReadOnly);
+    QDataStream in(&file);
+    // Read and check the header
+    quint32 magic;
+    in >> magic;
+    if (magic != 0xA0B0C0D0) {
+      return XXX_BAD_FILE_FORMAT;
+    }
+    // Read the version
+    qint32 version;
+    in >> version;
+    if (version < 100) {
+      return XXX_BAD_FILE_TOO_OLD;
+    }
+    if (version > 123) {
+      return XXX_BAD_FILE_TOO_NEW;
+    }
+    if (version <= 110) {
+      in.setVersion(QDataStream::Qt_5_7);
+    } else {
+      in.setVersion(QDataStream::Qt_5_14);
+    }
+    // Read the data
+    in >> lots_of_interesting_data;
+    if (version >= 120) {
+      in >> data_new_in_XXX_version_1_2;
+    }
+    in >> other_interesting_data;
+    file.close();
+    ```
+
+- Qt如何编写升级程序
+- Qt显示PDF文档
+- Qt打印文件
+- Qt处理压缩文件

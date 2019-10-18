@@ -1,4 +1,5 @@
 # C/C++控制台程序
+
 - 控制台如何输出不同颜色和底纹的字体？Linux平台上的实现方法是在输出流中插入占位符`\e[***`，Windows平台上请使用Win32 API `SetConsoleTextAttribute`。
 
   | 占位符 | 作用 |

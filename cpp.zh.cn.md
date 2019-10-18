@@ -1,8 +1,10 @@
 # C++ 笔记
+
 - 使用`__TIME__`可以获取编译的时刻，`__DATE__`可以获取编译的日期，类型均为`const char *`。
 - 使用`__FUNCTION__`可以获取当前函数名，`__FILE__`可以获取当前源文件路径和文件名，`__LINE__`可以获取当前行号，类型均为`const char *`。
 - 在使用C语言风格的字符串时，尽量使用字符数组，即`const char []`，而不是指向字符数组的指针，即`const char *`，尽量少引入指针操作
 - 如何使用`pImpl`：
+
   ```cpp
   #include <iostream>
   #include <memory>
@@ -55,9 +57,14 @@
       w2.draw();
   }
   ```
+
   输出：
+
   ```text
   drawing a non-const widget 7
   drawing a const widget 8
   ```
-  摘自：https://en.cppreference.com/w/cpp/language/pimpl
+
+  摘自：<https://en.cppreference.com/w/cpp/language/pimpl>
+- 格式化
+- 日志
