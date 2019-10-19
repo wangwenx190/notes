@@ -84,6 +84,8 @@
   sei.lpFile = TEXT("notepad.exe"); // 待启动程序的路径
   sei.nShow = SW_HIDE; // 想隐藏程序窗口的话要加上这一句，否则不需要这一行
   sei.lpParameters = TEXT("/ABC /DEF"); // 要传给程序的参数，没有的话也不需要这一行
+  sei.cbSize = sizeof(SHELLEXECUTEINFO); // 必需的参数，不要忘掉
+  sei.fMask = SEE_MASK_NOASYNC; // 必需的参数，不要忘掉
   if(ShellExecuteEx(&sei) != TRUE)
   {
       DWORD dwStatus = GetLastError();
