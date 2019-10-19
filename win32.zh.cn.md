@@ -252,8 +252,27 @@
   }
   ```
 
-- 获取系统是否开启深色模式/浅色模式：详见[qt.zh.cn.md：Windows平台如何获取是否开启深色模式/浅色模式](/qt.zh.cn.md)。
-- 将窗口设置为深色模式：详见[qt.zh.cn.md：Windows平台如何将窗口设置为深色模式](/qt.zh.cn.md)。
+- 获取系统是否开启深色模式/浅色模式：
+
+  ```cpp
+  HKEY hKey = nullptr;
+  RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"), 0, KEY_QUERY_VALUE, &hKey);
+  DWORD dwSize = sizeof(DWORD), dwDataType = REG_DWORD, dwValue = 0;
+  RegQueryValueEx(hKey, TEXT("AppsUseLightTheme"), 0, &dwDataType, (LPBYTE)&dwValue, &dwSize);
+  RegCloseKey(hKey);
+  BOOL darkThemeEnabled = (dwValue == 0);
+  BOOL lightThemeEnabled = !darkThemeEnabled;
+  ```
+
+- 将窗口设置为深色模式：
+
+  ```cpp
+  // 头文件：uxtheme.h
+  // 库文件：UxTheme.lib（UxTheme.dll）
+  // hWnd 为窗口的句柄
+  SetWindowTheme(hWnd, L"DarkMode_Explorer", nullptr);
+  ```
+
 - 读写INI文件
   - 读取
 
@@ -282,5 +301,70 @@
     ```
 
 - 读写注册表
+  - 读取
+
+    ```cpp
+    // 头文件：winreg.h (include Windows.h)
+    // 库文件：Advapi32.lib（Advapi32.dll）
+    HKEY hKey = nullptr;
+    RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_QUERY_VALUE, &hKey);
+    DWORD dwSize = 0, dwDataType = 0;
+    RegQueryValueEx(hKey, TEXT("MyApp"), 0, &dwDataType, nullptr, &dwSize);
+    switch (dwDataType) {
+    case REG_MULTI_SZ:
+      break;
+    case REG_SZ:
+      break;
+    }
+    RegCloseKey(hKey);
+    ```
+
+  - 写入
 - 置顶/取消置顶窗口
+
+  ```cpp
+  // 头文件：winuser.h (include Windows.h)
+  // 库文件：User32.lib（User32.dll）
+  // 置顶
+  SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+  // 取消置顶
+  SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+  // 注：hWnd 为窗口的句柄
+  ```
+
 - 将最小化或被其他窗口挡住的窗口移到最前
+
+  ```cpp
+  // 头文件：winuser.h (include Windows.h)
+  // 库文件：User32.lib（User32.dll）
+  // 下面这一段代码要在较早的地方执行，例如在程序的 main 函数里。
+  // 这一段代码是为了确保 SetForegroundWindow 能执行成功而设置的，在前置窗口前执行过一次就足够了（如果需要的话），不是每次前置窗口都要执行的。
+  DWORD dwTimeout = -1;
+  SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
+  if (dwTimeout >= 100) {
+    // 下面这一行语句因为要读写INI文件，因此可能会导致执行此语句时卡顿两三秒
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+  }
+  // 上面的代码结束，下面的代码与上面的没有关系了
+  // 下面这一段代码每次前置窗口时都要执行一次，与上面那一段不一样。
+  HWND hWnd = reinterpret_cast<HWND>(effectiveWinId()); // 获取程序当前活动窗口的句柄
+  HWND hForeWnd = GetForegroundWindow(); // 获取当前前置窗口的句柄
+  DWORD dwForeID = GetWindowThreadProcessId(hForeWnd, nullptr); // 获取当前前置窗口的进程ID
+  DWORD dwCurID = GetCurrentThreadId(); // 获取程序自身的进程ID
+  // 如果窗口被隐藏了，先显示出来
+  if (IsWindowVisible(hWnd) != TRUE) {
+    // 此处一定要用 SW_SHOW，用其他的值会意外改变窗口的状态
+    ShowWindow(hWnd, SW_SHOW);
+  }
+  WINDOWPLACEMENT wndpmt;
+  if (GetWindowPlacement(hWnd, &wndpmt) != FALSE) {
+    // 如果窗口被最小化了，还原回去
+    if (wndpmt.showCmd == SW_SHOWMINIMIZED) {
+      // 此处一定要用 SW_RESTORE，用 SW_SHOW 不能恢复被最小化的窗口，用 SW_SHOWNORMAL 会导致窗口被无条件的还原为原始大小，即使在最小化之前处于最大化的状态
+      ShowWindow(hWnd, SW_RESTORE);
+    }
+  }
+  AttachThreadInput(dwCurID, dwForeID, TRUE); // 连接两个进程的输入焦点
+  SetForegroundWindow(hWnd); // 设置为前置的窗口
+  AttachThreadInput(dwCurID, dwForeID, FALSE); // 断开两个进程的输入焦点
+  ```

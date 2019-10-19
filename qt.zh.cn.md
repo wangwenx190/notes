@@ -407,55 +407,8 @@
   std::copy(argv + 1, argv + argc, std::back_inserter(args));
   ```
 
-- Windows平台如何获取是否开启深色模式/浅色模式：
-
-  ```cpp
-  bool lightModeEnabled() const {
-  // Qt 5.14 之前的版本请使用 Q_OS_WIN
-  #ifdef Q_OS_WINDOWS
-    const QSettings settings(QLatin1String("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"), QSettings::NativeFormat);
-    const auto appsUseLightTheme = settings.value(QLatin1String("AppsUseLightTheme"));
-    const auto systemUsesLightTheme = settings.value(QLatin1String("SystemUsesLightTheme"));
-    return (appsUseLightTheme.isValid() && (appsUseLightTheme.toInt() != 0));
-  #else
-    return false;
-  #endif
-  }
-
-  bool darkModeEnabled() const { return !lightModeEnabled(); }
-  ```
-
-- Windows平台如何将窗口设置为深色模式：
-
-  ```cpp
-  #include <uxtheme.h>
-  // Lib 文件：UxTheme.lib，记得要引用此文件
-  // 对应的 DLL：UxTheme.dll
-
-  bool setWindowsExplorerDarkTheme(QWidget *widget) {
-    if (widget == nullptr) {
-      return false;
-    }
-  #ifdef Q_OS_WINDOWS
-  #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-    const auto windowHandle = widget->windowHandle();
-    if (windowHandle == nullptr) {
-      return false;
-    }
-    const auto hwnd = reinterpret_cast<HWND>(windowHandle->winId());
-  #else
-    const auto hwnd = widget->winId();
-  #endif
-    if (hwnd == nullptr) {
-      return false;
-    }
-    return SUCCEEDED(SetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr));
-  #else
-    return false;
-  #endif
-  }
-  ```
-
+- Windows平台如何获取是否开启深色模式/浅色模式：详见[win32.md：获取系统是否开启深色模式/浅色模式](/win32.zh.cn.md)
+- Windows平台如何将窗口设置为深色模式：详见[win32.md：将窗口设置为深色模式](/win32.zh.cn.md)
 - Qt5如何从C++方面调用QML函数/信号？
 
   ```cpp
@@ -849,7 +802,7 @@
     支持 Windows + Unix 平台，但早已经停止维护了（2011年左右），是一个比较老的代码库。用还是能用的，只不过可能用了不少现在看来已经非常过时的技术。
   - `QtService`：<https://github.com/Skycoder42/QtService>
 
-    支持 Windows + Linux + macOS
+    支持 Windows + Linux + macOS，代码库较新
 - 获取部分硬件信息
 - 获取操作系统的详细信息
 
@@ -1186,46 +1139,7 @@
   - 编译时版本：`QT_VERSION_STR`宏（这个宏返回的是编译程序时所链接的Qt库的版本，这个值在编译完成后永远不会改变）
   - 运行时版本：`const char *qVersion();`函数（这个函数返回的是当前加载的Qt库的版本，它可能会在程序运行期间发生改变）
 - 将最小化或被其他窗口挡住的窗口移到最前：
-  - Windows：Win32 API
-
-    ```cpp
-    // 头文件：winuser.h (include Windows.h)
-    // 库文件：User32.lib（User32.dll）
-    // 下面这一段代码要在较早的地方执行，例如在程序的 main 函数里。
-    // 这一段代码是为了确保 SetForegroundWindow 能执行成功而设置的，在前置窗口前执行过一次就足够了（如果需要的话），不是每次前置窗口都要执行的。
-    DWORD dwTimeout = -1;
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
-    if (dwTimeout >= 100) {
-      // 下面这一行语句因为要读写INI文件，因此可能会导致执行此语句时卡顿两三秒
-      SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-    }
-    // 上面的代码结束，下面的代码与上面的没有关系了
-    // 下面这一段代码每次前置窗口时都要执行一次，与上面那一段不一样。
-    HWND hWnd = reinterpret_cast<HWND>(effectiveWinId()); // 获取程序当前活动窗口的句柄
-    HWND hForeWnd = GetForegroundWindow(); // 获取当前前置窗口的句柄
-    DWORD dwForeID = GetWindowThreadProcessId(hForeWnd, nullptr); // 获取当前前置窗口的进程ID
-    DWORD dwCurID = GetCurrentThreadId(); // 获取程序自身的进程ID
-    // 如果窗口被隐藏了，先显示出来
-    if (IsWindowVisible(hWnd) != TRUE) {
-      // 此处一定要用 SW_SHOW，用其他的值会意外改变窗口的状态
-      ShowWindow(hWnd, SW_SHOW);
-    }
-    WINDOWPLACEMENT wndpmt;
-    if (GetWindowPlacement(hWnd, &wndpmt) != FALSE) {
-      // 如果窗口被最小化了，还原回去
-      if (wndpmt.showCmd == SW_SHOWMINIMIZED) {
-        // 此处一定要用 SW_RESTORE，用 SW_SHOW 不能恢复被最小化的窗口，用 SW_SHOWNORMAL 会导致窗口被无条件的还原为原始大小，即使在最小化之前处于最大化的状态
-        ShowWindow(hWnd, SW_RESTORE);
-      }
-    }
-    AttachThreadInput(dwCurID, dwForeID, TRUE); // 连接两个进程的输入焦点
-    // 经过我的测试，以下两行不是必需的，没有这两行也能达到预期效果，只不过加上会更加保险
-    // SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 修改窗口Z序，将窗口置顶（暂时）
-    // SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 取消置顶（为了防止影响到别的窗口的Z序；虽然已经取消了置顶，但已经跑到前面的窗口是不会再回到底下去了）
-    SetForegroundWindow(hWnd); // 设置为前置的窗口
-    AttachThreadInput(dwCurID, dwForeID, FALSE); // 断开两个进程的输入焦点
-    ```
-
+  - Windows：详见[win32.md：将最小化或被其他窗口挡住的窗口移到最前](/win32.zh.cn.md)
   - 其他平台：Qt提供的方法
 
     ```cpp
@@ -1519,18 +1433,19 @@
 
   C++的基本类型都是支持的，`QBrush`、`QColor`、`QDateTime`、`QFont`、`QPixmap`、`QString`以及`QVariant`等Qt自己的类型也都支持。请查看Qt手册的`Serializing Qt Data Types`章节来获取`QDataStream`支持的所有Qt类型。
 
-  随着Qt版本的升级，`QDataStream`也会升级版本，不同版本的`QDataStream`所输出的内容是不能互相兼容的，因此在读写数据之前，一定要先确认好`QDataStream`的版本。
+  随着Qt版本的升级，`QDataStream`也会升级版本，不同版本的`QDataStream`所输出的内容是不能互相兼容的，因此在读写数据之前，一定要先确认好`QDataStream`的版本：`void QDataStream::setVersion(int v)`。
   - 写
 
     ```cpp
+    // 软件自己的文档格式
     QFile file("my_doc.abc");
     file.open(QFile::WriteOnly);
     QDataStream out(&file);
-    // Write a header with a "magic number" and a version
-    out << (quint32)0xA0B0C0D0;
-    out << (qint32)123;
+    // 文件头：一个“神奇的数字”+文档版本号
+    out << (quint32)0xA0B0C0D0; // 识别格式用的
+    out << (qint32)123; // 此文档的版本号为 123
     out.setVersion(QDataStream::Qt_5_14);
-    // Write the data
+    // 写入真正的数据
     out << lots_of_interesting_data;
     file.close();
     ```
@@ -1541,28 +1456,33 @@
     QFile file("my_doc.abc");
     file.open(QFile::ReadOnly);
     QDataStream in(&file);
-    // Read and check the header
+    // 读取文件内容，检查文件头
     quint32 magic;
     in >> magic;
     if (magic != 0xA0B0C0D0) {
+      // 文件头无法对应：不是正确的格式或文件已损坏
       return XXX_BAD_FILE_FORMAT;
     }
-    // Read the version
+    // 读取版本（例如：Office 2007）
     qint32 version;
     in >> version;
     if (version < 100) {
+      // 版本太老，不能兼容（示例）
       return XXX_BAD_FILE_TOO_OLD;
     }
     if (version > 123) {
+      // 版本太新，不能兼容（示例）
       return XXX_BAD_FILE_TOO_NEW;
     }
+    // 根据文档中记录的版本号，来设置 QDataStream 的版本
     if (version <= 110) {
       in.setVersion(QDataStream::Qt_5_7);
     } else {
       in.setVersion(QDataStream::Qt_5_14);
     }
-    // Read the data
+    // 读取真正的数据
     in >> lots_of_interesting_data;
+    // 读取某版本特有的数据段（示例）
     if (version >= 120) {
       in >> data_new_in_XXX_version_1_2;
     }
