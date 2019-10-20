@@ -257,13 +257,19 @@
 - 获取系统是否开启深色模式/浅色模式：
 
   ```cpp
-  HKEY hKey = nullptr;
-  RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"), 0, KEY_QUERY_VALUE, &hKey);
-  DWORD dwSize = sizeof(DWORD), dwDataType = REG_DWORD, dwValue = 0;
-  RegQueryValueEx(hKey, TEXT("AppsUseLightTheme"), 0, &dwDataType, (LPBYTE)&dwValue, &dwSize);
-  RegCloseKey(hKey);
-  BOOL darkThemeEnabled = (dwValue == 0);
-  BOOL lightThemeEnabled = !darkThemeEnabled;
+  BOOL isLightThemeEnabled() {
+    HKEY hKey = nullptr;
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS) {
+      return FALSE;
+    }
+    DWORD dwSize = sizeof(DWORD), dwDataType = REG_DWORD, dwValue = 0;
+    // 虽然 RegQueryValueEx 也有可能会失败，但反正我们马上就 RegCloseKey 并且 return 了，就算失败了也没什么影响
+    RegQueryValueEx(hKey, TEXT("AppsUseLightTheme"), 0, &dwDataType, (LPBYTE)&dwValue, &dwSize);
+    RegCloseKey(hKey);
+    return (dwValue != 0);
+  }
+
+  BOOL isDarkThemeEnabled() { return !isLightThemeEnabled(); }
   ```
 
 - 将窗口设置为深色模式：
@@ -349,7 +355,7 @@
   }
   // 上面的代码结束，下面的代码与上面的没有关系了
   // 下面这一段代码每次前置窗口时都要执行一次，与上面那一段不一样。
-  HWND hWnd = reinterpret_cast<HWND>(effectiveWinId()); // 获取程序当前活动窗口的句柄
+  HWND hWnd = ... // 获取程序当前活动窗口的句柄
   HWND hForeWnd = GetForegroundWindow(); // 获取当前前置窗口的句柄
   DWORD dwForeID = GetWindowThreadProcessId(hForeWnd, nullptr); // 获取当前前置窗口的进程ID
   DWORD dwCurID = GetCurrentThreadId(); // 获取程序自身的进程ID

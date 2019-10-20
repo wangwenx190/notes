@@ -1494,3 +1494,22 @@
 - Qt显示PDF文档
 - Qt打印文件
 - Qt处理压缩文件
+- Qt获取窗口句柄
+
+  ```cpp
+  HWND getHWND(QWidget *widget) {
+    if (widget == nullptr) {
+      return nullptr;
+    }
+    // 这一步获取的是widget对应的QWindow。如果本来就是要获取QWindow自身的句柄，直接用winId函数获取就可以了。也就是说，只有QWidget会多这么一步
+    // 不要直接对QWidget调用winId函数，这是Qt4时代的做法，现在已经不提倡这么做了（虽然用起来没什么问题）
+    // 也不要用effectiveWinId这个函数，这个函数获取的不一定是当前窗口的句柄
+    const auto windowHandle = widget->windowHandle();
+    if (windowHandle == nullptr) {
+      return nullptr;
+    }
+    return reinterpret_cast<HWND>(windowHandle->winId());
+  }
+  ```
+
+  注：`windowHandle`和`winId`这些Qt自己的函数都是跨平台的。虽然上面的例子只演示了如何在Windows平台获取窗口句柄，但是在Unix平台也是同样的做法，只不过最后获取到的句柄的类型不是`HWND`了。
