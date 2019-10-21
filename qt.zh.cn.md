@@ -430,6 +430,8 @@
   QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
   ```
 
+  或设置环境变量`QT_ENABLE_HIGHDPI_SCALING`（布尔类型，Qt 5.14 引入）。
+
 - 样式表更改：设置样式表、移除样式表、刷新样式表
 
   ```cpp
@@ -1513,3 +1515,5 @@
   ```
 
   注：`windowHandle`和`winId`这些Qt自己的函数都是跨平台的。虽然上面的例子只演示了如何在Windows平台获取窗口句柄，但是在Unix平台也是同样的做法，只不过最后获取到的句柄的类型不是`HWND`了。
+- MVC
+- 添加、删除、更新和获取环境变量
