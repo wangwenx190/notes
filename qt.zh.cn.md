@@ -1517,3 +1517,22 @@
   注：`windowHandle`和`winId`这些Qt自己的函数都是跨平台的。虽然上面的例子只演示了如何在Windows平台获取窗口句柄，但是在Unix平台也是同样的做法，只不过最后获取到的句柄的类型不是`HWND`了。
 - MVC
 - 添加、删除、更新和获取环境变量
+
+  ```cpp
+  // 返回环境变量varName是否已经被设置（但可为空）。等价于!qgetenv(varName).isNull()，但下面这个函数快得多
+  bool qEnvironmentVariableIsSet(const char *varName);
+  // 返回环境变量varName是否为空。等价于qgetenv(varName).isEmpty()，但下面这个函数快得多
+  bool qEnvironmentVariableIsEmpty(const char *varName);
+  // 返回环境变量varName的值。如果值为空或者获取失败，则返回默认值defaultValue
+  QString qEnvironmentVariable(const char *varName, const QString &defaultValue);
+  // 返回环境变量varName的整型数值。如果ok不是空指针，则根据函数执行结果将ok设置为true或false。等价于qgetenv(varName).toInt(ok, 0)，但下面这个函数快得多
+  int qEnvironmentVariableIntValue(const char *varName, bool *ok = nullptr);
+  // 返回环境变量varName的值，但结果类型为QByteArray。不要在Windows平台使用这个函数，因为可能会产生数据丢失，但在Unix平台不存在这个问题。
+  QByteArray qgetenv(const char *varName);
+  // 将环境变量varName的值设置为value。如果环境变量不存在，这个函数会创建一个。如果将一个环境变量设置为空，在Windows平台会导致这个环境变量被移除，但在Unix平台会导致一个空的环境变量被创建（而不是被移除）。如果确实要移除一个环境变量，请使用qunsetenv，而不是将其设置为空。
+  bool qputenv(const char *varName, const QByteArray &value);
+  // 将环境变量varName移除。
+  bool qunsetenv(const char *varName);
+  ```
+
+- 读写数据库
