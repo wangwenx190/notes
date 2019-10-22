@@ -68,4 +68,27 @@
   摘自：<https://en.cppreference.com/w/cpp/language/pimpl>
 - 格式化
 - 日志
-- 如何使编译生成的二进制文件最小：关闭调试信息的生成（即release模式）+为大小优化+开启LTCG/LTO/IPO+关闭RTTI+关闭异常处理+开启dead_strip/gc_sections+动态链接运行时+尽可能的静态链接所用到的库
+- 如何使编译生成的二进制文件最小
+
+  关闭调试信息的生成（即release模式）+为大小优化+开启链接时间代码生成（LTCG/LTO/IPO）+关闭RTTI+关闭异常处理+消除重复代码+动态链接运行时+尽可能的静态链接所用到的库
+
+  以`clang-cl`为例：
+
+  ```text
+  // 编译
+  clang-cl /clang:-Oz -flto=thin /GR- /EHs-c- /Zc:inline /Gy /MD /guard:cf
+  // 链接
+  lld-link /OPT:REF /GUARD:CF
+  // 以上都不是完整命令行，还缺少其他必要参数，此处展示的仅为所需的参数
+  ```
+
+  说明：
+    1. `/clang:-Oz`：为大小优化。要有`/clang:`这个前缀是因为`Oz`这个优化级别是`Clang`独有的，`clang-cl`不能识别；
+    2. `-flto=thin`：开启链接时间代码生成（LTCG/LTO/IPO）。注意`-f`不能写为`/f`。后面的`=thin`是设置为`ThinLTO`模式，默认是`FullLTO`模式，耗时较长；
+    3. `/GR-`：关闭RTTI（MSVC参数）；
+    4. `/EHs-c-`：关闭异常处理（MSVC参数）；
+    5. `/Zc:inline /Gy` + `/OPT:REF`：消除重复代码（MSVC参数）；
+    6. `/MD`：动态链接运行时（MSVC参数）；
+    7. `/guard:cf` + `/GUARD:CF`：MSVC及类MSVC编译器建议开启（仅限release模式）。
+
+  注：模板元编程会导致代码体积急剧膨胀，如果想要追求二进制文件的大小，一定要尽量减少使用。
