@@ -280,7 +280,7 @@
   SetWindowTheme(hWnd, L"DarkMode_Explorer", nullptr);
   ```
 
-- 读写INI文件
+- 读写INI文件：<https://github.com/Chuyu-Team/CPPHelper/blob/master/IniHelper.h>
   - 读取
 
     ```cpp
@@ -307,26 +307,7 @@
     BOOL WritePrivateProfileStruct(LPCSTR lpszSection, LPCSTR lpszKey, LPVOID lpStruct, UINT uSizeStruct, LPCSTR szFile);
     ```
 
-- 读写注册表
-  - 读取
-
-    ```cpp
-    // 头文件：winreg.h (include Windows.h)
-    // 库文件：Advapi32.lib（Advapi32.dll）
-    HKEY hKey = nullptr;
-    RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_QUERY_VALUE, &hKey);
-    DWORD dwSize = 0, dwDataType = 0;
-    RegQueryValueEx(hKey, TEXT("MyApp"), 0, &dwDataType, nullptr, &dwSize);
-    switch (dwDataType) {
-    case REG_MULTI_SZ:
-      break;
-    case REG_SZ:
-      break;
-    }
-    RegCloseKey(hKey);
-    ```
-
-  - 写入
+- 读写注册表：<https://github.com/Chuyu-Team/CPPHelper/blob/master/RegHelper.h>
 - 置顶/取消置顶窗口
 
   ```cpp
@@ -379,3 +360,69 @@
 - 关联文件后缀名
 - 将窗口嵌入桌面（类似于动态壁纸那种效果）
 - 将图标固定到任务栏（XP时代将快捷方式放到专门的文件夹的那种做法已经行不通了）
+- 资源脚本（.rc文件）写法
+
+  ```rc
+  // 此头文件不可缺少，否则编译报错。
+  // 如果把下面所有的常量替换为其对应的数值，就可以不包含任何头文件。
+  #include <windows.h>
+
+  // 第一个图标资源即为程序的图标
+  IDI_MYAPPICON ICON "app_icon.ico"
+  // 可以有不止一个图标资源，供程序内部使用
+  IDI_MYICON2 ICON "my_icon2.ico"
+
+  // VS_VERSION_INFO = 1
+  VS_VERSION_INFO VERSIONINFO
+   // 文件版本，修改时别忘了一起改这里，不要加双引号，而且是逗号不是点
+   FILEVERSION 1,0,0,1
+   // 产品版本，修改时别忘了一起改这里，不要加双引号，而且是逗号不是点
+   PRODUCTVERSION 1,0,0,1
+   FILEFLAGSMASK 0x3fL
+  #ifdef _DEBUG
+   FILEFLAGS 0x1L
+  #else
+   FILEFLAGS 0x0L
+  #endif
+   // VOS_NT_WINDOWS32 = 0x40004L
+   FILEOS VOS_NT_WINDOWS32
+   // VFT_APP = 0x1L, VFT_DLL = 0x2L
+   // 应用程序用VFT_APP，动态链接库用VFT_DLL
+   FILETYPE VFT_APP
+   // VFT2_UNKNOWN = 0x0L
+   FILESUBTYPE VFT2_UNKNOWN
+  BEGIN
+      BLOCK "StringFileInfo"
+      BEGIN
+          // 英语（美国）
+          BLOCK "040904b0"
+          BEGIN
+              VALUE "CompanyName", "TODO: <CompanyName>"
+              VALUE "FileDescription", "TODO: <FileDescription>"
+              VALUE "FileVersion", "1.0.0.1"
+              VALUE "InternalName", "WindowsP.exe"
+              VALUE "LegalCopyright", "Copyright (C) 2019"
+              VALUE "OriginalFilename", "WindowsP.exe"
+              VALUE "ProductName", "TODO: <ProductName>"
+              VALUE "ProductVersion", "1.0.0.1"
+          END
+          // 中文（中国）
+          BLOCK "080404b0"
+          BEGIN
+              VALUE "CompanyName", "TODO: <公司名>"
+              VALUE "FileDescription", "TODO: <文件说明>"
+              VALUE "FileVersion", "1.0.0.1"
+              VALUE "InternalName", "WindowsP.exe"
+              VALUE "LegalCopyright", "Copyright (C) 2019"
+              VALUE "OriginalFilename", "WindowsP.exe"
+              VALUE "ProductName", "TODO: <产品名>"
+              VALUE "ProductVersion", "1.0.0.1"
+          END
+      END
+      BLOCK "VarFileInfo"
+      BEGIN
+          // 如果添加了不同语言的区块，下面的值也要同步修改
+          VALUE "Translation", 0x409, 1200, 0x804, 1200
+      END
+  END
+  ```
