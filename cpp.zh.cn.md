@@ -68,3 +68,4 @@
   摘自：<https://en.cppreference.com/w/cpp/language/pimpl>
 - 格式化
 - 日志
+- 如何使编译生成的二进制文件最小：为大小优化+LTCG/LTO/IPO+关闭RTTI+关闭异常处理+开启dead_strip/gc_sections+动态链接运行时+尽可能的静态链接所用到的库
