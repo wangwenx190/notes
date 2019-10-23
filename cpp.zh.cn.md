@@ -76,9 +76,9 @@
 
   ```text
   // 编译
-  clang-cl /clang:-Oz -flto=thin /GR- /EHs-c- /Zc:inline /Gy /MD /guard:cf
+  clang-cl /clang:-Oz -flto=thin /GR- /EHs-c- /Zc:inline /Gy /MD
   // 链接
-  lld-link /OPT:REF /GUARD:CF
+  lld-link /OPT:REF
   // 以上都不是完整命令行，还缺少其他必要参数，此处展示的仅为所需的参数
   ```
 
@@ -89,6 +89,5 @@
     4. `/EHs-c-`：关闭异常处理（MSVC参数）；
     5. `/Zc:inline /Gy` + `/OPT:REF`：消除重复代码（MSVC参数）；
     6. `/MD`：动态链接运行时（MSVC参数）；
-    7. `/guard:cf` + `/GUARD:CF`：MSVC及类MSVC编译器建议开启（仅限release模式）。
 
   注：模板元编程会导致代码体积急剧膨胀，如果想要追求二进制文件的大小，一定要尽量减少使用。
