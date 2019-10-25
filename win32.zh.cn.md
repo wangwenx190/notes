@@ -362,7 +362,7 @@
 - 将图标固定到任务栏（XP时代将快捷方式放到专门的文件夹的那种做法已经行不通了）
 - 资源脚本（.rc文件）写法
 
-  ```rc
+  ```text
   // 此头文件不可缺少，否则编译报错。
   // 如果把下面所有的常量替换为其对应的数值，就可以不包含任何头文件。
   #include <windows.h>
@@ -372,57 +372,62 @@
   // 可以有不止一个图标资源，供程序内部使用
   IDI_MYICON2 ICON "my_icon2.ico"
 
-  // VS_VERSION_INFO = 1
   VS_VERSION_INFO VERSIONINFO
-   // 文件版本，修改时别忘了一起改这里，不要加双引号，而且是逗号不是点
-   FILEVERSION 1,0,0,1
-   // 产品版本，修改时别忘了一起改这里，不要加双引号，而且是逗号不是点
-   PRODUCTVERSION 1,0,0,1
-   FILEFLAGSMASK 0x3fL
+  // 文件版本，修改时别忘了一起改这里，不要加双引号，而且是逗号不是点
+  FILEVERSION     1,0,0,1
+  // 产品版本，修改时别忘了一起改这里，不要加双引号，而且是逗号不是点
+  PRODUCTVERSION  1,0,0,1
+  FILEFLAGSMASK   0x3fL
   #ifdef _DEBUG
-   FILEFLAGS 0x1L
+      FILEFLAGS   VS_FF_DEBUG
   #else
-   FILEFLAGS 0x0L
+      FILEFLAGS   0x0L
   #endif
-   // VOS_NT_WINDOWS32 = 0x40004L
-   FILEOS VOS_NT_WINDOWS32
-   // VFT_APP = 0x1L, VFT_DLL = 0x2L
-   // 应用程序用VFT_APP，动态链接库用VFT_DLL
-   FILETYPE VFT_APP
-   // VFT2_UNKNOWN = 0x0L
-   FILESUBTYPE VFT2_UNKNOWN
+  FILEOS          VOS_NT_WINDOWS32
+  // 应用程序用VFT_APP，动态链接库用VFT_DLL
+  FILETYPE        VFT_DLL
+  FILESUBTYPE     VFT2_UNKNOWN
   BEGIN
       BLOCK "StringFileInfo"
       BEGIN
           // 英语（美国）
-          BLOCK "040904b0"
+          BLOCK "040904B0"
           BEGIN
-              VALUE "CompanyName", "TODO: <CompanyName>"
-              VALUE "FileDescription", "TODO: <FileDescription>"
-              VALUE "FileVersion", "1.0.0.1"
-              VALUE "InternalName", "WindowsP.exe"
-              VALUE "LegalCopyright", "Copyright (C) 2019"
-              VALUE "OriginalFilename", "WindowsP.exe"
-              VALUE "ProductName", "TODO: <ProductName>"
-              VALUE "ProductVersion", "1.0.0.1"
+              VALUE "Comments",         "Built by Qt 5.14.1"
+              VALUE "CompanyName",      "wangwenx190"
+              VALUE "FileDescription",  "My App"
+              VALUE "FileVersion",      "1.0.0.1"
+              VALUE "InternalName",     "my-app"
+              VALUE "LegalCopyright",   "GPLv3"
+              VALUE "LegalTrademarks1", "Trademark-1"
+              VALUE "LegalTrademarks2", "Trademark-2"
+              VALUE "OriginalFilename", "libEg.dll"
+              VALUE "ProductName",      "Test App"
+              VALUE "ProductVersion",   "1.0.0.1"
           END
-          // 中文（中国）
-          BLOCK "080404b0"
+          // 简体中文
+          BLOCK "080404B0"
           BEGIN
-              VALUE "CompanyName", "TODO: <公司名>"
-              VALUE "FileDescription", "TODO: <文件说明>"
-              VALUE "FileVersion", "1.0.0.1"
-              VALUE "InternalName", "WindowsP.exe"
-              VALUE "LegalCopyright", "Copyright (C) 2019"
-              VALUE "OriginalFilename", "WindowsP.exe"
-              VALUE "ProductName", "TODO: <产品名>"
-              VALUE "ProductVersion", "1.0.0.1"
+              VALUE "Comments",         "使用 Qt 5.14.1 构建"
+              VALUE "CompanyName",      "我的公司"
+              VALUE "FileDescription",  "我的应用程序"
+              VALUE "FileVersion",      "1.0.0.1"
+              VALUE "InternalName",     "我的程序"
+              VALUE "LegalCopyright",   "许可协议"
+              VALUE "LegalTrademarks1", "商标1"
+              VALUE "LegalTrademarks2", "商标2"
+              VALUE "OriginalFilename", "libEg.dll"
+              VALUE "ProductName",      "测试应用"
+              VALUE "ProductVersion",   "1.0.0.1"
           END
       END
       BLOCK "VarFileInfo"
       BEGIN
-          // 如果添加了不同语言的区块，下面的值也要同步修改
+          // 下面这一行包含 WORD,WORD 对，前者为语言，后者为代码页
+          // 例如：美式英语（0x409），Unicode（1200），简体中文（0x804），Unicode（1200）
           VALUE "Translation", 0x409, 1200, 0x804, 1200
       END
   END
   ```
+
+  摘自：<https://docs.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource>
