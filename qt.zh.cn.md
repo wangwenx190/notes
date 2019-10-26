@@ -1,5 +1,11 @@
 # Qt 使用笔记
 
+## Qt 6
+
+### Qt 5 迁移指南
+
+## Qt 5
+
 - Windows 平台尽量使用[`JOM`](http://download.qt.io/official_releases/jom/)编译，速度快很多，远远不是`NMake`或者`mingw32-make`能比得上的。
 
   注：JOM仅支持原生Windows环境，任何Unix或类Unix环境（例如MinGW）均不支持。

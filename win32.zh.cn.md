@@ -359,7 +359,18 @@
 
 - 关联文件后缀名
 - 将窗口嵌入桌面（类似于动态壁纸那种效果）
-- 将图标固定到任务栏（XP时代将快捷方式放到专门的文件夹的那种做法已经行不通了）
+- 将图标固定到任务栏
+
+  ```cpp
+  // 头文件：shellapi.h
+  // 库文件：Shell32.lib（Shell32.dll）
+  ShellExecute(nullptr, TEXT("TaskbarPin"), TEXT("快捷方式（.lnk文件）的绝对路径"), nullptr, nullptr, SW_SHOW);
+  // 快捷方式指向的文件一定要存在，即不能把一个失效的快捷方式固定到任务栏。当然了，快捷方式本身也一定要存在，不能把一个不存在的文件固定到任务栏。
+  // 将“TaskbarPin”替换为“TaskbarUnpin”即可将已经固定在任务栏上的图标移除。
+  ```
+
+  注：此API支持Win7~Win10，Windows Vista及XP请直接在`C:\Documents and Settings\用户名\Application Data\Microsoft\Internet Explorer\Quick Launch`文件夹下创建快捷方式。
+
 - 资源脚本（.rc文件）写法
 
   ```text
