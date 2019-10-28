@@ -402,7 +402,7 @@
       BLOCK "StringFileInfo"
       BEGIN
           // 英语（美国）
-          BLOCK "040904B0"
+          BLOCK "040904b0"
           BEGIN
               VALUE "Comments",         "Built by Qt 5.14.1"
               VALUE "CompanyName",      "wangwenx190"
@@ -417,7 +417,7 @@
               VALUE "ProductVersion",   "1.0.0.1"
           END
           // 简体中文
-          BLOCK "080404B0"
+          BLOCK "080404b0"
           BEGIN
               VALUE "Comments",         "使用 Qt 5.14.1 构建"
               VALUE "CompanyName",      "我的公司"

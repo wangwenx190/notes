@@ -44,26 +44,40 @@
 - `opengl32sw.dll`这个文件是用软件模拟的显卡，针对的是没有显卡的机器，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件，能极大减小发布大小
 - 发布 Windows 平台的 Qt 程序时可以使用 Qt 官方提供的`windeployqt`程序，这个小程序会自动检测并复制相关的 dll 到你的程序文件夹，非常方便。但它无法检测第三方库，必须自行查找并复制。而且这个工具会复制一些多余的 Qt 的 dll，但极难判断究竟哪些是真的无用，因此就不要管了。
 
-  常用参数：
+  - 常用参数：
 
-  | 参数 | 附加参数 | 描述 |
-  | ---- | ---- | ----- |
-  | `--dir <directory>` | 目标文件夹路径 | 使用给定的文件夹（作为此次操作的根目录），而不是二进制文件所在的文件夹 |
-  | `--libdir <path>` | 目标文件夹路径 | 将Qt库文件（Qt5XXX.dll或libQt5XXX.so）复制到给定的路径，而不是二进制文件所在的文件夹 |
-  | `--plugindir <path>` | 目标文件夹路径 | 将Qt自身的插件复制到给定的路径，而不是直接放在二进制文件所在的文件夹 |
-  | `--pdb` | - | 一同复制.PDB文件（仅限MSVC） |
-  | `--force` | - | 强制更新文件 |
-  | `--dry-run` | - | 模拟模式。正常执行操作，但不会复制或更新任何文件 |
-  | `--qmldir <directory>` | **应用程序自身**的QML插件文件夹路径（此处用的是工程路径，不是发布后QML插件所在的路径） | 从给定的文件夹扫描.QML文件，来复制所用到的Qt Quick插件 |
-  | `--no-translations` | - | 不复制Qt自身的翻译文件 |
-  | `--no-system-d3d-compiler` | - | 不复制D3DCompiler_XX.dll |
-  | `--no-virtualkeyboard` | - | 不复制虚拟键盘相关的文件 |
-  | `--no-compiler-runtime` | - | 不复制编译器运行时相关的文件（例如vcredist_msvc2017_x64.exe） |
-  | `--no-angle` | - | 不复制ANGLE相关的文件（libEGL.dll和libGLESv2.dll） |
-  | `--no-opengl-sw` | - | 不复制Mesa llvmpipe相关的文件（opengl32sw.dll） |
-  | `--json` | - | 将输出结果输出为JSON格式 |
-  | `--list <option>` | `source`：源文件的绝对路径；`target`：目标文件的绝对路径；`relative`：目标文件的相对路径（与目标文件夹相对）；`mapping`：UWP平台的Appx专用 | 将复制的文件输出为列表文件 |
-- 使用`CONFIG += windeployqt` -> `nmake/jom windeployqt`来自动执行`windeployqt`程序
+    | 参数 | 附加参数 | 描述 |
+    | ---- | ---- | ----- |
+    | `--dir <directory>` | 目标文件夹路径 | 使用给定的文件夹（作为此次操作的根目录），而不是二进制文件所在的文件夹 |
+    | `--libdir <path>` | 目标文件夹路径 | 将Qt库文件（Qt5XXX.dll或libQt5XXX.so）复制到给定的路径，而不是二进制文件所在的文件夹 |
+    | `--plugindir <path>` | 目标文件夹路径 | 将Qt自身的插件复制到给定的路径，而不是直接放在二进制文件所在的文件夹 |
+    | `--pdb` | - | 一同复制.PDB文件（仅限MSVC） |
+    | `--force` | - | 强制更新文件 |
+    | `--dry-run` | - | 模拟模式。正常执行操作，但不会复制或更新任何文件 |
+    | `--qmldir <directory>` | **应用程序自身**的QML插件文件夹路径（此处用的是工程路径，不是发布后QML插件所在的路径） | 从给定的文件夹扫描.QML文件，来复制所用到的Qt Quick插件 |
+    | `--no-translations` | - | 不复制Qt自身的翻译文件 |
+    | `--no-system-d3d-compiler` | - | 不复制D3DCompiler_XX.dll |
+    | `--no-virtualkeyboard` | - | 不复制虚拟键盘相关的文件 |
+    | `--no-compiler-runtime` | - | 不复制编译器运行时相关的文件（例如vcredist_msvc2017_x64.exe） |
+    | `--no-angle` | - | 不复制ANGLE相关的文件（libEGL.dll和libGLESv2.dll） |
+    | `--no-opengl-sw` | - | 不复制Mesa llvmpipe相关的文件（opengl32sw.dll） |
+    | `--json` | - | 将输出结果输出为JSON格式 |
+    | `--list <option>` | `source`：源文件的绝对路径；`target`：目标文件的绝对路径；`relative`：目标文件的相对路径（与目标文件夹相对）；`mapping`：UWP平台的Appx专用 | 将复制的文件输出为列表文件 |
+
+  - 如何使QMake自动调用`windeployqt`工具
+
+    在.pro文件里写入：
+
+    ```text
+    CONFIG += windeployqt
+    ```
+
+    然后使用命令行编译时：
+
+    ```text
+    jom/nmake/mingw32-make windeployqt
+    ```
+
 - QMake用命令行编译 Qt 工程：
 
   ```bash
@@ -77,9 +91,9 @@
 
   这个命令行是全平台通用的，只不过最后的`make`过程要根据你的平台修改，例如MinGW使用`mingw32-make`，Unix使用`make`。
 - Windows平台可以使用[`Dependency Walker`](http://www.dependencywalker.com/)这个工具来检测你开发的程序具体依赖哪些 dll，非常好用
-- 如果你开发的程序不是很大，不推荐使用 Qt 提供的`Installer Framework`(`IFW`)打包，因为这个`IFW`是 Qt 静态编译的，因此文件会比较大，哪怕什么文件都不打包，也会有**20MB**左右的大小，得不偿失。当然，如果你的程序很大，几百兆甚至更大，就可以用它了。小软件推荐：[NSIS](https://sourceforge.net/projects/nsis/)，[Inno Setup](http://jrsoftware.org/isinfo.php)，[WiX Toolset](http://wixtoolset.org/)（制作**MSI**安装包专用）。不推荐：Install Shield（授权费非常昂贵，软件非常臃肿，打包出的安装程序较大，界面不容易定制。不信自己装一个试试），Install Anywhere（与前者是同一个公司的，因此缺点也差不多），Advanced Installer（有授权费），Vice Installer（远古软件），Wise Installation System（远古软件），Smart Install Maker（基本就是个玩具）以及其他任何不知名小软件
-- 尽量不要链接`ICU`(`International Components for Unicode`)，虽然它提供了对世界上大多数国家和地区的语言和文字支持，功能非常强大，但文件太大，裁剪前**20~30MB**左右，裁剪后也有**10MB**左右，实际上一般程序根本用不到这种变态级别的国际化支持，所以不推荐使用这个库。Qt 官方也早已去掉了对它的依赖。在配置时给一个`-no-icu`参数就可以禁用`ICU`支持。
-- Qt自从5.13版本开始添加了对`Schannel`的支持，可以在配置时通过`-schannel`来启用，以此去掉对`OpenSSL`的依赖（如果完全不需要`OpenSSL`的支持，需要在配置时给一个`-no-openssl`参数来禁用`OpenSSL`）
+- 如果你开发的程序不是很大，不推荐使用 Qt 提供的[`Installer Framework`(`IFW`)](http://download.qt.io/official_releases/qt-installer-framework/)打包，因为这个`IFW`是 Qt 静态编译的，因此文件会比较大，哪怕什么文件都不打包，也会有**20MB**左右的大小，得不偿失。当然，如果你的程序很大，几百兆甚至更大，就可以用它了。小软件推荐：[NSIS](https://sourceforge.net/projects/nsis/)，[Inno Setup](http://jrsoftware.org/isinfo.php)，[WiX Toolset](http://wixtoolset.org/)（制作**MSI**安装包专用）。不推荐：Install Shield（授权费非常昂贵，软件非常臃肿，打包出的安装程序较大，界面不容易定制。不信自己装一个试试），Install Anywhere（与前者是同一个公司的，因此缺点也差不多），Advanced Installer（制作MSI安装包专用，授权费较高），Vice Installer（远古软件），Wise Installation System（远古软件），Smart Install Maker（基本就是个玩具）以及其他任何不知名小软件
+- 尽量不要链接[`ICU`(`International Components for Unicode`)](https://github.com/unicode-org/icu)，虽然它提供了对世界上大多数国家和地区的语言和文字支持，功能非常强大，但文件太大，裁剪前**20~30MB**左右，裁剪后也有**10MB**左右，实际上一般程序根本用不到这种变态级别的国际化支持，所以不推荐使用这个库。Qt 官方也早已去掉了对它的依赖。在配置时给一个`-no-icu`参数就可以禁用`ICU`支持。
+- Qt自从5.13版本开始添加了对`Schannel`的支持，可以在配置时通过`-schannel`来启用，以此去掉对[`OpenSSL`](https://github.com/openssl/openssl)的依赖（如果完全不需要`OpenSSL`的支持，需要在配置时给一个`-no-openssl`参数来禁用`OpenSSL`）
 - QMake区分调试版本和发布版本：`CONFIG(debug, debug|release)`（debug时返回true），`CONFIG(release, debug|release)`（release时返回true），`contains(CONFIG, debug)`（debug时返回true），`contains(CONFIG, release)`（release时返回true），或者更简单的`debug:`和`release:`。在代码中，可以通过`#ifdef _DEBUG`来判断，但请注意，发布版本并没有`_RELEASE`这样的宏。
 - QMake区分 Qt 是静态链接还是动态链接的：`CONFIG(static, static|shared)`，`CONFIG(shared, static|shared)`，`contains(CONFIG, static)`，`contains(CONFIG, shared)`，`static:`，`shared:`。在代码中，可以通过`#ifdef QT_STATIC`和`#ifdef QT_SHARED`来判断。
 - QMake区分32位还是64位：`contains(QMAKE_TARGET.arch, x86_64)`，`contains(QMAKE_HOST.arch, x86_64)`，`contains(QT_ARCH, x86_64)`，以上三条语句在编译64位程序时返回true。其中`x86_64`替换为其他架构，例如`i386`，也是可行的，只不过判断的就不一定是64位了。在代码中，Windows 平台上可以通过`#ifdef WIN64`或`#ifdef _WIN64`来判断是不是64位，不要用`WIN32`来判断，因为`WIN32`这个会在两个架构上都有定义。
@@ -92,10 +106,11 @@
      VERSION = 1.2.3
      # 设置图标。必须为.ico格式，且最大 256x256
      RC_ICONS = "../res/icon.ico"
-     # 设置代码页
-     #RC_CODEPAGE = ""
-     # 设置语言。具体的值请参考：https://docs.microsoft.com/en-us/windows/win32/intl/language-identifier-constants-and-strings
-     RC_LANG = 0x0004
+     # 设置代码页（此处以Unicode为例）
+     RC_CODEPAGE = 1200
+     # 设置语言（此处以简体中文为例）
+     RC_LANG = 0x0804
+     # 更多代码页以及语言的值请参考：https://docs.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
      # 设置产品名称
      QMAKE_TARGET_PRODUCT = "My app name"
      # 设置文件说明
@@ -208,7 +223,7 @@
    ```
 
    摘自：<https://doc.qt.io/qt-5/qmake-environment-reference.html>
-- 在 Windows 平台上使用`MinGW`编译 Qt 时不能使用`JOM`，也不能开启 LTO，否则会报错，不清楚具体的原因
+- 在 Windows 平台上使用`MinGW`编译 Qt 时不能开启 LTO，否则会报错，不清楚具体的原因
 - 在 Windows 平台上如果想要嵌入 Manifest 文件，可以插入到资源文件中，但我试过几次，效果都不理想，可能是方法有问题
 - 编译 Qt 时常用的参数：
 
@@ -324,7 +339,7 @@
   ```
 
   这个函数的作用是可以修改日志输出的格式，但它最大的用途是可以利用自定义的回调函数将日志信息写入到文件。
-- Qt 5（说Qt5是因为不知道Qt6会不会改）在使用`qInstallMessageHandler`设置回调函数时，不能通过常规方法设置为类的成员函数，一般都是设置为全局函数，如果非要设置为一个类的成员函数，请参考以下示例：
+- Qt 5在使用`qInstallMessageHandler`设置回调函数时，不能通过常规方法设置为类的成员函数，一般都是设置为全局函数，如果非要设置为一个类的成员函数，请参考以下示例：
 
   ```cpp
   // mylogger.h
@@ -491,7 +506,7 @@
   ```
 
 - Qt Creator的配置文件存放在`%APPDATA%\QtProject`，如果发现Qt Creator出问题了，可以将这个文件夹删除，然后重新打开Qt Creator即可。
-- `QMediaPlayer`依赖本地解码器，默认状态下仅支持非常有限的格式，Windows平台上下载[*K-Lite Codec Pack*](http://www.codecguide.com/download_k-lite_codec_pack_mega.htm)或者[*LAV Filters*](https://github.com/Nevcairiel/LAVFilters/releases/latest)安装即可解决。但`QMediaPlayer`官方没有提供开启硬件解码的接口，默认全部软件解码，对CPU的占用较高。
+- `QMediaPlayer`依赖本地解码器，默认状态下仅支持非常有限的格式，Windows平台上下载[*K-Lite Codec Pack*](http://www.codecguide.com/download_k-lite_codec_pack_mega.htm)或者[*LAV Filters*](https://github.com/Nevcairiel/LAVFilters/releases/latest)安装即可解决。但`QMediaPlayer`官方没有提供开启硬件解码的接口，默认全部软件解码，对CPU和内存的占用较高，除非继承`QAbstractVideoFilter`这个类自己写一个解码插件，自己实现硬件解码（具体方法请查看Qt手册。这个对多媒体文件的编解码知识要求较高，我暂时还干不了这个）。
 - 如何使`QPushButton`的文字左对齐：
 
   设置样式表`QPushButton{text-align:left;}`。
@@ -624,7 +639,7 @@
   注：
 
   - 以上代码必须在`Q(Core|Gui)Application`构造前使用，否则不会生效。
-  - 也可以通过设置环境变量来实现这个功能（即不写任何代码）：将`QT_OPENGL`设置为`desktop`、`angle`或`software`。当使用ANGLE时，设置`QT_ANGLE_PLATFORM`这个环境变量为`d3d11`、`d3d9`或`warp`可以修改ANGLE默认使用的DirectX版本。
+  - 也可以通过设置环境变量来实现这个功能（即不写任何代码）：将`QT_OPENGL`设置为`desktop`、`angle`或`software`。当使用ANGLE时，设置`QT_ANGLE_PLATFORM`这个环境变量为`d3d11`、`d3d9`或`warp`可以修改ANGLE默认使用的DirectX版本。但请注意，这些环境变量的名字及其值都是大小写敏感的。
 - 设置Qt默认使用的OpenGL版本：
 
   ```cpp
@@ -1233,6 +1248,7 @@
 - 在使用`QLineEdit`的时候，如果想要实现将输入的格式和内容限定为*IP地址*、*MAC地址*以及*序列号*等特殊需求，可以将`void QLineEdit::setInputMask(const QString &inputMask);`与`void QLineEdit::setValidator(const QValidator *v);`搭配使用，前者用来限定输入的格式，后者用来限定输入的内容，非常简单方便和高效。
 - 尽量使用`QString QFileInfo::canonicalFilePath() const;`这个函数而不是`QString QFileInfo::absoluteFilePath() const;`或者`QString QFileInfo::filePath() const;`，因为`canonicalFilePath`这个函数会尽可能的解析路径，不会包含`.`、`..`或任何快捷方式/软链接，而且返回的是完整的绝对路径，而后两个函数不会解析的如此彻底。
 - Qt界面文字乱码：
+  - 将所有源码文件（.h、.hpp、.c、.cpp、.qml等）的文本编码都改为`UTF-8`，最好不要带`BOM`。
   - 不要直接在源码（C++和QML）中使用非英文半角字符（注释除外），非英文半角字符一定要用`tr`（QML：`qsTr`）函数包裹起来。如果实在不需要翻译，则用`QStringLiteral`包裹。
   - 编译器开启`UTF-8`支持。
 - 修改程序字体
