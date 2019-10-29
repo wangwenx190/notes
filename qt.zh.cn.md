@@ -570,12 +570,21 @@
 - 遍历文件夹下的所有文件：
 
   ```cpp
+  namespace {
+  bool isSymLink(const QFileInfo &dir) {
+  #ifdef Q_OS_WINDOWS
+      return dir.isShortcut();
+  #else
+      return dir.isSymLink();
+  #endif
+  }
+  }
   QVector<QString> Widget::getFolderContents(const QString &folderPath) const {
       if (folderPath.isEmpty() || !QFileInfo::exists(folderPath) || !QFileInfo(folderPath).isDir()) {
           return {};
       }
       const QFileInfo dirInfo(folderPath);
-      const QDir dir(dirInfo.isSymLink() ? dirInfo.symLinkTarget() : dirInfo.canonicalFilePath());
+      const QDir dir(isSymLink(dirInfo) ? dirInfo.symLinkTarget() : dirInfo.canonicalFilePath());
       const auto fileInfoList = dir.entryInfoList(QDir::Files | QDir::Readable | QDir::Hidden | QDir::System, QDir::Name);
       const auto folderInfoList = dir.entryInfoList(QDir::Dirs | QDir::Readable | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot, QDir::Name);
       if (fileInfoList.isEmpty() && folderInfoList.isEmpty()) {
@@ -584,12 +593,12 @@
       QVector<QString> stringList = {};
       if (!fileInfoList.isEmpty()) {
           for (const auto &fileInfo : fileInfoList) {
-              stringList.append(QDir::toNativeSeparators(fileInfo.isSymLink() ? fileInfo.symLinkTarget() : fileInfo.canonicalFilePath()));
+              stringList.append(QDir::toNativeSeparators(isSymLink(fileInfo) ? fileInfo.symLinkTarget() : fileInfo.canonicalFilePath()));
           }
       }
       if (!folderInfoList.isEmpty()) {
           for (const auto &folderInfo : folderInfoList) {
-              const QVector<QString> _fileList = getFolderContents(folderInfo.isSymLink() ? folderInfo.symLinkTarget() : folderInfo.canonicalFilePath());
+              const QVector<QString> _fileList = getFolderContents(isSymLink(folderInfo) ? folderInfo.symLinkTarget() : folderInfo.canonicalFilePath());
               if (!_fileList.isEmpty()) {
                   stringList.append(_fileList);
               }
