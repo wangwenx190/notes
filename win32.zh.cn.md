@@ -79,7 +79,7 @@
   // 头文件：shellapi.h
   // 库文件：Shell32.lib（Shell32.dll）
   SHELLEXECUTEINFO sei;
-  sei.lpVerb = TEXT("runas"); // 这一行是关键，有了这一行才能以管理员权限执行
+  sei.lpVerb = TEXT("RunAs"); // 这一行是关键，有了这一行才能以管理员权限执行
   sei.lpFile = TEXT("notepad.exe"); // 待启动程序的路径
   sei.nShow = SW_HIDE; // 想隐藏程序窗口的话要加上这一句，否则不需要这一行
   sei.lpParameters = TEXT("/ABC /DEF"); // 要传给程序的参数，没有的话也不需要这一行
