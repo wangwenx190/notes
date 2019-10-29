@@ -14,6 +14,7 @@
   BOOL MoveToRecycleBin(LPCTSTR pszPath, BOOL bDelete)
   {
     SHFILEOPSTRUCT sfos;
+    SecureZeroMemory(sfos, sizeof(sfos));
     sfos.fFlags |= FOF_SILENT; // 不要显示进度
     sfos.fFlags |= FOF_NOERRORUI; // 不要报错
     sfos.fFlags |= FOF_NOCONFIRMATION; // 不要弹出提示窗口（您是否要删除XXX）
@@ -79,6 +80,7 @@
   // 头文件：shellapi.h
   // 库文件：Shell32.lib（Shell32.dll）
   SHELLEXECUTEINFO sei;
+  SecureZeroMemory(sei, sizeof(sei));
   sei.lpVerb = TEXT("RunAs"); // 这一行是关键，有了这一行才能以管理员权限执行
   sei.lpFile = TEXT("notepad.exe"); // 待启动程序的路径
   sei.nShow = SW_HIDE; // 想隐藏程序窗口的话要加上这一句，否则不需要这一行
@@ -112,13 +114,14 @@
   // 服务描述
   #define SERVICE_DESCRIPTION TEXT("This service will do something.")
 
-  SERVICE_STATUS serviceStatus = { 0 };
+  SERVICE_STATUS serviceStatus;
   SERVICE_STATUS_HANDLE serviceStatusHandle = nullptr;
 
   // 服务安装函数
   VOID Install()
   {
-      TCHAR filePath[MAX_PATH + 1] = { 0 };
+      TCHAR filePath[MAX_PATH + 1];
+      SecureZeroMemory(filePath, sizeof(filePath));
       DWORD dwSize = GetModuleFileName(nullptr, filePath, MAX_PATH);
       filePath[dwSize] = 0;
       bool result = false;
@@ -129,6 +132,7 @@
           if (hService != nullptr)
           {
               SERVICE_DESCRIPTION sdesc;
+              SecureZeroMemory(sdesc, sizeof(sdesc));
               sdesc.lpDescription = const_cast<LPTSTR>(SERVICE_DESCRIPTION);
               result = ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &sdesc);
               CloseServiceHandle(hService);
@@ -204,7 +208,7 @@
       serviceStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, ServiceCtrlHandler);
       if (serviceStatusHandle == nullptr)
           return;
-      ZeroMemory(&serviceStatus, sizeof(serviceStatus));
+      SecureZeroMemory(serviceStatus, sizeof(serviceStatus));
       serviceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS;
       serviceStatus.dwControlsAccepted = 0;
       serviceStatus.dwCurrentState = SERVICE_START_PENDING;
@@ -345,6 +349,7 @@
     ShowWindow(hWnd, SW_SHOW);
   }
   WINDOWPLACEMENT wndpmt;
+  SecureZeroMemory(wndpmt, sizeof(wndpmt));
   if (GetWindowPlacement(hWnd, &wndpmt) != FALSE) {
     // 如果窗口被最小化了，还原回去
     if (wndpmt.showCmd == SW_SHOWMINIMIZED) {
