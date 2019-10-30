@@ -447,3 +447,5 @@
   ```
 
   摘自：<https://docs.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource>
+
+  注：如果.rc文件中包含非拉丁字符，请将文本编码设置为`UTF-16 LE`或对应的本地文本编码，但不要改为`UTF-8`（不论带不带`BOM`），否则编译时会报错。
