@@ -1567,3 +1567,70 @@
   ```
 
 - 读写数据库
+- 使用`QTimer::singleShot`可以实现延时执行部分代码，在某些特定情况下特别好用，请留意。
+
+  ```cpp
+  // 延时为0也是可以的
+  QTimer::singleShot(0, [](){
+    // Do something
+  });
+  ```
+
+- 使用弱属性机制，可以很方便的实现许多意想不到的效果：
+
+  ```cpp
+  // 设置属性及其值。如果此属性不存在，则新建一个，如果存在，则更新其值。
+  bool QObject::setProperty(const char *name, const QVariant &value);
+  // 获取属性的值
+  QVariant QObject::property(const char *name) const;
+  // 获取所有弱属性的名字
+  QList<QByteArray> QObject::dynamicPropertyNames() const;
+  ```
+
+- 获取类的元属性及其值（非弱属性）
+
+  ```cpp
+  const auto* metaObject = obj->metaObject();
+  for (int i = metaObject->propertyOffset(); i != metaObject->propertyCount(); ++i) {
+    const auto metaProperty = metaObject->property(i);
+    const auto name = metaProperty.name();
+    const auto typeName = metaProperty.typeName();
+    const auto value = object->property(name);
+    qDebug() << name << typeName << value;
+  }
+  ```
+
+- `This application failed to start because it could not find or load the Qt platform plugin`错误如何解决？
+
+  此错误仅在Qt程序无法找到或成功加载*QPA*（*Qt Platform Abstract*）插件时才会发生。静态链接Qt库的程序不会发生此错误，只有动态链接或加载Qt库的程序才有可能会发生这个错误。在Windows平台，此插件存在于`C:\Qt\5.14.0\msvc2017_64\plugins\platforms`（以Qt 5.14.0 msvc2017 64-bit为例，且安装到默认位置），发布版文件为`qwindows.dll`，调试版文件为`qwindowsd.dll`，请确保您开发的Qt程序所在的文件夹下存在`platforms`（或`plugins\platforms`）文件夹且`qwindows(d).dll`位于其中，并注意32位和64位的DLL不能混用。另，使用[`UPX`](https://github.com/upx/upx)等压缩或加壳程序处理过的QPA插件也经常无法正常加载，这点也要十分注意。其他平台的QPA插件也大同小异，与Windows平台相比，只是文件名和后缀名有所区别。
+
+  注：所有Qt插件（`plugins`文件夹下的所有内容）都不要用任何第三方程序（例如`UPX`）进行处理，否则会导致Qt程序行为异常。
+- 在`QTableView`控件中，如果需要自定义的列按钮、复选框、下拉框等其他模式显示，可以采用自定义委托`QItemDelegate`来实现，如果需要禁用某列，则在自定义委托的重载`createEditor`函数返回`0`即可。自定义委托对应的控件在进入编辑状态的时候出现，如果想一直出现，则需要重载`paint`函数用`drawPrimitive`或者`drawControl`来绘制。
+- 将`QApplication::style()`对应的`drawPrimitive`、`drawControl`、`drawItemText`、`drawItemPixmap`等几个方法用熟悉了，再结合`QStyleOption`属性，可以玩转各种自定义委托，还可以直接使用`paint`函数中的`painter`进行各种绘制，各种牛逼的表格、树状列表、下拉框等，绝对屌炸天。`QApplication::style()->drawControl`的第4个参数如果不设置，则绘制出来的控件不会应用样式表。
+- 在已知背景色的情况下，为了能够清晰的绘制文字，这个时候需要计算合适的文字颜色：
+
+  ```cpp
+  // 根据背景色自动计算合适的前景色
+  double gray = (0.299 * color.red() + 0.587 * color.green() + 0.114 * color.blue()) / 255;
+  QColor textColor = gray > 0.5 ? Qt::black : Qt::white;
+  ```
+
+- `QTableView`或者`QTableWidget`禁用列拖动：
+
+  ```cpp
+  ui->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+  ```
+
+- `QVariant`提供了`toInt`、`toReal`、`toBool`、`toString`、`toList`以及`toMap`等方法，可以方便的将`QVariant`转为各种具体的类型，如果遇到想要转换的类型没有类似的转换函数，可以用以下方法手动进行转换：
+
+  ```cpp
+  // 判断具体是什么类型（如果对类型非常确定，可以跳过这一步）
+  if (variant.typeName() == "QColor") {
+      // 将QVariant转为QColor
+      QColor color = variant.value<QColor>();
+      // 将QVariant转为QFont
+      QFont font = variant.value<QFont>();
+      // 将QVariant转为QXXX
+      QXXX xxx = variant.value<QXXX>();
+  }
+  ```
