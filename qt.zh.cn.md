@@ -1634,3 +1634,7 @@
       QXXX xxx = variant.value<QXXX>();
   }
   ```
+
+- Qt支持安装多个翻译文件，但如果有重复的翻译条目，后来安装的翻译文件会覆盖之前的。同时还可以用`[static] bool QCoreApplication::removeTranslator(QTranslator *translationFile)`这个API来移除某个特定的已安装的翻译文件。
+
+  注：大多数`QWidget`及其右键菜单（如果有的话）基本都是没有中文翻译的，如果想要完全汉化，则需要自行生成*widgets.ts*并手动翻译。
