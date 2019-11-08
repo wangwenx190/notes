@@ -665,6 +665,8 @@
 - 如何使能进行翻译的字符串都被`tr`函数包裹，不被遗漏：
 
   在全局定义`QT_NO_CAST_FROM_ASCII`这个宏，之后在编译时任何没有被`QLatin1String`包裹的字符串都会被提示出来（或直接报错？不太确定）。
+
+  注：使用`QT_NO_CAST_TO_ASCII`可以禁止`QString`到本地8位编码字符串（`char *`）的转换。
 - 在Linux平台发布Qt程序：
   - 将所有用到的动态库都复制到二进制文件所在的文件夹。可以使用一个叫`linuxdeployqt`的第三方小工具（Qt官方没有提供类似的工具）：<https://github.com/probonopd/linuxdeployqt>
   - 将以下脚本保存到二进制文件所在的文件夹下，并重命名为二进制文件的名字（不包括后缀名，脚本的后缀名一直都是.sh）：
@@ -731,10 +733,10 @@
     使用了TCP/IP以及共享内存等多种技术，理论上也是跨平台的。
 - 进程间通信（IPC）：7种方式
   - 4种跨平台方式：
-    - Qt Remote Objects（QtRO）：使用`Qt Remote Objects`模块实现
+    - Qt Remote Objects（QtRO）：使用`Qt Remote Objects`模块实现。我粗略的看了下这个模块的源码，发现`QtRO`内部也是使用TCP/IP的方式实现的。这个模块具体的用法我也不是特别明白，暂时就不展开讲了。
     - TCP/IP：使用`Qt Network`模块的`QLocalServer`以及`QLocalSocket`实现
     - 共享内存：使用`Qt Core`模块的`QSharedMemory`或`QSystemSemaphore`/`QSemaphore`实现
-    - QProcess
+    - QProcess：`QProcess`是`QIODevice`的派生类，因此支持`read`和`write`等函数。当然也可以通过传递和读取命令行参数实现通信。
   - 3种平台独有方式：
     - Windows：消息
 
@@ -778,8 +780,8 @@
       }
       ```
 
-    - Linux：D-Bus
-    - Linux：Session Management
+    - Linux：D-Bus。暂不了解。
+    - Linux：Session Management。暂不了解。
 - 下载文件
 
   ```cpp
@@ -803,13 +805,16 @@
           QTextStream(stderr) << tr("Redirected to: ") << redirectUrl.toDisplayString() << endl;
         }
       } else {
+        // 写入到本地文件
         QFile file(QLatin1String("D:/test.dat"));
         file.open(QFile::WriteOnly);
+        // QNetworkReply是QIODevice的派生类
         file.write(reply->readAll());
         file.close();
       }
     }
   });
+  // 此处的网址仅作演示之用，并不实际存在
   const QUrl url = QUrl::fromEncoded("https://download.qt.io/balabalabala.dat");
   QNetworkRequest request(url);
   manager.get(request);
@@ -827,6 +832,8 @@
   const QString hash = QLatin1String(cryptographicHash.result().toHex());
   ```
 
+  注：当数据量不大时，可以通过使用静态函数`[static] QByteArray QCryptographicHash::hash(const QByteArray &data, QCryptographicHash::Algorithm method)`直接计算哈希值。
+
 - Qt框架下的服务程序（Windows services与Unix daemons）
 
   - `QtService`（Qt Solutions Component: Service）：<https://github.com/qtproject/qt-solutions/tree/master/qtservice>
@@ -835,7 +842,6 @@
   - `QtService`：<https://github.com/Skycoder42/QtService>
 
     支持 Windows + Linux + macOS，代码库较新
-- 获取部分硬件信息
 - 获取操作系统的详细信息
 
   ```text
@@ -1026,7 +1032,66 @@
 - 读写注册表：`QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office", QSettings::NativeFormat);`
 
   注：某些特殊的或重要的键值没有管理员权限无法修改，例如`HKEY_LOCAL_MACHINE`等，如果发现无法写入或修改注册表的某个键值，先看是不是权限的原因，不是的话再去看是不是程序本身有bug，实在找不到问题根源再去怀疑是不是Qt本身的bug。
-- Windows：任务栏进度条，图标+任务栏小按钮+任务栏任务列表（最近打开，常用任务等）
+- Windows上启用*DWM*（*Desktop Window Manager*）特性：
+  - 任务栏进度条+角标
+
+    ```cpp
+    // 要想获取并操作任务栏进度条，必须先新建一个QWinTaskbarButton
+    QWinTaskbarButton *winTaskbarButton = new QWinTaskbarButton(this);
+    // 此处要传一个QWindow的指针。QWidget可以用windowHandle这个函数来获取
+    winTaskbarButton->setWindow(windowHandle());
+    // 设置任务栏图标的角标样式。此处使用了Qt提供的标准图标，您也可以使用自己的资源文件：setOverlayIcon(QIcon(":/loading.png"));
+    // 角标也不是必须的，如果不设置角标，则不会显示角标
+    winTaskbarButton->setOverlayIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    // 获取任务栏进度条
+    QWinTaskbarProgress *winTaskbarProgress = winTaskbarButton->progress();
+    // 使用hide函数可以彻底隐藏进度条
+    winTaskbarProgress->show();
+    // 设置进度条的进度。使用setMaximum和setMinimum这两个函数或setRange这一个函数来设置进度条的进度范围，默认为0~100。
+    // 使用reset函数可以将进度重置为最小值
+    winTaskbarProgress->setValue(50);
+    // 调用resume函数会使进度条显绿色，调用pause函数会使进度条显黄色，调用stop函数会使进度条显红色。
+    winTaskbarProgress->resume();
+    ```
+
+  - 任务栏小按钮
+
+    ```cpp
+    // 要想创建任务栏小按钮，必须先新建一个QWinThumbnailToolBar
+    QWinThumbnailToolBar *winThumbnailToolBar = new QWinThumbnailToolBar(this);
+    winThumbnailToolBar->setWindow(windowHandle());
+    QWinThumbnailToolButton *winThumbnailToolButton1 = new QWinThumbnailToolButton(winThumbnailToolBar);
+    winThumbnailToolButton1->setToolTip(tr("Play"));
+    // 此选项设置为true可以使预览窗口在按钮点击后关闭。默认值为false
+    winThumbnailToolButton1->setDismissOnClick(true);
+    winThumbnailToolButton1->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    connect(winThumbnailToolButton1, &QWinThumbnailToolButton::clicked, this, [](){
+      // Do something
+    });
+    // 将按钮添加到任务栏
+    winThumbnailToolBar->addButton(winThumbnailToolButton1);
+    ```
+
+  - 任务列表
+
+    ```cpp
+    QWinJumpListItem *newProject = new QWinJumpListItem(QWinJumpListItem::Link);
+    newProject->setTitle(tr("Create new project"));
+    newProject->setFilePath(QDir::toNativeSeparators(QCoreApplication::applicationFilePath()));
+    newProject->setArguments(QStringList{"--new-project"});
+    QWinJumpList winJumpList;
+    // 常用任务
+    QWinJumpListCategory *tasks = winJumpList.tasks();
+    tasks->addItem(newProject);
+    tasks->setVisible(true);
+    // 最近文件
+    QWinJumpListCategory *recent = winJumpList.recent();
+    recent->setVisible(true);
+    // 常用文件
+    QWinJumpListCategory *frequent = winJumpList.frequent();
+    frequent->setVisible(true);
+    ```
+
 - lupdate：将源码中能进行翻译的字符串制作为Qt Linguist专用的.ts翻译文件
 
   用法：`lupdate [options] [project-file]...`或`lupdate [options] [source-file|path|@lst-file]... -ts ts-files|@lst-file`
@@ -1638,3 +1703,27 @@
 - Qt支持安装多个翻译文件，但如果有重复的翻译条目，后来安装的翻译文件会覆盖之前的。同时还可以用`[static] bool QCoreApplication::removeTranslator(QTranslator *translationFile)`这个API来移除某个特定的已安装的翻译文件。
 
   注：大多数`QWidget`及其右键菜单（如果有的话）基本都是没有中文翻译的，如果想要完全汉化，则需要自行生成*widgets.ts*并手动翻译。
+- 如何获取*此电脑*（*计算机*、*我的电脑*）、以及*回收站*（*垃圾桶*、*废纸篓*）等系统程序的图标或某个具体的文件的图标
+  - 系统程序的图标
+
+    ```cpp
+    QFileIconProvider fileIconProvider;
+    // 其他程序的图标请参考 QFileIconProvider::IconType 这个枚举
+    QIcon icon = fileIconProvider.icon(QFileIconProvider::Computer);
+    ```
+
+  - 本地文件的图标
+
+    ```cpp
+    // 这个文件必须真实存在，否则无法获取图标
+    QFileInfo fileInfo("D:/test.docx");
+    QFileIconProvider fileIconProvider;
+    // 获取fileInfo所指向的文件的图标
+    QIcon icon = fileIconProvider.icon(fileInfo);
+    ```
+
+    注：使用`QFileIconProvider`获取本地文件的图标只有传`QFileInfo`这一个方法，没有第二种。
+
+- 创建临时文件或临时文件夹
+
+  临时文件或文件夹在某些特殊场景下是非常有用的，比如软件下载更新包，可以先下载到一个临时文件夹中，下载完毕校验成功后再进行下一步的操作。为此，Qt提供了`QTemporaryFile`和`QTemporaryDir`这两个类，它们都可以保证生成一个绝对独一无二的临时文件（夹），默认情况下它们所生成的临时文件（夹）会在其析构时删除，保证不会产生任何残留，但这个行为可以通过`setAutoRemove`这个函数修改。所生成的文件（夹）的路径也可以通过`path`这个函数获取。更多用法请自行查看文档。
