@@ -561,30 +561,32 @@
   // Windows
   bool QFileInfo::isShortcut() const;
   // Unix（包括macOS和iOS）
-  bool QFileInfo::isSymLink() const;
+  bool QFileInfo::isSymbolicLink() const;
   // 获取快捷方式/软链接指向的目标
   QString QFileInfo::symLinkTarget() const;
   ```
 
-  注意：Windows平台尽量不要用`isSymLink`这个函数进行判断，虽然目前（5.14）暂时可以代替`isShortcut`，但此行为已被废弃，Qt会在以后的版本中去掉这个行为。
+  注意：还有一个叫`isSymLink`的函数与上面提到的`isSymbolicLink`函数名字很像，这两个函数的区别是，`isSymLink`函数对于Windows系统的快捷方式（.lnk文件）和Unix系统的软链接都会返回`true`，而`isSymbolicLink`函数只对Unix系统的软链接返回`true`。但以后尽量不要再用`isSymLink`这个函数了，Qt会在以后的版本中去掉它。
 - 遍历文件夹下的所有文件：
 
   ```cpp
+  // 匿名空间，其中的函数相当于以前的静态函数，只在当前的源文件中有效
   namespace {
-  bool isSymLink(const QFileInfo &dir) {
+  bool isLink(const QFileInfo &dir) {
   #ifdef Q_OS_WINDOWS
       return dir.isShortcut();
   #else
-      return dir.isSymLink();
+      return dir.isSymbolicLink();
   #endif
   }
   }
+
   QVector<QString> Widget::getFolderContents(const QString &folderPath) const {
       if (folderPath.isEmpty() || !QFileInfo::exists(folderPath) || !QFileInfo(folderPath).isDir()) {
           return {};
       }
       const QFileInfo dirInfo(folderPath);
-      const QDir dir(isSymLink(dirInfo) ? dirInfo.symLinkTarget() : dirInfo.canonicalFilePath());
+      const QDir dir(isLink(dirInfo) ? dirInfo.symLinkTarget() : dirInfo.canonicalFilePath());
       const auto fileInfoList = dir.entryInfoList(QDir::Files | QDir::Readable | QDir::Hidden | QDir::System, QDir::Name);
       const auto folderInfoList = dir.entryInfoList(QDir::Dirs | QDir::Readable | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot, QDir::Name);
       if (fileInfoList.isEmpty() && folderInfoList.isEmpty()) {
@@ -593,12 +595,12 @@
       QVector<QString> stringList = {};
       if (!fileInfoList.isEmpty()) {
           for (const auto &fileInfo : fileInfoList) {
-              stringList.append(QDir::toNativeSeparators(isSymLink(fileInfo) ? fileInfo.symLinkTarget() : fileInfo.canonicalFilePath()));
+              stringList.append(QDir::toNativeSeparators(isLink(fileInfo) ? fileInfo.symLinkTarget() : fileInfo.canonicalFilePath()));
           }
       }
       if (!folderInfoList.isEmpty()) {
           for (const auto &folderInfo : folderInfoList) {
-              const QVector<QString> _fileList = getFolderContents(isSymLink(folderInfo) ? folderInfo.symLinkTarget() : folderInfo.canonicalFilePath());
+              const QVector<QString> _fileList = getFolderContents(isLink(folderInfo) ? folderInfo.symLinkTarget() : folderInfo.canonicalFilePath());
               if (!_fileList.isEmpty()) {
                   stringList.append(_fileList);
               }
@@ -1727,4 +1729,4 @@
 - 创建临时文件或临时文件夹
 
   临时文件或文件夹在某些特殊场景下是非常有用的，比如软件下载更新包，可以先下载到一个临时文件夹中，下载完毕校验成功后再进行下一步的操作。为此，Qt提供了`QTemporaryFile`和`QTemporaryDir`这两个类，它们都可以保证生成一个绝对独一无二的临时文件（夹），默认情况下它们所生成的临时文件（夹）会在其析构时删除，保证不会产生任何残留，但这个行为可以通过`setAutoRemove`这个函数修改。所生成的文件（夹）的路径也可以通过`path`这个函数获取。更多用法请自行查看文档。
-- 裁剪Qt，使编译得到的二进制文件最小：[Qt Lite](https://qtlite.com/)
+- 裁剪Qt，在尽量不影响性能的情况下，使编译得到的二进制文件最小：[Qt Lite](https://qtlite.com/)，通过编译前配置参数，来去掉尽可能多的无用特性。
