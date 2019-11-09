@@ -1171,6 +1171,23 @@
   | `--threshold <level>` | 设置压缩阈值（临界值），可取值为1~100，只有文件大小的减小量超过原文件大小的`level %`，rcc才会压缩它，否则rcc会直接存储而不进行压缩。默认值为70 |
   | `--binary` | 输出一个二进制文件以便动态加载（可以视为经过压缩和加密的外部资源文件） |
 - 显示托盘图标+自定义托盘菜单（使用`QWidget`而不是`QMenu`）+弹出消息
+
+  ```text
+  // 返回当前操作系统是否支持显示托盘图标
+  [static] bool QSystemTrayIcon::isSystemTrayAvailable();
+  // 返回当前操作系统是否支持显示气泡消息
+  [static] bool QSystemTrayIcon::supportsMessages();
+  // 设置托盘菜单
+  void QSystemTrayIcon::setContextMenu(QMenu *menu);
+  ```
+
+  技巧：
+    1. `QMenu`是`QWidget`的派生类，因此，可以直接把一个`QWidget`传给`setContextMenu`，使用这个方法就可以不受`QMenu`的限制了，可以将任何`QWidget`设置为托盘菜单。
+    2. 使用`setToolTip`函数设置托盘图标的提示信息
+    3. 使用`setIcon`函数设置托盘图标的图标
+    4. 使用`showMessage`函数来弹出气泡消息
+    5. 使用`show`或`hide`函数来显示或隐藏托盘图标
+
 - 多线程：3种方式
   - Qt Concurrent
   - `void QObject::moveToThread(QThread *targetThread);`
