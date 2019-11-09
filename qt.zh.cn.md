@@ -1034,7 +1034,7 @@
 - 读写注册表：`QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office", QSettings::NativeFormat);`
 
   注：某些特殊的或重要的键值没有管理员权限无法修改，例如`HKEY_LOCAL_MACHINE`等，如果发现无法写入或修改注册表的某个键值，先看是不是权限的原因，不是的话再去看是不是程序本身有bug，实在找不到问题根源再去怀疑是不是Qt本身的bug。
-- Windows上启用*DWM*（*Desktop Window Manager*）特性：
+- Windows上启用*DWM*（*Desktop Window Manager*）特性：`Qt Windows Extras`模块（QMake：`QT += winextras`）
   - 任务栏进度条+角标
 
     ```cpp
