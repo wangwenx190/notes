@@ -42,9 +42,12 @@
 | CAMKE_SYSTEM_NAME | 系统名称（不带版本号） | - |
 | CMAKE_SYSTEM_VERSION | 系统版本 | - |
 | CMAKE_SYSTEM_PROCESSOR | 处理器名称，如`i686` | - |
-| CMAKE_DEBUG_POSTFIX | 调试版本库文件后缀 | set(CMAKE_DEBUG_POSTFIX "_d") |
-| CMAKE_RELEASE_POSTFIX | 发布版本库文件后缀 | set(CMAKE_RELEASE_POSTFIX "_r") |
+| CMAKE_DEBUG_POSTFIX | 调试版本库文件后缀 | set(CMAKE_DEBUG_POSTFIX "_debug") |
+| CMAKE_MINSIZEREL_POSTFIX | 为大小优化版本库文件后缀 | set(CMAKE_MINSIZEREL_POSTFIX "_minsizerel") |
+| CMAKE_RELEASE_POSTFIX | 为速度优化版本库文件后缀 | set(CMAKE_RELEASE_POSTFIX "_release") |
+| CMAKE_RELWITHDEBINFO_POSTFIX | 发布版本（带调试符号）库文件后缀 | set(CMAKE_RELWITHDEBINFO_POSTFIX "_relwithdebinfo") |
 | CMAKE_INTERPROCEDURAL_OPTIMIZATION | 是否开启*链接时间代码生成*（*LTCG*） | set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON) |
+| CMAKE_MSVC_RUNTIME_LIBRARY | 设置MSVC运行时（仅限MSVC/clang-cl/icl），可选值为`MultiThreaded`（即`MT`）、`MultiThreadedDLL`（即`MD`）、`MultiThreadedDebug`（即`MTd`）以及`MultiThreadedDebugDLL`（即`MDd`）。如果将此值设置为空，则CMake不会主动添加任何参数。 | set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded) |
 
 注：
 
