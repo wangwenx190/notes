@@ -1077,14 +1077,25 @@
   - 任务列表
 
     ```cpp
+    // QWinJumpListItem::Link 代表此item指向了一个应用程序
+    // QWinJumpListItem::Destination 代表此item指向了一个此应用程序能打开的文件
+    // QWinJumpListItem::Separator 代表此item为一个分隔符（一个横线）
     QWinJumpListItem *newProject = new QWinJumpListItem(QWinJumpListItem::Link);
     newProject->setTitle(tr("Create new project"));
+    // 只有 QWinJumpListItem::Link 类型的item支持设置描述
+    newProject->setDescription(tr("A shortcut to create a new project"));
+    newProject->setIcon(QIcon(":/images/new_project.svg"));
     newProject->setFilePath(QDir::toNativeSeparators(QCoreApplication::applicationFilePath()));
-    newProject->setArguments(QStringList{"--new-project"});
+    newProject->setWorkingDirectory("C:\\temp");
+    newProject->setArguments(QStringList{"--new-project", "--no-update", "--single-instance"});
     QWinJumpList winJumpList;
-    // 常用任务
+    // 任务
     QWinJumpListCategory *tasks = winJumpList.tasks();
     tasks->addItem(newProject);
+    // 添加一个分隔符。只有“任务”列表支持添加分隔符。
+    tasks->addSeparator();
+    // 使用 addLink 可以不像上面那样分开设置
+    tasks->addLink(QIcon(":/images/sdk_manager.svg"), tr("Launch SDK Manager"), QDir::toNativeSeparators(QCoreApplication::applicationDirPath()) + "\\sdk-manager.exe", QStringList{"/WITHGUI", "/EXAMPLE"});
     tasks->setVisible(true);
     // 最近文件
     QWinJumpListCategory *recent = winJumpList.recent();
