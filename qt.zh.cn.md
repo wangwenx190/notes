@@ -1105,6 +1105,8 @@
     frequent->setVisible(true);
     ```
 
+  注：任务栏进度条和任务栏小按钮都要使用`setWindow`函数设置一个有效的`QWindow`句柄，但这个句柄只有在`showEvent`执行完毕后（即窗口显示出来以后）才能获得（请参考：<https://codereview.qt-project.org/c/qt/qtwinextras/+/278355>）。
+
 - lupdate：将源码中能进行翻译的字符串制作为Qt Linguist专用的.ts翻译文件
 
   用法：`lupdate [options] [project-file]...`或`lupdate [options] [source-file|path|@lst-file]... -ts ts-files|@lst-file`
@@ -1498,6 +1500,8 @@
   ```
 
 - 适合Qt项目的*Crash Handler*框架
+
+  可以参考<https://github.com/buzzySmile/qBreakpad>这个项目，虽然早就不维护了，但仍然有学习的价值。这个项目是GitHub上为数不多的适合Qt项目的Crash Handler框架了。
 - `QDialog`窗口默认会阻塞整个应用程序的执行，如果不想这样，可以进行以下设置：
 
   ```cpp
@@ -1619,6 +1623,12 @@
     ```
 
 - Qt如何编写升级程序
+  - [QSimpleUpdater](https://github.com/alex-spataru/QSimpleUpdater)
+
+    跨平台。此项目对程序的安装及升级程序没有任何要求。这个项目的代码也比较简短，可以根据自己的需求自行修改扩充。
+  - [QtAutoUpdater](https://github.com/Skycoder42/QtAutoUpdater)
+
+    跨平台。此项目要求程序的安装及升级程序必须使用[Qt IFW](http://download.qt.io/official_releases/qt-installer-framework/)制作。
 - Qt显示PDF文档
 - Qt打印文件
 - Qt处理压缩文件

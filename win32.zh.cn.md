@@ -33,6 +33,8 @@
   }
   ```
 
+  注：自 Windows Vista 开始，微软推荐使用新版 API [IFileOperation](https://docs.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-ifileoperation) 来代替过时的 API `SHFileOperation`。
+
 - 判断当前程序是否正在以管理员权限运行
 
   ```cpp
@@ -364,6 +366,92 @@
 
 - 关联文件后缀名
 - 将窗口嵌入桌面（类似于动态壁纸那种效果）
+
+  ```cpp
+  static bool legacyMode = false;
+  static HWND HWORKERW = nullptr;
+
+  BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
+      (void)lParam;
+      const HWND defview = FindWindowEx(hwnd, nullptr, TEXT("SHELLDLL_DefView"), nullptr);
+      if (defview != nullptr) {
+          HWORKERW = FindWindowEx(nullptr, hwnd, TEXT("WorkerW"), nullptr);
+          if (HWORKERW != nullptr) {
+              return FALSE;
+          }
+      }
+      return TRUE;
+  }
+
+  HWND getProgman() {
+      return FindWindow(TEXT("Progman"), TEXT("Program Manager"));
+  }
+
+  HWND getDesktop() {
+      const HWND hwnd = getProgman();
+      if (hwnd == nullptr) {
+          return nullptr;
+      }
+      SendMessage(hwnd, 0x052c, 0, 0);
+      EnumWindows(EnumWindowsProc, 0);
+      ShowWindow(HWORKERW, legacyMode ? SW_HIDE : SW_SHOW);
+      return legacyMode ? hwnd : HWORKERW;
+  }
+
+  HWND getWallpaper() {
+      return legacyMode ? getProgman() : HWORKERW;
+  }
+
+  bool setWallpaper(HWND window) {
+      if (window == nullptr) {
+          return false;
+      }
+      const HWND desktop = getDesktop();
+      const HWND parent = desktop != nullptr ? SetParent(window, desktop) : nullptr;
+      return parent != nullptr;
+  }
+
+  bool isWallpaperVisible() {
+      return getWallpaper() == nullptr ? false : IsWindowVisible(getWallpaper());
+  }
+
+  bool isWallpaperHidden() {
+      return !isWallpaperVisible();
+  }
+
+  bool setWallpaperVisible(bool visible) {
+      if (getWallpaper() == nullptr) {
+          return false;
+      }
+      if (visible != isWallpaperVisible()) {
+          return ShowWindow(getWallpaper(), visible ? SW_SHOW : SW_HIDE);
+      }
+      return false;
+  }
+
+  void hideWallpaper() {
+      if (getWallpaper() != nullptr) {
+          setWallpaperVisible(false);
+      }
+  }
+
+  void showWallpaper() {
+      if (getWallpaper() != nullptr) {
+          setWallpaperVisible(true);
+      }
+  }
+
+  void setLegacyMode(bool legacy) {
+      if (legacyMode != legacy) {
+          legacyMode = legacy;
+      }
+  }
+  ```
+
+  用法：使用`setWallpaper`将你的窗口嵌入到桌面。其他函数的效果请自行体验。
+
+  注意：窗口一旦被嵌入桌面，它就再也不能获取到焦点了。
+
 - 将图标固定到任务栏
 
   ```cpp
@@ -448,5 +536,7 @@
 
   摘自：<https://docs.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource>
 
-  注：如果.rc文件中包含非拉丁字符，请将文本编码设置为`UTF-16 LE`或对应的本地文本编码，但不要改为`UTF-8`（不论带不带`BOM`），否则编译时会报错。
-- 普通程序开机自启：写注册表
+  注：如果.rc文件中包含非拉丁字符，请将文本编码设置为`UTF-16 LE`或对应的本地文本编码（例如：`GB18030`），但不要改为`UTF-8`（不论带不带`BOM`），否则编译时会报错。
+- 普通程序开机自启
+
+  将应用程序的绝对路径，写注册表到`HKEY_LOCAL_MACHINE（或HKEY_CURRENT_USER）\SOFTWARE\Microsoft\Windows\CurrentVersion\Run`下。如果路径包含空格，最好使用英文半角双引号包裹起来。

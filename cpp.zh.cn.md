@@ -66,8 +66,8 @@
   ```
 
   摘自：<https://en.cppreference.com/w/cpp/language/pimpl>
-- 格式化
-- 日志
+- 字符串格式化：<https://github.com/fmtlib/fmt>
+- 输出日志：<https://github.com/gabime/spdlog>
 - 如何使编译生成的二进制文件最小
 
   关闭调试信息的生成（即release模式）+为大小优化+开启链接时间代码生成（LTCG/LTO/IPO）+关闭RTTI+关闭异常处理+消除重复代码+动态链接运行时+尽可能的静态链接所用到的库
