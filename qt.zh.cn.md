@@ -1768,3 +1768,31 @@
 
   临时文件或文件夹在某些特殊场景下是非常有用的，比如软件下载更新包，可以先下载到一个临时文件夹中，下载完毕校验成功后再进行下一步的操作。为此，Qt提供了`QTemporaryFile`和`QTemporaryDir`这两个类，它们都可以保证生成一个绝对独一无二的临时文件（夹），默认情况下它们所生成的临时文件（夹）会在其析构时删除，保证不会产生任何残留，但这个行为可以通过`setAutoRemove`这个函数修改。所生成的文件（夹）的路径也可以通过`path`这个函数获取。更多用法请自行查看文档。
 - 裁剪Qt，在尽量不影响性能的情况下，使编译得到的二进制文件最小：[Qt Lite](https://qtlite.com/)，通过编译前配置参数，来去掉尽可能多的无用特性。
+- 不同的`QObject`及其派生类的对象，在进行类型转换时，建议使用`qobject_cast`而不是`dynamic_cast`，因为前者不需要开启`RTTI`。
+
+  ```cpp
+  QObject *obj = new QTimer; // QTimer inherits QObject
+  QTimer *timer = qobject_cast<QTimer *>(obj); // timer == (QObject *)obj
+  QAbstractButton *button = qobject_cast<QAbstractButton *>(obj); // button = nullptr
+  ```
+
+  待转换的对象必须直接或间接继承自`QObject`，并且使用`Q_OBJECT`宏进行了声明。如果不符合以上条件，则返回空指针。
+- 访问和操作系统剪贴板
+
+  ```cpp
+  void DropArea::paste() {
+      const QClipboard *clipboard = QGuiApplication::clipboard();
+      const QMimeData *mimeData = clipboard->mimeData();
+      if (mimeData->hasImage()) {
+          setPixmap(qvariant_cast<QPixmap>(mimeData->imageData()));
+      } else if (mimeData->hasHtml()) {
+          setText(mimeData->html());
+          setTextFormat(Qt::RichText);
+      } else if (mimeData->hasText()) {
+          setText(mimeData->text());
+          setTextFormat(Qt::PlainText);
+      } else {
+          setText(tr("Cannot display data"));
+      }
+  }
+  ```
