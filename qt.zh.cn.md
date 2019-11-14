@@ -1796,3 +1796,65 @@
       }
   }
   ```
+
+- 应用程序在执行耗时的操作时，如何防止界面卡顿
+  - 在耗时操作的执行过程中，时不时的调用`QCoreApplication::processEvents()`函数。例如：
+
+    ```cpp
+    auto busyWork = []() {
+        // 这里以一个次数非常多的循环来模拟耗时操作
+        for (int i = 0; i != 1000000; ++i) {
+            qDebug() << i << endl;
+            QCoreApplication::processEvents();
+        }
+    };
+    // 通过按钮触发这个耗时操作
+    connect(ui->pushButton, &QPushButton::clicked, this, busyWork);
+    ```
+
+    效果：界面不会完全卡住，但在配置不够高的机器上还是有所卡顿。
+  - 使用`QtConcurrent`模块实现多线程
+
+    ```cpp
+    // 实际的耗时操作
+    static bool actualWork() {
+        for (int i = 0; i != 1000000; ++i) {
+            qDebug() << i << endl;
+        }
+        return true;
+    }
+    // 多线程
+    auto busyWork = []() -> void {
+        // QFuture 非常强大好用，更多具体的用法请自行查阅 Qt 手册
+        // 如果不需要获取线程函数的返回值，或者不需要获取线程执行的状态和进度，可以不用 QFuture
+        // QtConcurrent::run 支持匿名函数，但像这样分开写也是可以的
+        QFuture<bool> future = QtConcurrent::run(actualWork);
+        while (!future.isFinished()) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        }
+    };
+    connect(ui->pushButton, &QPushButton::clicked, this, busyWork);
+    ```
+
+    效果：界面完全不会卡住，哪怕是在配置很低的机器上。
+  - 传统的多线程
+
+    ```cpp
+    QThread workerThread;
+    Worker *worker = new Worker; // 一个QObject的派生类
+    worker->moveToThread(&workerThread);
+    connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
+    // 触发耗时操作
+    connect(this, &Controller::operate, worker, &Worker::doWork);
+    // 当耗时操作执行完毕后，获取并处理结果
+    connect(worker, &Worker::resultReady, this, &Controller::handleResults);
+    workerThread.start();
+    // 如何停止线程
+    workerThread.quit();
+    workerThread.wait();
+    ```
+
+    效果：界面完全不会卡住，哪怕是在配置很低的机器上。
+
+  总结：在执行耗时操作时，推荐使用`QtConcurrent`模块实现多线程，不仅完全不会使界面卡住，还能以较少的代码实现较多较高级的功能，用起来十分方便舒心。
+- 监视文件（夹）的变化：请自行查阅`QFileSystemWatcher`的用法。
