@@ -735,9 +735,9 @@
     使用了TCP/IP以及共享内存等多种技术，理论上也是跨平台的。
 - 进程间通信（IPC）：7种方式
   - 4种跨平台方式：
-    - Qt Remote Objects（QtRO）：使用`Qt Remote Objects`模块实现。我粗略的看了下这个模块的源码，发现`QtRO`内部也是使用TCP/IP的方式实现的。这个模块具体的用法我也不是特别明白，暂时就不展开讲了。
-    - TCP/IP：使用`Qt Network`模块的`QLocalServer`以及`QLocalSocket`实现
-    - 共享内存：使用`Qt Core`模块的`QSharedMemory`或`QSystemSemaphore`/`QSemaphore`实现
+    - Qt Remote Objects（QtRO）：使用`Qt Remote Objects`模块实现。官方示例工程位于`C:\Qt\Examples\Qt-5.14.0\remoteobjects`。
+    - TCP/IP：使用`Qt Network`模块的`QLocalServer`以及`QLocalSocket`实现。官方示例代码位于`C:\Qt\Examples\Qt-5.14.0\corelib\ipc\localfortuneserver`以及`C:\Qt\Examples\Qt-5.14.0\corelib\ipc\localfortuneclient`。
+    - 共享内存：使用`Qt Core`模块的`QSharedMemory`或`QSystemSemaphore`/`QSemaphore`实现。官方示例代码位于`C:\Qt\Examples\Qt-5.14.0\corelib\ipc\sharedmemory`。
     - QProcess：`QProcess`是`QIODevice`的派生类，因此支持`read`和`write`等函数。当然也可以通过传递和读取命令行参数实现通信。
   - 3种平台独有方式：
     - Windows：消息
@@ -782,7 +782,7 @@
       }
       ```
 
-    - Linux：D-Bus。暂不了解。
+    - Linux：D-Bus。使用`Qt D-Bus`模块实现。用法较简单，请自行查阅Qt手册。
     - Linux：Session Management。暂不了解。
 - 下载文件
 
@@ -1838,7 +1838,9 @@
 
     ```cpp
     void DropArea::paste() {
+        // 获取全局剪贴板的指针
         const QClipboard *clipboard = QGuiApplication::clipboard();
+        // 方法1：通过剪贴板的 QMimeData 来获取其中的所有内容
         const QMimeData *mimeData = clipboard->mimeData();
         if (mimeData->hasImage()) {
             setPixmap(qvariant_cast<QPixmap>(mimeData->imageData()));
@@ -1851,6 +1853,12 @@
         } else {
             setText(tr("Cannot display data"));
         }
+        // 方法2：直接读取剪贴板中的内容
+        // const QString originalText = clipboard->text();
+        // const QImage originalImage = clipboard->image();
+        // const QMimeData *originalMimeData = clipboard->mimeData();
+        // const QPixmap originalPixmap = clipboard->pixmap();
+        // 方法1的好处是能提前判断一下，缺点是不如方法2来的直接
     }
     ```
 
@@ -1858,11 +1866,6 @@
 
     ```cpp
     const QClipboard *clipboard = QGuiApplication::clipboard();
-    // 直接读取剪贴板中的内容，与上面的做法不同
-    const QString originalText = clipboard->text();
-    const QImage originalImage = clipboard->image();
-    const QMimeData *originalMimeData = clipboard->mimeData();
-    const QPixmap originalPixmap = clipboard->pixmap();
     // 清空剪贴板
     clipboard->clear();
     // 将指定内容填充到剪贴板
