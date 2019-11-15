@@ -1202,9 +1202,65 @@
     5. 使用`show`或`hide`函数来显示或隐藏托盘图标
 
 - 多线程：3种方式
-  - Qt Concurrent
+  - `Qt Concurrent`模块。如果需要获取线程函数的返回值，或者线程的执行状态和进度，需要搭配`QFuture`一起使用。
+
+    ```cpp
+    // 用法1：在另外一个线程中执行函数（默认线程池）
+    extern void aFunction();
+    QFuture<void> future = QtConcurrent::run(aFunction);
+    // 用法2：在指定线程池中执行函数
+    extern void aFunction();
+    QThreadPool pool;
+    QFuture<void> future = QtConcurrent::run(&pool, aFunction);
+    // 用法3：给函数传递参数
+    extern void aFunctionWithArguments(int arg1, double arg2, const QString &string);
+    int integer = 0;
+    double floatingPoint = 0;
+    QString string = "Test";
+    QFuture<void> future = QtConcurrent::run(aFunctionWithArguments, integer, floatingPoint, string);
+    // 用法4：获取函数返回值
+    extern QString functionReturningAString();
+    QFuture<QString> future = QtConcurrent::run(functionReturningAString);
+    QString result = future.result();
+    // 用法5：传参+获取返回值
+    extern QString someFunction(const QByteArray &input);
+    QByteArray bytearray = "hello world";
+    QFuture<QString> future = QtConcurrent::run(someFunction, bytearray);
+    QString result = future.result();
+    // 用法6：调用成员函数（const函数）
+    // 函数原型：QList<QByteArray>  QByteArray::split(char sep) const
+    QByteArray bytearray = "hello world";
+    QFuture<QList<QByteArray> > future = QtConcurrent::run(bytearray, &QByteArray::split, ',');
+    QList<QByteArray> result = future.result();
+    // 用法7：调用成员函数（非const函数）
+    // 函数原型：void QImage::invertPixels(InvertMode mode)
+    QImage image = ...;
+    QFuture<void> future = QtConcurrent::run(&image, &QImage::invertPixels, QImage::InvertRgba);
+    future.waitForFinished();
+    // 此刻，image本身已经被处理完毕了
+    // 用法8：调用匿名函数
+    QFuture<void> future = QtConcurrent::run([=]() { /* Do something */ });
+    QFuture<QVector<QString>> future = QtConcurrent::run([=]() -> QVector<QString> { /* Do something */ });
+    ```
+
   - `void QObject::moveToThread(QThread *targetThread);`
-  - 重写`QThread`的`run`函数：`[virtual protected] void QThread::run();`
+
+    ```cpp
+    QThread workerThread;
+    Worker *worker = new Worker; // 一个QObject的派生类
+    worker->moveToThread(&workerThread);
+    connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
+    // 触发耗时操作
+    connect(this, &Controller::operate, worker, &Worker::doWork);
+    // 当耗时操作执行完毕后，获取并处理结果
+    connect(worker, &Worker::resultReady, this, &Controller::handleResults);
+    workerThread.start();
+    // 如何停止线程
+    workerThread.quit();
+    workerThread.wait();
+    ```
+
+  - 【已过时，不推荐使用】重写`QThread`的`run`函数：`[virtual protected] void QThread::run();`
 - Qt Creator添加自定义注释/协议模板：
 
   打开 Qt Creator，菜单选择：工具 -> 选项 -> 文本编辑器 -> 片段，点击“添加”按钮，添加新的“片段”。其中，“触发”为这个片段的触发条件，即当用户输入一个特定的字符串时提示是否插入这个片段的完整版。“触发种类”可以随便填写，这是为了方便用户记忆和区分而设置的。
@@ -1778,24 +1834,43 @@
 
   待转换的对象必须直接或间接继承自`QObject`，并且使用`Q_OBJECT`宏进行了声明。如果不符合以上条件，则返回空指针。
 - 访问和操作系统剪贴板
+  - 获取剪贴板的内容
 
-  ```cpp
-  void DropArea::paste() {
-      const QClipboard *clipboard = QGuiApplication::clipboard();
-      const QMimeData *mimeData = clipboard->mimeData();
-      if (mimeData->hasImage()) {
-          setPixmap(qvariant_cast<QPixmap>(mimeData->imageData()));
-      } else if (mimeData->hasHtml()) {
-          setText(mimeData->html());
-          setTextFormat(Qt::RichText);
-      } else if (mimeData->hasText()) {
-          setText(mimeData->text());
-          setTextFormat(Qt::PlainText);
-      } else {
-          setText(tr("Cannot display data"));
-      }
-  }
-  ```
+    ```cpp
+    void DropArea::paste() {
+        const QClipboard *clipboard = QGuiApplication::clipboard();
+        const QMimeData *mimeData = clipboard->mimeData();
+        if (mimeData->hasImage()) {
+            setPixmap(qvariant_cast<QPixmap>(mimeData->imageData()));
+        } else if (mimeData->hasHtml()) {
+            setText(mimeData->html());
+            setTextFormat(Qt::RichText);
+        } else if (mimeData->hasText()) {
+            setText(mimeData->text());
+            setTextFormat(Qt::PlainText);
+        } else {
+            setText(tr("Cannot display data"));
+        }
+    }
+    ```
+
+  - 向剪贴板中填充内容
+
+    ```cpp
+    const QClipboard *clipboard = QGuiApplication::clipboard();
+    // 直接读取剪贴板中的内容，与上面的做法不同
+    const QString originalText = clipboard->text();
+    const QImage originalImage = clipboard->image();
+    const QMimeData *originalMimeData = clipboard->mimeData();
+    const QPixmap originalPixmap = clipboard->pixmap();
+    // 清空剪贴板
+    clipboard->clear();
+    // 将指定内容填充到剪贴板
+    clipboard->setText(newText);
+    clipboard->setPixmap(newPixmap);
+    clipboard->setMimeData(newMimeData);
+    clipboard->setImage(newImage);
+    ```
 
 - 应用程序在执行耗时的操作时，如何防止界面卡顿
   - 在耗时操作的执行过程中，时不时的调用`QCoreApplication::processEvents()`函数。例如：
@@ -1813,7 +1888,7 @@
     ```
 
     效果：界面不会完全卡住，但在配置不够高的机器上还是有所卡顿。
-  - 使用`QtConcurrent`模块实现多线程
+  - 使用`Qt Concurrent`模块实现多线程
 
     ```cpp
     // 实际的耗时操作
@@ -1837,24 +1912,12 @@
     ```
 
     效果：界面完全不会卡住，哪怕是在配置很低的机器上。
-  - 传统的多线程
+  - 传统的多线程：`void QObject::moveToThread(QThread *targetThread);`
 
-    ```cpp
-    QThread workerThread;
-    Worker *worker = new Worker; // 一个QObject的派生类
-    worker->moveToThread(&workerThread);
-    connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
-    // 触发耗时操作
-    connect(this, &Controller::operate, worker, &Worker::doWork);
-    // 当耗时操作执行完毕后，获取并处理结果
-    connect(worker, &Worker::resultReady, this, &Controller::handleResults);
-    workerThread.start();
-    // 如何停止线程
-    workerThread.quit();
-    workerThread.wait();
-    ```
+    效果：界面完全不会卡住，哪怕是在配置很低的机器上。
+  - 【已过时，不推荐使用】重写`QThread`的`run`函数来实现多线程：`[virtual protected] void QThread::run();`
 
     效果：界面完全不会卡住，哪怕是在配置很低的机器上。
 
-  总结：在执行耗时操作时，推荐使用`QtConcurrent`模块实现多线程，不仅完全不会使界面卡住，还能以较少的代码实现较多较高级的功能，用起来十分方便舒心。
+  总结：在执行耗时操作时，推荐使用`Qt Concurrent`模块实现多线程，不仅完全不会使界面卡住，还能以较少的代码实现较多较高级的功能，用起来十分方便舒心。
 - 监视文件（夹）的变化：请自行查阅`QFileSystemWatcher`的用法。
