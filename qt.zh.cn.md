@@ -1931,3 +1931,26 @@
 
   总结：在执行耗时操作时，推荐使用`Qt Concurrent`模块实现多线程，不仅完全不会使界面卡住，还能以较少的代码实现较多较高级的功能，用起来十分方便舒心。
 - 监视文件（夹）的变化：请自行查阅`QFileSystemWatcher`的用法。
+- 向Qt提交补丁
+
+  ```bash
+  # 【非常重要】根据 https://wiki.qt.io/Setting_up_Gerrit 设置好 Gerrit（一次性）
+  # 到 https://code.qt.io/cgit/ 克隆只读仓库（一次性）
+  # 此处以 qtbase 模块为例
+  git clone https://code.qt.io/qt/qtbase.git
+  # 设置 git hook（一次性）
+  gitdir=$(git rev-parse --git-dir); scp -P 29418 codereview.qt-project.org:hooks/commit-msg ${gitdir}/hooks/
+  # 添加 Gerrit 远端（一次性）
+  # 此处以 qtbase 模块为例
+  git remote add gerrit ssh://codereview.qt-project.org/qt/qtbase
+  # 切换到需要的分支。此处以 5.14 分支为例。
+  git checkout 5.14
+  # 新建分支用于制作补丁
+  git checkout -b my-fix
+  # 修改文件
+  # 提交到本地仓库
+  git commit -a
+  # 推送到 Gerrit 远端。此处以 5.14 分支为例。
+  git push gerrit HEAD:refs/for/5.14
+  # 到 https://codereview.qt-project.org/ 查看并找人 review
+  ```
