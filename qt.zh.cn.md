@@ -1785,14 +1785,21 @@
 - `QVariant`提供了`toInt`、`toReal`、`toBool`、`toString`、`toList`以及`toMap`等方法，可以方便的将`QVariant`转为各种具体的类型，如果遇到想要转换的类型没有类似的转换函数，可以用以下方法手动进行转换：
 
   ```cpp
-  // 判断具体是什么类型（如果对类型非常确定，可以跳过这一步）
-  if (variant.typeName() == "QColor") {
-      // 将QVariant转为QColor
-      QColor color = variant.value<QColor>();
-      // 将QVariant转为QFont
-      QFont font = variant.value<QFont>();
-      // 将QVariant转为QXXX
-      QXXX xxx = variant.value<QXXX>();
+  QVariant variant;
+  // 某个类型（可以是C++/Qt提供的标准类型，也可以是用户自己定义的类型）
+  MyCustomStruct myCustomStruct;
+  // 判断 QVariant 能否被转换为指定的类型
+  if (variant.canConvert<MyCustomStruct>()) {
+      // 取出 QVariant 的值并转换为指定的类型
+      myCustomStruct = variant.value<MyCustomStruct>();
+  }
+  // qvariant_cast 等价于 QVariant::value()
+  // 如果不加判断直接进行转换，转换失败时会返回一个默认的值
+  QColor color = qvariant_cast<QColor>(variant);
+  // 使用 type() 函数可以获取 QVariant 具体的类型
+  // 其他类型的枚举请查看 QMetaType::Type 这个枚举
+  if (variant.type() == QVariant::Font) {
+      // 进行转换或其他操作
   }
   ```
 
