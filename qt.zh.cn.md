@@ -1333,7 +1333,8 @@
       show();
     }
     // 第二步：如果窗口被最小化了，恢复原始的大小和状态
-    // QWindow 没有 isMinimized 函数，请根据 Qt::WindowStates 自行判断
+    // QWindow 没有 isMinimized 函数，请使用以下语句进行判断
+    // if (windowStates() & Qt::WindowMinimized) { /* ... */ }
     if (isMinimized()) {
       // QWindow 没有 setWindowState 以及 windowState 函数，请使用 setWindowStates 以及 windowStates 函数代替。
       setWindowState(windowState() & ~Qt::WindowMinimized);
