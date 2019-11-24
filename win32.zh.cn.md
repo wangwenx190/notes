@@ -40,8 +40,7 @@
   ```cpp
   // 头文件：securitybaseapi.h (include Windows.h)
   // 库文件：Advapi32.lib（Advapi32.dll）
-  BOOL IsUserAdmin(VOID)
-  /*++
+  /*
   Routine Description: This routine returns TRUE if the caller's
   process is a member of the Administrators local group. Caller is NOT
   expected to be impersonating anyone and is expected to be able to
@@ -51,27 +50,17 @@
      TRUE - Caller has Administrators local group.
      FALSE - Caller does not have Administrators local group. --
   */
-  {
-  BOOL b;
-  SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
-  PSID AdministratorsGroup;
-  b = AllocateAndInitializeSid(
-      &NtAuthority,
-      2,
-      SECURITY_BUILTIN_DOMAIN_RID,
-      DOMAIN_ALIAS_RID_ADMINS,
-      0, 0, 0, 0, 0, 0,
-      &AdministratorsGroup);
-  if(b)
-  {
-      if (!CheckTokenMembership( NULL, AdministratorsGroup, &b))
-      {
-           b = FALSE;
+  BOOL IsUserAdmin() {
+      SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+      PSID AdministratorsGroup;
+      BOOL b = AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &AdministratorsGroup);
+      if (b) {
+          if (!CheckTokenMembership(nullptr, AdministratorsGroup, &b)) {
+              b = FALSE;
+          }
+          FreeSid(AdministratorsGroup);
       }
-      FreeSid(AdministratorsGroup);
-  }
-
-  return(b);
+      return b;
   }
   ```
 
