@@ -1964,3 +1964,5 @@
   git push gerrit HEAD:refs/for/5.14
   # 到 https://codereview.qt-project.org/ 查看并找人 review
   ```
+
+- 在Qt 5.10以后，表格控件`QTableWidget`或`QTableView`默认的最小列宽改成了15，以前的版本是0。所以在新版的Qt中，如果设置表格列宽时数值过小，小于15（即默认的最小列宽），将不会生效。所以如果要设置比默认的最小列宽更小的列宽需要修改最小列宽：`ui->tableView->horizontalHeader()->setMinimumSectionSize(0);`
