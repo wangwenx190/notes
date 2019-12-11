@@ -37,9 +37,9 @@
   | 静态连接运行时 | `/MT`/`/MTd` | `-static`（clang-cl：与MSVC相同） | `-static` | `-static`（icl：与MSVC相同） | `CONFIG += static_runtime` |
   | 启用Quick编译器 | - | - | - | - | `CONFIG += qtquickcompiler` |
   | 启用异常处理 | `/EHsc` | `-fexceptions`（clang-cl：与MSVC相同） | `-fexceptions` | `-fexceptions`（icl：与MSVC相同） | `CONFIG += exceptions` |
-  | 禁用异常处理 | `/EHs-c-`（或留空，不加任何参数） | `-fno-exceptions`（clang-cl：与MSVC相同） | `-fno-exceptions` | `-fno-exceptions`（icl：与MSVC相同） | `CONFIG += exceptions_off` |
+  | 禁用异常处理 | `/EHs-c-` | `-fno-exceptions`（clang-cl：与MSVC相同） | `-fno-exceptions` | `-fno-exceptions`（icl：与MSVC相同） | `CONFIG += exceptions_off` |
   | 启用RTTI | `/GR` | `-frtti`（clang-cl：与MSVC相同） | `-frtti` | `-frtti`（icl：与MSVC相同） | `CONFIG += rtti` |
-  | 禁用RTTI | `/GR-`（或留空，不加任何参数） | `-fno-rtti`（clang-cl：与MSVC相同） | `-fno-rtti` | `-fno-rtti`（icl：与MSVC相同） | `CONFIG += rtti_off` |
+  | 禁用RTTI | `/GR-` | `-fno-rtti`（clang-cl：与MSVC相同） | `-fno-rtti` | `-fno-rtti`（icl：与MSVC相同） | `CONFIG += rtti_off` |
   | 最高警告级别 | - | - | - | - | `CONFIG += warn_on` |
   | 关闭警告 | - | - | - | - | `CONFIG += warn_off` |
   | 关闭C语言编译器扩展 | - | - | - | - | `CONFIG += strict_c` |
