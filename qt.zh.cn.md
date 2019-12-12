@@ -40,9 +40,10 @@
   | 禁用异常处理 | `/EHs-c-` | `-fno-exceptions`（clang-cl：与MSVC相同） | `-fno-exceptions` | `-fno-exceptions`（icl：与MSVC相同） | `CONFIG += exceptions_off` |
   | 启用RTTI | `/GR` | `-frtti`（clang-cl：与MSVC相同） | `-frtti` | `-frtti`（icl：与MSVC相同） | `CONFIG += rtti` |
   | 禁用RTTI | `/GR-` | `-fno-rtti`（clang-cl：与MSVC相同） | `-fno-rtti` | `-fno-rtti`（icl：与MSVC相同） | `CONFIG += rtti_off` |
-  | 最高警告级别 | - | - | - | - | `CONFIG += warn_on` |
-  | 关闭警告 | - | - | - | - | `CONFIG += warn_off` |
-  | 关闭C语言编译器扩展 | - | - | - | - | `CONFIG += strict_c` |
+  | 开启所有警告 | `/Wall` | `-Weverything` | `-Wall -Wextra` | - | `CONFIG += warn_on` |
+  | 将警告视为错误 | `/WX` | `-Werror` | `-Werror` | - | - |
+  | 关闭所有警告 | `/w` | `-w` | `-w` | - | `CONFIG += warn_off` |
+  | 关闭C语言编译器扩展 | `/Za` | - | - | - | `CONFIG += strict_c` |
   | 关闭C++语言编译器扩展 | - | - | - | - | `CONFIG += strict_c++` |
   | 开启UTF-8支持 | `/utf-8` | `-finput-charset=UTF-8 -fexec-charset=UTF-8`（clang-cl：与MSVC相同） | `-finput-charset=UTF-8 -fexec-charset=UTF-8` | `-option,cpp,--unicode_source_kind,UTF-8`（icl：`/Qoption,cpp,--unicode_source_kind,UTF-8`） | - |
 - `opengl32sw.dll`这个文件是用软件模拟的显卡，针对的是没有显卡的机器，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件，能极大减小发布大小
