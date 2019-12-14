@@ -33,7 +33,7 @@
   | --------- | -------- | -------- | ------- | ------- | ----- |
   | 为速度优化 | `/O2`    | `-Ofast`（clang-cl：`/clang:-Ofast`） | `-Ofast` | `-Ofast`（icl：`/O3`） | `CONFIG += optimize_full` |
   | 为大小优化 | `/O1`    | `-Oz`（clang-cl：`/clang:-Oz`） | `-Os` | `-Os`（icl：与MSVC相同） | `CONFIG += optimize_size` |
-  | 启用链接时间代码生成 | `/GL`（编译器），`/LTCG`（连接器） | `-flto=thin`（clang-cl：`/clang:-flto=thin`；只有lld-link不需要额外的参数，其他任何连接器都要传这个参数） | `-flto -fno-fat-objects`（连接器还要多一个`-fuse-linker-plugin`参数） | `-ipo -fno-fat-objects`（icl：`/Qipo`） | `CONFIG += ltcg` |
+  | 启用链接时间代码生成 | `/GL`（编译器），`/LTCG`（连接器） | `-flto=thin`（clang-cl：`-flto=thin`；只有lld-link不需要额外的参数，其他任何连接器都要传这个参数） | `-flto -fno-fat-objects`（连接器还要多一个`-fuse-linker-plugin`参数） | `-ipo -fno-fat-objects`（icl：`/Qipo`） | `CONFIG += ltcg` |
   | 静态连接运行时 | `/MT`/`/MTd` | `-static`（clang-cl：与MSVC相同） | `-static` | `-static`（icl：与MSVC相同） | `CONFIG += static_runtime` |
   | 启用Quick编译器 | - | - | - | - | `CONFIG += qtquickcompiler` |
   | 启用异常处理 | `/EHsc` | `-fexceptions`（clang-cl：与MSVC相同） | `-fexceptions` | `-fexceptions`（icl：与MSVC相同） | `CONFIG += exceptions` |
