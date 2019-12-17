@@ -1984,3 +1984,15 @@
       void incomingConnection(int handle);
   #endif
   ```
+
+- 判断两个浮点数是否相等时，尽量使用Qt提供的`qFuzzyCompare`函数（头文件：`QtGlobal`），但不能对`NaN`（Not a Number，可以使用`qIsNaN`函数进行判断）或者无穷（可以使用`qIsInf`函数进行判断）这两类数字进行判断。注意不要用这个函数和常数`0`/`0.0`比较，这种情况下要改用`qFuzzyIsNull`函数。
+- 部分不常用的宏
+
+  | 宏 | 作用 | 示例 |
+  | -- | -- | -- |
+  | `Q_LIKELY(expr)` | 告知编译器，表达式`expr`的计算结果很有可能（但不一定）为`true`。此宏被用来改善编译器优化，但编译器不一定都接受此提示。 | - |
+  | `Q_UNLIKELY(expr)` | 告知编译器，表达式`expr`的计算结果很有可能（但不一定）为`false`。此宏被用来改善编译器优化，但编译器不一定都接受此提示。 | - |
+  | `Q_UNREACHABLE` | 告知编译器，当前位置是任何情况下都不可能到达的（例如`switch`语句的某些分支）。 | - |
+  | `Q_UNUSED(name)` | 告知编译器，参数`name`没有被使用。此宏被用来消除某些编译器警告。 | `Q_UNUSED(argc)` |
+  | `Q_FOREVER` | 无限循环，等价于`for(;;)` | `Q_FOREVER { qDebug() << "*"; }` |
+  | `Q_ASSUME(expr)` | 告知编译器，表达式`expr`的计算结果一定为`true`。但当表达式`expr`的计算结果为`false`时，此宏的效果与`Q_UNREACHABLE`相同。此宏被用来改善编译器优化，但编译器不一定都接受此提示。 | - |
