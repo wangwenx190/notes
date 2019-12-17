@@ -1972,3 +1972,15 @@
 
 - 在Qt 5.10以后，表格控件`QTableWidget`或`QTableView`默认的最小列宽改成了15，以前的版本是0。所以在新版的Qt中，如果设置表格列宽时数值过小，小于15（即默认的最小列宽），将不会生效。所以如果要设置比默认的最小列宽更小的列宽需要修改最小列宽：`ui->tableView->horizontalHeader()->setMinimumSectionSize(0);`
 - 不要直接在构造函数里获取控件的尺寸和位置等信息，因为Qt的各种控件在被显示出来之前是不具备这些信息的，虽然能获取到具体的数字，但不一定准确。如果一定要获取类似的信息，一定要等它们显出出来再进行。
+- Qt中有个全局的焦点切换信号`focusChanged`，可以用它做自定义的输入法。Qt4中默认会安装输入法上下文，这个默认安装的输入法上下文会拦截两个信号，`QEvent::RequestSoftwareInputPanel`和`QEvent::CloseSoftwareInputPanel`，以至于就算你安装了全局的事件过滤器也依然获取不到这两个信号，你只需要在`main`函数执行`app.setInputContext(nullptr)`即可，意思是设置输入法上下文为空。
+- 理论上串口和网络收发数据默认都是异步的，操作系统自动调度，完全不会卡住界面，网上那些说收发数据卡住界面主线程的都是瞎说的，真正耗时的是运算以及运算后的处理，而不是收发数据。在一些运算数据量很小的项目中，一般不建议动用线程去处理，线程调度是有开销的，不要什么东西都往线程里边扔，线程不是万能的。只有当真正需要进行一些很耗时的操作（比如多媒体编解码等）时，才需要移到线程处理。
+- 数据库处理一般建议在主线程中进行，如果非要在其他线程中操作，务必记得打开数据库也要在那个线程，即在哪个线程使用数据库就在哪个线程打开它，而不能在主线程打开数据库，在子线程执行sql，这样很可能出问题。
+- 新版的`QTcpServer`类在64位版本的Qt下很可能不会进入`incomingConnection`函数，那是因为Qt5对应的`incomingConnection`函数的参数类型变了，由之前的`int`改成了`qintptr`。改成`qintptr`有个好处，那就是在32位上是`quint32`而在64位上是`quint64`。如果在Qt5中继续把参数当`int`，在32位上不会出问题，但在64位上肯定会出问题，所以为了兼容Qt4和Qt5，必须分开处理：
+
+  ```cpp
+  #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+      void incomingConnection(qintptr handle);
+  #else
+      void incomingConnection(int handle);
+  #endif
+  ```
