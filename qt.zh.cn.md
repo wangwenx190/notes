@@ -380,6 +380,7 @@
   }
   ```
 
+- 使用`qInstallMessageHandler`设置了自己的回调函数后，`qSetMessagePattern`函数失效怎么办？在你的回调函数中使用`qFormatLogMessage`函数即可，这个函数可以获取格式化后的日志消息。
 - QMake如何使Qt编译生成的带版本信息的动态库，文件名末尾不带主版本号：
 
   ```text
