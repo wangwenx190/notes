@@ -248,33 +248,7 @@
   }
   ```
 
-- 获取系统是否开启深色模式/浅色模式：
-
-  ```cpp
-  BOOL isLightThemeEnabled() {
-    HKEY hKey = nullptr;
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS) {
-      return FALSE;
-    }
-    DWORD dwSize = sizeof(DWORD), dwDataType = REG_DWORD, dwValue = 0;
-    // 虽然 RegQueryValueEx 也有可能会失败，但反正我们马上就 RegCloseKey 并且 return 了，就算失败了也没什么影响
-    RegQueryValueEx(hKey, TEXT("AppsUseLightTheme"), 0, &dwDataType, (LPBYTE)&dwValue, &dwSize);
-    RegCloseKey(hKey);
-    return (dwValue != 0);
-  }
-
-  BOOL isDarkThemeEnabled() { return !isLightThemeEnabled(); }
-  ```
-
-- 将窗口设置为深色模式：
-
-  ```cpp
-  // 头文件：uxtheme.h
-  // 库文件：UxTheme.lib（UxTheme.dll）
-  // hWnd 为窗口的句柄
-  SetWindowTheme(hWnd, L"DarkMode_Explorer", nullptr);
-  ```
-
+- 获取系统是否已经开启了深色模式/浅色模式 & 将窗口设置为深色模式/浅色模式：<https://github.com/microsoft/terminal/blob/master/src/interactivity/win32/windowtheme.cpp>
 - 读写INI文件：<https://github.com/Chuyu-Team/CPPHelper/blob/master/IniHelper.h>
   - 读取
 
