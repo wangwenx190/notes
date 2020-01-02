@@ -1999,3 +1999,36 @@
   | `Q_UNUSED(name)` | 告知编译器，参数`name`没有被使用。此宏被用来消除某些编译器警告。 | `Q_UNUSED(argc)` |
   | `Q_FOREVER` | 无限循环，等价于`for(;;)` | `Q_FOREVER { qDebug() << "*"; }` |
   | `Q_ASSUME(expr)` | 告知编译器，表达式`expr`的计算结果一定为`true`。但当表达式`expr`的计算结果为`false`时，此宏的效果与`Q_UNREACHABLE`相同。此宏被用来改善编译器优化，但编译器不一定都接受此提示。 | - |
+
+- 如何像微软的Office套件那样，用户关机时暂时中断系统的关机进程，提示用户保存未保存的文档，处理完毕后再继续关机？
+
+  ```cpp
+  MyMainWidget::MyMainWidget(QWidget *parent) : QWidget(parent) {
+      QGuiApplication::setFallbackSessionManagementEnabled(false);
+      connect(qApp, &QGuiApplication::commitDataRequest, this, &MyMainWidget::commitData);
+  }
+
+  void MyMainWidget::commitData(QSessionManager& manager) {
+      if (manager.allowsInteraction()) {
+          // 程序拥有与用户进行交互的权限
+          const int ret = QMessageBox::warning(mainWindow, tr("My Application"), tr("Save changes to document?"), QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+          switch (ret) {
+          case QMessageBox::Save:
+              manager.release();
+              if (!saveDocument()) {
+                  manager.cancel();
+              }
+              break;
+          case QMessageBox::Discard:
+              break;
+          case QMessageBox::Cancel:
+          default:
+              manager.cancel();
+          }
+      } else {
+          // 没有与用户交互的权限，做一些其他合理的事情
+      }
+  }
+  ```
+
+  注：更多更详细的用法请自行查看Qt文档中关于`QSessionManager`的部分。
