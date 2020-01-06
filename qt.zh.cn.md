@@ -2032,3 +2032,4 @@
   ```
 
   注：更多更详细的用法请自行查看Qt文档中关于`QSessionManager`的部分。
+- Qt支持将`QPushButton`和`QLineEdit`等控件自动关联与它们相对应的`on_控件名_信号(参数)`这一类的槽函数，比如按钮*openButton*的点击信号会自动关联槽函数`on_openButton_clicked()`（如果找得到这个函数的实现的话）。
