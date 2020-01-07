@@ -99,7 +99,7 @@
 - 如果你开发的程序不是很大，不推荐使用 Qt 提供的[`Installer Framework`(`IFW`)](http://download.qt.io/official_releases/qt-installer-framework/)打包，因为这个`IFW`是 Qt 静态编译的，因此文件会比较大，哪怕什么文件都不打包，也会有**20MB**左右的大小，得不偿失。当然，如果你的程序很大，几百兆甚至更大，就可以用它了。小软件推荐：[NSIS](https://sourceforge.net/projects/nsis/)，[Inno Setup](http://jrsoftware.org/isinfo.php)，[WiX Toolset](http://wixtoolset.org/)（制作**MSI**安装包专用）。不推荐：Install Shield（授权费非常昂贵，软件非常臃肿，打包出的安装程序较大，界面不容易定制。不信自己装一个试试），Install Anywhere（与前者是同一个公司的，因此缺点也差不多），Advanced Installer（制作MSI安装包专用，授权费较高），Vice Installer（远古软件），Wise Installation System（远古软件），Smart Install Maker（基本就是个玩具）以及其他任何不知名小软件
 - 尽量不要链接[`ICU`(`International Components for Unicode`)](https://github.com/unicode-org/icu)，虽然它提供了对世界上大多数国家和地区的语言和文字支持，功能非常强大，但文件太大，裁剪前**20~30MB**左右，裁剪后也有**10MB**左右，实际上一般程序根本用不到这种变态级别的国际化支持，所以不推荐使用这个库。Qt 官方也早已去掉了对它的依赖。在配置时给一个`-no-icu`参数就可以禁用`ICU`支持。
 - Qt自从5.13版本开始添加了对`Schannel`的支持，可以在配置时通过`-schannel`来启用，以此去掉对[`OpenSSL`](https://github.com/openssl/openssl)的依赖（如果完全不需要`OpenSSL`的支持，需要在配置时给一个`-no-openssl`参数来禁用`OpenSSL`）
-- QMake区分调试版本和发布版本：`CONFIG(debug, debug|release)`（debug时返回true），`CONFIG(release, debug|release)`（release时返回true），`contains(CONFIG, debug)`（debug时返回true），`contains(CONFIG, release)`（release时返回true），或者更简单的`debug:`和`release:`。在代码中，可以通过`#ifdef _DEBUG`来判断，但请注意，发布版本并没有`_RELEASE`这样的宏。
+- QMake区分调试版本和发布版本：`CONFIG(debug, debug|release)`（debug时返回true），`CONFIG(release, debug|release)`（release时返回true），`contains(CONFIG, debug)`（debug时返回true），`contains(CONFIG, release)`（release时返回true），或者更简单的`debug:`和`release:`。在代码中，可以通过`#ifdef _DEBUG`来判断，但请注意，发布版本并没有`_RELEASE`这样的宏（某些构建系统和编译器可能会自动给发布版本添加`NDEBUG`的宏定义，但不具有通用性）。
 - QMake区分 Qt 是静态链接还是动态链接的：`CONFIG(static, static|shared)`，`CONFIG(shared, static|shared)`，`contains(CONFIG, static)`，`contains(CONFIG, shared)`，`static:`，`shared:`。在代码中，可以通过`#ifdef QT_STATIC`和`#ifdef QT_SHARED`来判断。
 - QMake区分32位还是64位：`contains(QMAKE_TARGET.arch, x86_64)`，`contains(QMAKE_HOST.arch, x86_64)`，`contains(QT_ARCH, x86_64)`，以上三条语句在编译64位程序时返回true。其中`x86_64`替换为其他架构，例如`i386`，也是可行的，只不过判断的就不一定是64位了。在代码中，Windows 平台上可以通过`#ifdef WIN64`或`#ifdef _WIN64`来判断是不是64位，不要用`WIN32`来判断，因为`WIN32`这个会在两个架构上都有定义。
 - QMake区分应用程序和库：`contains(TEMPLATE, app)`，`contains(TEMPLATE, lib)`
@@ -872,6 +872,8 @@
   // 返回当前操作系统的产品版本。例如：16.10（Ubuntu 16.10）
   [static] QString QSysInfo::productVersion();
   ```
+
+  注：程序的目标架构还可以通过一些宏来进行判断，Qt提供的宏有`Q_PROCESSOR_X86`（x86架构，包含32位和64位）、`Q_PROCESSOR_X86_32`（32位x86架构）、`Q_PROCESSOR_X86_64`（64位x86架构）、`Q_PROCESSOR_IA64`（英特尔64位架构）、`Q_PROCESSOR_ARM`（`ARM`架构，目前包含`V5`、`V6`和`V7`）等，具体请查阅Qt手册。Windows平台还提供了`WIN64`/`_WIN64`等宏。
 
 - 修改`qInfo`、`qDebug`、`qWarning`、`qCritical`以及`qFatal`输出信息时的默认格式：`void qSetMessagePattern(const QString &pattern);`
 
@@ -2033,3 +2035,67 @@
 
   注：更多更详细的用法请自行查看Qt文档中关于`QSessionManager`的部分。
 - Qt支持将`QPushButton`和`QLineEdit`等控件自动关联与它们相对应的`on_控件名_信号(参数)`这一类的槽函数，比如按钮*openButton*的点击信号会自动关联槽函数`on_openButton_clicked()`（如果找得到这个函数的实现的话）。
+- 如何获取程序正在使用的OpenGL类型（OpenGL或OpenGL ES）、版本、格式、制造商（英特尔、英伟达等）等信息：
+
+  ```cpp
+  void dumpGlInfo(QTextStream &str, bool listExtensions) {
+      QOpenGLContext context;
+      if (context.create()) {
+  #ifdef QT_OPENGL_DYNAMIC
+          str << "Dynamic GL ";
+  #endif
+          switch (context.openGLModuleType()) {
+          case QOpenGLContext::LibGL:
+              str << "LibGL";
+              break;
+          case QOpenGLContext::LibGLES:
+              str << "LibGLES";
+              break;
+          }
+          QWindow window;
+          window.setSurfaceType(QSurface::OpenGLSurface);
+          window.create();
+          context.makeCurrent(&window);
+          QOpenGLFunctions functions(&context);
+          str << " Vendor: " << reinterpret_cast<const char *>(functions.glGetString(GL_VENDOR))
+              << "\nRenderer: " << reinterpret_cast<const char *>(functions.glGetString(GL_RENDERER))
+              << "\nVersion: " << reinterpret_cast<const char *>(functions.glGetString(GL_VERSION))
+              << "\nShading language: " << reinterpret_cast<const char *>(functions.glGetString(GL_SHADING_LANGUAGE_VERSION))
+              <<  "\nFormat: " << context.format();
+  #ifndef QT_OPENGL_ES_2
+          GLint majorVersion;
+          functions.glGetIntegerv(GL_MAJOR_VERSION, &majorVersion);
+          GLint minorVersion;
+          functions.glGetIntegerv(GL_MINOR_VERSION, &minorVersion);
+          const QByteArray openGlVersionFunctionsName = "QOpenGLFunctions_" + QByteArray::number(majorVersion) + '_' + QByteArray::number(minorVersion);
+          str << "\nProfile: None (" << openGlVersionFunctionsName << ')';
+          if (majorVersion > 3 || (majorVersion == 3 && minorVersion >= 1)) {
+              QOpenGLVersionProfile profile;
+              profile.setVersion(majorVersion, minorVersion);
+              profile.setProfile(QSurfaceFormat::CoreProfile);
+              if (QAbstractOpenGLFunctions *f = context.versionFunctions(profile)) {
+                  if (f->initializeOpenGLFunctions())
+                      str << ", Core (" << openGlVersionFunctionsName << "_Core)";
+              }
+              profile.setProfile(QSurfaceFormat::CompatibilityProfile);
+              if (QAbstractOpenGLFunctions *f = context.versionFunctions(profile)) {
+                  if (f->initializeOpenGLFunctions())
+                      str << ", Compatibility (" << openGlVersionFunctionsName << "_Compatibility)";
+              }
+          }
+          str << '\n';
+  #endif // !QT_OPENGL_ES_2
+          if (listExtensions) {
+              QByteArrayList extensionList = context.extensions().values();
+              std::sort(extensionList.begin(), extensionList.end());
+              str << " \nFound " << extensionList.size() << " extensions:\n";
+              for (const QByteArray &extension : qAsConst(extensionList))
+                  str << "  " << extension << '\n';
+          }
+      } else {
+          str << "Unable to create an Open GL context.\n";
+      }
+  }
+  ```
+
+  注：摘自Qt工具[qtdiag](https://code.qt.io/cgit/qt/qttools.git/tree/src/qtdiag/qtdiag.cpp)的源码。
