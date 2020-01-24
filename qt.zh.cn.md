@@ -392,6 +392,9 @@
 - QMake如何使QML插件支持静态加载（只是简单的能静态编译是不行的）：
 
   ```text
+  # Qt's QML plugins should be relocatable
+  # 下面这个设置不管静态还是动态都是需要的
+  CONFIG += relative_qt_rpath
   # 以此URI为例
   uri = wangwenx190.QuickMpv
   # Insert the plugins URI into its meta data to enable usage
