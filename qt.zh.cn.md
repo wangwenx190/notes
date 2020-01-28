@@ -48,6 +48,7 @@
   | 开启UTF-8支持 | `/utf-8` | `-finput-charset=UTF-8 -fexec-charset=UTF-8`（clang-cl：与MSVC相同） | `-finput-charset=UTF-8 -fexec-charset=UTF-8` | `-option,cpp,--unicode_source_kind,UTF-8`（icl：`/Qoption,cpp,--unicode_source_kind,UTF-8`） | `CONFIG += utf8_source` |
   | 设置C语言标准 | `/std:c11` | `-std=c11`（clang-cl：与MSVC相同） | `-std=c11` | `-std=c11`（icl：`/Qstd=c11`） | `CONFIG += c11` |
   | 设置C++语言标准 | `/std:c++17` | `-std=c++1z`（clang-cl：与MSVC相同） | `-std=c++1z` | `-std=c++17`（icl：`/Qstd=c++17`） | `CONFIG += c++1z`/`CONFIG += c++17` |
+  | 隐藏符号 | - | `-fvisibility=hidden -fvisibility-inlines-hidden` | `-fvisibility=hidden -fvisibility-inlines-hidden` | `-fvisibility=hidden -fvisibility-inlines-hidden` | `CONFIG += hide_symbols` |
 - `opengl32sw.dll`这个文件是用软件模拟的显卡，针对的是没有显卡的机器，所以只有在极少数情况下才会需要，发布 Qt 程序时不必带上此文件，能极大减小发布大小
 - 发布 Windows 平台的 Qt 程序时可以使用 Qt 官方提供的`windeployqt`程序，这个小程序会自动检测并复制相关的 dll 到你的程序文件夹，非常方便。但它无法检测第三方库，必须自行查找并复制。而且这个工具会复制一些多余的 Qt 的 dll，但极难判断究竟哪些是真的无用，因此就不要管了。
 
