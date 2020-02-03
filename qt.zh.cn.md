@@ -725,10 +725,44 @@
   const quint32 value = QRandomGenerator::global()->bounded(quint32 lowest, quint32 highest);
   ```
 
-- 无边框窗口：自定义标题栏+8向拉伸+窗口阴影
-  - 支持`QMainWindow`（稍微改一下也能支持`QWidget`），原生Windows+macOS效果，不支持Linux：<https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window>
-  - 支持`QMainWindow`、`QWidget`以及Qt Quick，仅支持原生Windows效果，不能跨平台：<https://github.com/qtdevs/FramelessHelper>
-  - 支持Qt大多数的类，跨平台，但不支持任何系统原生效果：<https://github.com/feiyangqingyun/QWidgetDemo/tree/master/framelesswidget>
+- 无边框窗口+自定义标题栏+拖动窗体+8向拉伸+窗口阴影
+  - 窗口无边框
+
+    ```cpp
+    // QWidget:
+    setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
+    // QWindow:
+    setFlags(Qt::Window | Qt::FramelessWindowHint);
+    // QML:
+    // flags: Qt.Window | Qt.FramelessWindowHint
+    ```
+
+  - 自定义标题栏
+
+    把窗口边框去掉的同时也会把窗口自带的原生标题栏去掉，我们再绘制一个自己的标题栏即可。原本标题栏的功能可以通过拦截鼠标事件实现。*QWidget*和*Qt Quick*都是这个思路。
+  - 8方向自由拉伸+窗体拖动
+
+    Qt 自 **5.15** 引入了跨平台（Windows+X11+Wayland+macOS）接口`startSystemMove`和`startSystemResize`，使用这两个接口可以很方便的实现以上功能，具体用法请自行查看文档。
+  - 窗口阴影
+
+    ```cpp
+    #include <QtWin> // Qt Windows Extras 模块
+    #include <dwmapi.h> // DWM 相关函数
+    #include <qt_windows.h> // 如果有些 Win32 的函数和结构体找不到定义，就添加这个头文件
+
+    Widget::Widget(QWidget *parent) : QWidget(parent) {
+        setWindowFlags(Qt::Window | Qt::FramelessWindowHint); // 去掉窗口自带的原生边框（与此同时标题栏和阴影也会被一并去掉）
+        DWMNCRENDERINGPOLICY ncrp = DWMNCRP_ENABLED;
+        DwmSetWindowAttribute(reinterpret_cast<HWND>(winId()), DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp));
+        QtWin::extendFrameIntoClientArea(this, -1, -1, -1, -1);
+        // 上面那一行等价于下面这两行，任选一种即可：
+        // MARGINS margins = { -1 };
+        // DwmExtendFrameIntoClientArea(reinterpret_cast<HWND>(winId()), &margins);
+    }
+    ```
+
+    上面的代码可以给无边框窗口带回窗口阴影，但由于使用的是DWM函数，因此仅支持 Windows 平台。其他平台暂时不熟悉。
+
 - Qt Quick获取正在显示QML文档的系统窗口
 
   ```cpp
