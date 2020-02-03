@@ -24,7 +24,7 @@
 - 在 Linux 平台进行 Qt 开发需要安装额外的库：<https://doc.qt.io/qt-5/linux.html> 。其中，在 Ubuntu 平台上进行开发的官方 Wiki：<https://wiki.qt.io/Install_Qt_5_on_Ubuntu>
 - 在 Linux 平台编译 Qt 需要安装额外的库：<https://doc.qt.io/qt-5/linux-requirements.html>
 - `QWebEngine`模块不支持静态编译（但静态链接运行时是可以的）
-- 在 Windows 平台上，`QWebEngine`模块只能使用最新版的`Visual Studio`编译，不支持其他一切编译器（截至2019-03-27）
+- 在 Windows 平台上，`QWebEngine`模块只能使用最新版的`Visual Studio 2017/2019`或`Clang-CL`（暂不清楚`Intel-CL`是否支持）编译，不支持其他一切编译器（截至2020-02-03）
 - 不要将 Qt 项目放在有非英文字符的路径下，否则会无法编译
 - 添加删除源文件或者源文件改名后，要重新执行`qmake`然后重新构建，否则会有链接错误
 - 编译器选项与 Qt 的`CONFIG`如何对应：
