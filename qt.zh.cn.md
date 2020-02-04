@@ -730,13 +730,13 @@
 - 无边框窗口+自定义标题栏+拖动窗体+8向拉伸+窗口阴影
   - 窗口无边框
 
-    ```cpp
+    ```text
     // QWidget:
     setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
     // QWindow:
     setFlags(Qt::Window | Qt::FramelessWindowHint);
     // QML:
-    // flags: Qt.Window | Qt.FramelessWindowHint
+    flags: Qt.Window | Qt.FramelessWindowHint
     ```
 
   - 自定义标题栏
