@@ -750,16 +750,16 @@
     ```cpp
     #include <QtWin> // Qt Windows Extras 模块
     #include <dwmapi.h> // DWM 相关函数
-    #include <qt_windows.h> // 如果有些 Win32 的函数和结构体找不到定义，就添加这个头文件
 
     Widget::Widget(QWidget *parent) : QWidget(parent) {
         setWindowFlags(Qt::Window | Qt::FramelessWindowHint); // 去掉窗口自带的原生边框（与此同时标题栏和阴影也会被一并去掉）
-        DWMNCRENDERINGPOLICY ncrp = DWMNCRP_ENABLED;
-        DwmSetWindowAttribute(reinterpret_cast<HWND>(winId()), DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp));
-        QtWin::extendFrameIntoClientArea(this, -1, -1, -1, -1);
-        // 上面那一行等价于下面这两行，任选一种即可：
-        // MARGINS margins = { -1 };
-        // DwmExtendFrameIntoClientArea(reinterpret_cast<HWND>(winId()), &margins);
+        if (QtWin::isCompositionEnabled()) { // 判断 DWM 特性是否已经启用（根据MSDN，自Win8开始默认总是启用，即此函数在Win8及更新版本的系统上总是返回true）
+            DWMNCRENDERINGPOLICY ncrp = DWMNCRP_ENABLED;
+            DwmSetWindowAttribute(reinterpret_cast<HWND>(winId()), DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp)); // 开启非客户区绘制（此句是带回窗口阴影的关键，不可缺少）
+            QtWin::resetExtendedFrame(this); // 是否多此一举？
+            QtWin::extendFrameIntoClientArea(this, -1, -1, -1, -1); // 当第2至第5个参数中至少有一个为负数时，意为对无边框控件绘制阴影（此句也是绘制窗口阴影的关键，也不能缺少）
+            QtWin::enableBlurBehindWindow(this); // 开启毛玻璃效果（此句与窗口阴影无关，仅是为了使窗口更加美观，因此一同启用；在Win8.1及更新版本的系统上无效，因为这些系统的毛玻璃效果已经被去掉）
+        }
     }
     ```
 

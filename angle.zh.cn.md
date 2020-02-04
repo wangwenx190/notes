@@ -1,8 +1,6 @@
 # ANGLE 使用笔记
 
-- 最新版`ANGLE`下载：<https://circleci.com/gh/wang-bin/build_angle/20#artifacts/containers/0> （记得把`#artifacts`前面的`20`换成最后一次成功构建的代号）
-
-  CMake脚本：<https://circleci.com/gh/wang-bin/build_angle>
+- 获取最新版`ANGLE`：请使用[vcpkg](https://github.com/microsoft/vcpkg)自行编译。
 - `ANGLE`（`libEGL.dll`和`libGLESv2.dll`）要搭配`d3dcompiler_XX.dll`一起使用，其中的`XX`一般为`47`，此文件位于`DirectX SDK`文件夹中，常见路径为`C:\Program Files (x86)\Windows Kits\10\Redist\D3D`
 - 在 Windows 平台上编译 Qt 时，编译`ANGLE`时需要一个叫`WindowsSdkVerBinPath`的环境变量，其路径指向`fxc.exe`(Microsoft Direct3D Shader Compiler)所在的文件夹，常见路径为`C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0`
 
