@@ -2141,3 +2141,4 @@
   ```
 
   注：摘自Qt工具[qtdiag](https://code.qt.io/cgit/qt/qttools.git/tree/src/qtdiag/qtdiag.cpp)的源码。
+- 将文件（夹）移动到回收站/废纸篓，而不是彻底删除：请自行查阅`QFile::moveToTrash`的用法，此API于Qt 5.15引入。
