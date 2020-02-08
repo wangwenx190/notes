@@ -6,7 +6,7 @@
 
 ### Qt 5 迁移指南
 
-待填充
+- 从QMake迁移到CMake：<https://wiki.qt.io/CMake_Port/Porting_Guide>
 
 ## Qt 5
 
