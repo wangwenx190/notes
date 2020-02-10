@@ -70,7 +70,7 @@
   // 库文件：Shell32.lib（Shell32.dll）
 
   struct DeCoInitializer {
-      DeCoInitializer() : neededCoInit(CoInitialize(NULL) == S_OK) {}
+      DeCoInitializer() : neededCoInit(CoInitialize(nullptr) == S_OK) {}
       ~DeCoInitializer() {
           if (neededCoInit) {
               CoUninitialize();
