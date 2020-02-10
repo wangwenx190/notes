@@ -68,6 +68,33 @@
   ```cpp
   // 头文件：shellapi.h
   // 库文件：Shell32.lib（Shell32.dll）
+
+  struct DeCoInitializer {
+      DeCoInitializer() : neededCoInit(CoInitialize(NULL) == S_OK) {}
+      ~DeCoInitializer() {
+          if (neededCoInit) {
+              CoUninitialize();
+          }
+      }
+      bool neededCoInit;
+  };
+
+  DeCoInitializer _deCoInitializer; // 虽然没有用到这个变量，但它的析构函数有用
+
+  // AdminAuthorization::execute uses UAC to ask for admin privileges. If the
+  // user is no administrator yet and the computer's policies are set to not
+  // use UAC (which is the case in some corporate networks), the call to
+  // execute() will simply succeed and not at all launch the child process. To
+  // avoid this, we detect this situation here and return early.
+  if (!hasAdminRights()) { // 使用上面提到的方法检测是否已经拥有管理员权限
+      QLatin1String key("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");
+      QSettings registry(key, QSettings::NativeFormat);
+      const QVariant enableLUA = registry.value(QLatin1String("EnableLUA"));
+      if ((enableLUA.type() == QVariant::Int) && (enableLUA.toInt() == 0)) {
+          return false;
+      }
+  }
+
   SHELLEXECUTEINFO sei;
   SecureZeroMemory(sei, sizeof(sei));
   sei.lpVerb = TEXT("RunAs"); // 这一行是关键，有了这一行才能以管理员权限执行
