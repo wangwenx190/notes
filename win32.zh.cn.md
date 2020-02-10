@@ -583,14 +583,21 @@
   #pragma pack(pop)
 
   void QInstaller::setApplicationIcon(const QString &application, const QString &icon) {
-      QFile iconFile(icon);
+      const QFile iconFile(icon);
       if (!iconFile.open(QIODevice::ReadOnly)) {
-          qWarning() << "Cannot use" << icon << "as an application icon:" << iconFile.errorString();
+          qWarning() << "Cannot open" << icon << ':' << iconFile.errorString();
           return;
       }
 
-      if (QImageReader::imageFormat(icon) != "ico") {
-          qWarning() << "Cannot use" << icon << "as an application icon, unsupported format" << QImageReader::imageFormat(icon).constData();
+      const QByteArray fileFormat = QImageReader::imageFormat(icon);
+      if (fileFormat != "ico") {
+          qWarning() << "Cannot use" << icon << "as an application icon: unsupported format" << fileFormat.constData();
+          return;
+      }
+
+      const HANDLE updateRes = BeginUpdateResourceW(reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(application).utf16()), FALSE);
+      if (!updateRes) {
+          qWarning() << "Cannot begin updating resource";
           return;
       }
 
@@ -603,7 +610,6 @@
       newDir->idType = ig->idType;
       newDir->idCount = ig->idCount;
 
-      const HANDLE updateRes = BeginUpdateResourceW(reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(application).utf16()), false);
       for (int i = 0; i < ig->idCount; ++i) {
           const char *temp1 = temp.data() + ig->idEntries[i].dwImageOffset;
           const DWORD size1 = ig->idEntries[i].dwBytesInRes;
@@ -617,14 +623,20 @@
           newDir->idEntries[i].dwBytesInRes = ig->idEntries[i].dwBytesInRes;
           newDir->idEntries[i].nID = i + 1;
 
-          UpdateResourceW(updateRes, RT_ICON, MAKEINTRESOURCE(i + 1), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), temp1, size1);
+          if (!UpdateResourceW(updateRes, RT_ICON, MAKEINTRESOURCE(i + 1), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), temp1, size1)) {
+              qWarning() << "Cannot update icon" << i + 1;
+          }
       }
 
-      UpdateResourceW(updateRes, RT_GROUP_ICON, L"IDI_ICON1", MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), newDir, newSize);
+      if (!UpdateResourceW(updateRes, RT_GROUP_ICON, MAKEINTRESOURCE(1), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), newDir, newSize)) {
+          qWarning() << "Cannot update group icon";
+      }
 
       delete[] newDir;
 
-      EndUpdateResourceW(updateRes, false);
+      if (!EndUpdateResourceW(updateRes, FALSE)) {
+          qWarning() << "Cannot end updating resource";
+      }
   }
   ```
 
