@@ -1377,34 +1377,31 @@
   - 编译时版本：`QT_VERSION_STR`宏（这个宏返回的是编译程序时所链接的Qt库的版本，这个值在编译完成后永远不会改变）
   - 运行时版本：`const char *qVersion();`函数（这个函数返回的是当前加载的Qt库的版本，它可能会在程序运行期间发生改变）
 - 将最小化或被其他窗口挡住的窗口移到最前：
-  - 通常做法（跨平台），以`QWidget`为例：
 
-    ```cpp
-    // 第一步：如果窗口被隐藏了，显示出来。
-    // QWindow 没有 isHidden 函数，请使用 isVisible 函数代替。
-    if (isHidden()) {
-      show();
-    }
-    // 第二步：如果窗口被最小化了，恢复原始的大小和状态
-    // QWindow 没有 isMinimized 函数，请使用以下语句进行判断
-    // if (windowStates() & Qt::WindowMinimized) { /* ... */ }
-    if (isMinimized()) {
-      // QWindow 没有 setWindowState 以及 windowState 函数，请使用 setWindowStates 以及 windowStates 函数代替。
-      setWindowState(windowState() & ~Qt::WindowMinimized);
-      // 不要用 showNormal 函数，因为如果窗口被最大化了，也会被还原
-    }
-    // 第三步：如果仍然不是前台窗口，则手动将其移到前台
-    // QWindow 没有 isActiveWindow 函数，请使用 isActive 函数代替。
-    if (!isActiveWindow()) {
-      raise(); // 此步是必须的吗？
-      // QWindow 没有 activateWindow 函数，请使用 requestActivate 函数代替。
-      activateWindow();
-    }
-    ```
+  ```cpp
+  // 第一步：如果窗口被隐藏了，显示出来。
+  // QWindow 没有 isHidden 函数，请使用 isVisible 函数代替。
+  if (isHidden()) {
+    show();
+  }
+  // 第二步：如果窗口被最小化了，恢复原始的大小和状态
+  // QWindow 没有 isMinimized 函数，请使用以下语句进行判断
+  // if (windowStates() & Qt::WindowMinimized) { /* ... */ }
+  if (isMinimized()) {
+    // QWindow 没有 setWindowState 以及 windowState 函数，请使用 setWindowStates 以及 windowStates 函数代替。
+    setWindowState(windowState() & ~Qt::WindowMinimized);
+    // 不要用 showNormal 函数，因为如果窗口被最大化了，也会被还原
+  }
+  // 第三步：如果仍然不是前台窗口，则手动将其移到前台
+  // QWindow 没有 isActiveWindow 函数，请使用 isActive 函数代替。
+  if (!isActiveWindow()) {
+    // 我看了QPA的源码，在激活窗口的过程中，窗口就已经被移到最前端了，不需要手动执行raise()函数
+    // 也不需要手动执行alert()函数，因为Windows会自动进行闪烁
+    // QWindow 没有 activateWindow 函数，请使用 requestActivate 函数代替。
+    activateWindow();
+  }
+  ```
 
-  - 另一种思路：先将窗口置顶，这样一来窗口肯定会跑到最前端，然后再取消置顶，恢复默认的设置。置顶和取消置顶这两个操作要有一定的时间间隔，如果间隔太短，很可能会没有效果（因为来不及置顶，置顶稍微需要点时间）。
-
-    按照我以前的经验，置顶和取消置顶都会导致窗口被隐藏，要手动重新将之显示出来（可能是Qt的bug？），所以用这个方法会导致窗口明显闪烁一到两次，体验不太好。如果没有这个问题，那么这个思路是最简单有效的方法。
 - 窗口如何置顶？置顶后如何取消置顶？
 
   ```cpp

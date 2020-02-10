@@ -15,9 +15,7 @@
   {
     SHFILEOPSTRUCT sfos;
     SecureZeroMemory(sfos, sizeof(sfos));
-    sfos.fFlags |= FOF_SILENT; // 不要显示进度
-    sfos.fFlags |= FOF_NOERRORUI; // 不要报错
-    sfos.fFlags |= FOF_NOCONFIRMATION; // 不要弹出提示窗口（您是否要删除XXX）
+    sfos.fFlags |= FOF_NO_UI; // 不显示任何窗口
     sfos.wFunc = FO_DELETE; // 关键，不可缺少：指定此操作为删除操作
     sfos.pFrom = pszPath; // 关键，不可缺少：待删除的文件（夹）
     sfos.pTo = nullptr; // 关键，不可缺少：必须是空指针
@@ -88,6 +86,10 @@
       else if(dwStatus == ERROR_FILE_NOT_FOUND)
       {
           std::cerr << "[UAC] : File not found." << std::endl;
+      }
+      else
+      {
+          std::cerr << "[UAC] : balabalabala." << std::endl;
       }
   }
   ```
@@ -317,7 +319,7 @@
   SecureZeroMemory(wndpmt, sizeof(wndpmt));
   if (GetWindowPlacement(hWnd, &wndpmt) != FALSE) {
     // 如果窗口被最小化了，还原回去
-    if (wndpmt.showCmd == SW_SHOWMINIMIZED) {
+    if ((wndpmt.showCmd == SW_SHOWMINIMIZED) || (wndpmt.showCmd == SW_MINIMIZE) || (wndpmt.showCmd == SW_FORCEMINIMIZE)) {
       // 此处一定要用 SW_RESTORE，用 SW_SHOW 不能恢复被最小化的窗口，用 SW_SHOWNORMAL 会导致窗口被无条件的还原为原始大小，即使在最小化之前处于最大化的状态
       ShowWindow(hWnd, SW_RESTORE);
     }
@@ -503,3 +505,103 @@
 - 普通程序开机自启
 
   将应用程序的绝对路径，写注册表到`HKEY_LOCAL_MACHINE（或HKEY_CURRENT_USER）\SOFTWARE\Microsoft\Windows\CurrentVersion\Run`下。如果路径包含空格，最好使用英文半角双引号包裹起来。
+- 使用Win32 API修改PE文件（exe、dll）的图标以及版本信息
+
+  ```cpp
+  // #pragmas are used here to insure that the structure's
+  // packing in memory matches the packing of the EXE or DLL.
+  #pragma pack(push)
+  #pragma pack(2)
+
+  typedef struct
+  {
+      BYTE        bWidth;          // Width, in pixels, of the image
+      BYTE        bHeight;         // Height, in pixels, of the image
+      BYTE        bColorCount;     // Number of colors in image (0 if >=8bpp)
+      BYTE        bReserved;       // Reserved ( must be 0)
+      WORD        wPlanes;         // Color Planes
+      WORD        wBitCount;       // Bits per pixel
+      DWORD       dwBytesInRes;    // How many bytes in this resource?
+      DWORD       dwImageOffset;   // Where in the file is this image?
+  } ICONDIRENTRY, *LPICONDIRENTRY;
+
+  typedef struct
+  {
+      WORD           idReserved;   // Reserved (must be 0)
+      WORD           idType;       // Resource Type (1 for icons)
+      WORD           idCount;      // How many images?
+      ICONDIRENTRY   idEntries[1]; // An entry for each image (idCount of 'em)
+  } ICONDIR, *LPICONDIR;
+
+  typedef struct
+  {
+     BYTE   bWidth;               // Width, in pixels, of the image
+     BYTE   bHeight;              // Height, in pixels, of the image
+     BYTE   bColorCount;          // Number of colors in image (0 if >=8bpp)
+     BYTE   bReserved;            // Reserved
+     WORD   wPlanes;              // Color Planes
+     WORD   wBitCount;            // Bits per pixel
+     DWORD  dwBytesInRes;         // how many bytes in this resource?
+     WORD   nID;                  // the ID
+  } GRPICONDIRENTRY, *LPGRPICONDIRENTRY;
+
+  typedef struct
+  {
+     WORD              idReserved;   // Reserved (must be 0)
+     WORD              idType;       // Resource type (1 for icons)
+     WORD              idCount;      // How many images?
+     GRPICONDIRENTRY   idEntries[1]; // The entries for each image
+  } GRPICONDIR, *LPGRPICONDIR;
+
+  #pragma pack(pop)
+
+  void QInstaller::setApplicationIcon(const QString &application, const QString &icon) {
+      QFile iconFile(icon);
+      if (!iconFile.open(QIODevice::ReadOnly)) {
+          qWarning() << "Cannot use" << icon << "as an application icon:" << iconFile.errorString();
+          return;
+      }
+
+      if (QImageReader::imageFormat(icon) != "ico") {
+          qWarning() << "Cannot use" << icon << "as an application icon, unsupported format" << QImageReader::imageFormat(icon).constData();
+          return;
+      }
+
+      const QByteArray temp = iconFile.readAll();
+      const auto *ig = reinterpret_cast<ICONDIR *>(temp.data());
+
+      const DWORD newSize = sizeof(GRPICONDIR) + sizeof(GRPICONDIRENTRY) * (ig->idCount - 1);
+      auto *newDir = reinterpret_cast<GRPICONDIR *>(new char[newSize]);
+      newDir->idReserved = ig->idReserved;
+      newDir->idType = ig->idType;
+      newDir->idCount = ig->idCount;
+
+      const HANDLE updateRes = BeginUpdateResourceW(reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(application).utf16()), false);
+      for (int i = 0; i < ig->idCount; ++i) {
+          const char *temp1 = temp.data() + ig->idEntries[i].dwImageOffset;
+          const DWORD size1 = ig->idEntries[i].dwBytesInRes;
+
+          newDir->idEntries[i].bWidth = ig->idEntries[i].bWidth;
+          newDir->idEntries[i].bHeight = ig->idEntries[i].bHeight;
+          newDir->idEntries[i].bColorCount = ig->idEntries[i].bColorCount;
+          newDir->idEntries[i].bReserved = ig->idEntries[i].bReserved;
+          newDir->idEntries[i].wPlanes = ig->idEntries[i].wPlanes;
+          newDir->idEntries[i].wBitCount = ig->idEntries[i].wBitCount;
+          newDir->idEntries[i].dwBytesInRes = ig->idEntries[i].dwBytesInRes;
+          newDir->idEntries[i].nID = i + 1;
+
+          UpdateResourceW(updateRes, RT_ICON, MAKEINTRESOURCE(i + 1), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), temp1, size1);
+      }
+
+      UpdateResourceW(updateRes, RT_GROUP_ICON, L"IDI_ICON1", MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), newDir, newSize);
+
+      delete[] newDir;
+
+      EndUpdateResourceW(updateRes, false);
+  }
+  ```
+
+  注：
+  - 源码摘自 [Qt Installer Framework](https://code.qt.io/cgit/installer-framework/installer-framework.git/tree/src/libs/installer/fileutils.cpp)
+  - MSDN官方资料：<https://docs.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)>
+  - 关于如何修改版本信息，请自行参考：<https://blog.csdn.net/qq_22423659/article/details/53940245>
