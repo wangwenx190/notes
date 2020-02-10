@@ -595,10 +595,10 @@
       }
 
       const QByteArray temp = iconFile.readAll();
-      const auto *ig = reinterpret_cast<ICONDIR *>(temp.data());
+      const auto *ig = reinterpret_cast<LPICONDIR>(temp.data());
 
       const DWORD newSize = sizeof(GRPICONDIR) + sizeof(GRPICONDIRENTRY) * (ig->idCount - 1);
-      auto *newDir = reinterpret_cast<GRPICONDIR *>(new char[newSize]);
+      auto *newDir = reinterpret_cast<LPGRPICONDIR>(new char[newSize]);
       newDir->idReserved = ig->idReserved;
       newDir->idType = ig->idType;
       newDir->idCount = ig->idCount;
