@@ -582,23 +582,23 @@
 
   #pragma pack(pop)
 
-  void QInstaller::setApplicationIcon(const QString &application, const QString &icon) {
-      const QFile iconFile(icon);
+  bool changeApplicationIcon(const QString &targetPath, const QString &iconPath) {
+      const QFile iconFile(iconPath);
       if (!iconFile.open(QIODevice::ReadOnly)) {
-          qWarning() << "Cannot open" << icon << ':' << iconFile.errorString();
-          return;
+          qWarning() << "Cannot open" << iconPath << ':' << iconFile.errorString();
+          return false;
       }
 
-      const QByteArray fileFormat = QImageReader::imageFormat(icon);
+      const QByteArray fileFormat = QImageReader::imageFormat(iconPath);
       if (fileFormat != "ico") {
-          qWarning() << "Cannot use" << icon << "as an application icon: unsupported format" << fileFormat.constData();
-          return;
+          qWarning() << "Cannot use" << iconPath << "as an application icon: unsupported format" << fileFormat.constData();
+          return false;
       }
 
-      const HANDLE updateRes = BeginUpdateResourceW(reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(application).utf16()), FALSE);
+      const HANDLE updateRes = BeginUpdateResourceW(reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(targetPath).utf16()), FALSE);
       if (!updateRes) {
           qWarning() << "Cannot begin updating resource";
-          return;
+          return false;
       }
 
       const QByteArray temp = iconFile.readAll();
@@ -636,11 +636,14 @@
 
       if (!EndUpdateResourceW(updateRes, FALSE)) {
           qWarning() << "Cannot end updating resource";
+          return false;
       }
+
+      return true;
   }
   ```
 
   注：
-  - 源码摘自 [Qt Installer Framework](https://code.qt.io/cgit/installer-framework/installer-framework.git/tree/src/libs/installer/fileutils.cpp)
+  - 源码摘自 [Qt Installer Framework](https://code.qt.io/cgit/installer-framework/installer-framework.git/tree/src/libs/installer/fileutils.cpp), 并进行了一定的修改
   - MSDN官方资料：<https://docs.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)>
   - 关于如何修改版本信息，请自行参考：<https://blog.csdn.net/qq_22423659/article/details/53940245>
