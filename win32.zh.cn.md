@@ -60,9 +60,9 @@
   // 头文件：shellapi.h
   // 库文件：Shell32.lib（Shell32.dll）
   // 示例代码，请注意修改
-  BOOL MoveToRecycleBin(LPCTSTR pszPath, BOOL bDelete)
+  BOOL MoveToRecycleBin(LPCWSTR pszPath, BOOL bDelete)
   {
-    SHFILEOPSTRUCT sfos;
+    SHFILEOPSTRUCTW sfos;
     SecureZeroMemory(sfos, sizeof(sfos));
     sfos.fFlags |= FOF_NO_UI; // 不显示任何窗口
     sfos.wFunc = FO_DELETE; // 关键，不可缺少：指定此操作为删除操作
@@ -76,7 +76,7 @@
     {
       sfos.fFlags |= FOF_ALLOWUNDO; // 将文件移动到回收站中
     }
-    return SHFileOperation(&sfos);
+    return SHFileOperationW(&sfos);
   }
   ```
 
@@ -144,15 +144,15 @@
       }
   }
 
-  SHELLEXECUTEINFO sei;
+  SHELLEXECUTEINFOW sei;
   SecureZeroMemory(sei, sizeof(sei));
-  sei.lpVerb = TEXT("RunAs"); // 这一行是关键，有了这一行才能以管理员权限执行
-  sei.lpFile = TEXT("notepad.exe"); // 待启动程序的路径
+  sei.lpVerb = L"RunAs"; // 这一行是关键，有了这一行才能以管理员权限执行
+  sei.lpFile = L"notepad.exe"; // 待启动程序的路径
   sei.nShow = SW_HIDE; // 想隐藏程序窗口的话要加上这一句，否则不需要这一行
-  sei.lpParameters = TEXT("/ABC /DEF"); // 要传给程序的参数，没有的话也不需要这一行
-  sei.cbSize = sizeof(SHELLEXECUTEINFO); // 必需的参数，不要忘掉
+  sei.lpParameters = L"/ABC /DEF"; // 要传给程序的参数，没有的话也不需要这一行
+  sei.cbSize = sizeof(SHELLEXECUTEINFOW); // 必需的参数，不要忘掉
   sei.fMask = SEE_MASK_NOASYNC; // 必需的参数，不要忘掉
-  if(ShellExecuteEx(&sei) != TRUE)
+  if(ShellExecuteExW(&sei) != TRUE)
   {
       DWORD dwStatus = GetLastError();
       if(dwStatus == ERROR_CANCELLED)
@@ -177,11 +177,11 @@
   #include <tchar.h>
 
   // 服务名
-  #define SERVICE_NAME TEXT("mysvc")
+  #define SERVICE_NAME L"mysvc"
   // 服务显示的名字
-  #define SERVICE_DISPLAY_NAME TEXT("My Service")
+  #define SERVICE_DISPLAY_NAME L"My Service"
   // 服务描述
-  #define SERVICE_DESCRIPTION TEXT("This service will do something.")
+  #define SERVICE_DESCRIPTION L"This service will do something."
 
   SERVICE_STATUS serviceStatus;
   SERVICE_STATUS_HANDLE serviceStatusHandle = nullptr;
@@ -189,50 +189,50 @@
   // 服务安装函数
   VOID Install()
   {
-      TCHAR filePath[MAX_PATH + 1];
+      wchar_t filePath[MAX_PATH + 1];
       SecureZeroMemory(filePath, sizeof(filePath));
-      DWORD dwSize = GetModuleFileName(nullptr, filePath, MAX_PATH);
+      DWORD dwSize = GetModuleFileNameW(nullptr, filePath, MAX_PATH);
       filePath[dwSize] = 0;
       bool result = false;
-      SC_HANDLE hSCM = OpenSCManager(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
+      SC_HANDLE hSCM = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
       if (hSCM != nullptr)
       {
-          SC_HANDLE hService = CreateService(hSCM, SERVICE_NAME, SERVICE_DISPLAY_NAME, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, filePath, nullptr, nullptr, nullptr, nullptr, nullptr);
+          SC_HANDLE hService = CreateServiceW(hSCM, SERVICE_NAME, SERVICE_DISPLAY_NAME, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, filePath, nullptr, nullptr, nullptr, nullptr, nullptr);
           if (hService != nullptr)
           {
-              SERVICE_DESCRIPTION sdesc;
+              SERVICE_DESCRIPTIONW sdesc;
               SecureZeroMemory(sdesc, sizeof(sdesc));
-              sdesc.lpDescription = const_cast<LPTSTR>(SERVICE_DESCRIPTION);
-              result = ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &sdesc);
-              CloseServiceHandle(hService);
+              sdesc.lpDescription = const_cast<LPWSTR>(SERVICE_DESCRIPTION);
+              result = ChangeServiceConfig2W(hService, SERVICE_CONFIG_DESCRIPTION, &sdesc);
+              CloseServiceHandleW(hService);
           }
-          CloseServiceHandle(hSCM);
+          CloseServiceHandleW(hSCM);
       }
       if (result)
-          OutputDebugString(TEXT("Installation succeeded."));
+          OutputDebugStringW(L"Installation succeeded.");
       else
-          OutputDebugString(TEXT("Installation failed. Administrator privilege is needed."));
+          OutputDebugStringW(L"Installation failed. Administrator privilege is needed.");
   }
 
   // 服务卸载函数
   VOID Uninstall()
   {
       bool result = false;
-      SC_HANDLE hSCM = OpenSCManager(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
+      SC_HANDLE hSCM = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
       if (hSCM != nullptr)
       {
-          SC_HANDLE hService = OpenService(hSCM, SERVICE_NAME, DELETE);
+          SC_HANDLE hService = OpenServiceW(hSCM, SERVICE_NAME, DELETE);
           if (hService != nullptr)
           {
-              result = DeleteService(hService);
-              CloseServiceHandle(hService);
+              result = DeleteServiceW(hService);
+              CloseServiceHandleW(hService);
           }
-          CloseServiceHandle(hSCM);
+          CloseServiceHandleW(hSCM);
       }
       if (result)
-          OutputDebugString(TEXT("Uninstallation succeeded."));
+          OutputDebugStringW(L"Uninstallation succeeded.");
       else
-          OutputDebugString(TEXT("Uninstallation failed. Administrator privilege is needed."));
+          OutputDebugStringW(L"Uninstallation failed. Administrator privilege is needed.");
   }
 
   // 服务控制函数
@@ -258,7 +258,7 @@
       default:
           break;
       };
-      SetServiceStatus(serviceStatusHandle, &serviceStatus);
+      SetServiceStatusW(serviceStatusHandle, &serviceStatus);
   }
 
   // 服务工作线程
@@ -274,7 +274,7 @@
   {
       (void)argc;
       (void)argv;
-      serviceStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, ServiceCtrlHandler);
+      serviceStatusHandle = RegisterServiceCtrlHandlerW(SERVICE_NAME, ServiceCtrlHandler);
       if (serviceStatusHandle == nullptr)
           return;
       SecureZeroMemory(serviceStatus, sizeof(serviceStatus));
@@ -284,43 +284,43 @@
       serviceStatus.dwWin32ExitCode = 0;
       serviceStatus.dwServiceSpecificExitCode = 0;
       serviceStatus.dwCheckPoint = 0;
-      if (SetServiceStatus(serviceStatusHandle, &serviceStatus) != TRUE)
+      if (SetServiceStatusW(serviceStatusHandle, &serviceStatus) != TRUE)
           return;
       serviceStatus.dwCurrentState = SERVICE_RUNNING;
       serviceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_PAUSE_CONTINUE;
       serviceStatus.dwWin32ExitCode = 0;
       serviceStatus.dwCheckPoint = 0;
-      if (SetServiceStatus(serviceStatusHandle, &serviceStatus) != TRUE)
+      if (SetServiceStatusW(serviceStatusHandle, &serviceStatus) != TRUE)
           return;
-      HANDLE hThread = CreateThread(nullptr, 0, ServiceWorkerThread, nullptr, 0, nullptr);
-      WaitForSingleObject(hThread, INFINITE);
+      HANDLE hThread = CreateThreadW(nullptr, 0, ServiceWorkerThread, nullptr, 0, nullptr);
+      WaitForSingleObjectW(hThread, INFINITE);
       serviceStatus.dwCurrentState = SERVICE_STOPPED;
       serviceStatus.dwControlsAccepted = 0;
       serviceStatus.dwWin32ExitCode = 0;
       serviceStatus.dwCheckPoint = 3;
-      SetServiceStatus(serviceStatusHandle, &serviceStatus);
+      SetServiceStatusW(serviceStatusHandle, &serviceStatus);
   }
 
   // 程序main函数
-  int _tmain(int argc, TCHAR *argv[])
+  int wmain(int argc, wchar_t *argv[])
   {
       SERVICE_TABLE_ENTRY ServiceTable[] =
       {
-          {const_cast<LPTSTR>(SERVICE_NAME), (LPSERVICE_MAIN_FUNCTION)ServiceMain},
+          {const_cast<LPWSTR>(SERVICE_NAME), (LPSERVICE_MAIN_FUNCTION)ServiceMain},
           {nullptr, nullptr}
       };
       for (unsigned int i = 1; i != argc; ++i)
-          if ((_tcscmp(argv[i], TEXT("-i")) == 0) || (_tcscmp(argv[i], TEXT("-I")) == 0) || (_tcscmp(argv[i], TEXT("-install")) == 0) || (_tcscmp(argv[i], TEXT("-INSTALL")) == 0) || (_tcscmp(argv[i], TEXT("-Install")) == 0))
+          if ((wcscmp(argv[i], L"-i") == 0) || (wcscmp(argv[i], L"-I") == 0) || (wcscmp(argv[i], L"-install") == 0) || (wcscmp(argv[i], L"-INSTALL") == 0) || (wcscmp(argv[i], L"-Install") == 0))
           {
               Install();
               break;
           }
-          else if ((_tcscmp(argv[i], TEXT("-u")) == 0) || (_tcscmp(argv[i], TEXT("-U")) == 0) || (_tcscmp(argv[i], TEXT("-uninstall")) == 0) || (_tcscmp(argv[i], TEXT("-UNINSTALL")) == 0) || (_tcscmp(argv[i], TEXT("-Uninstall")) == 0))
+          else if ((wcscmp(argv[i], L"-u") == 0) || (wcscmp(argv[i], L"-U") == 0) || (wcscmp(argv[i], L"-uninstall") == 0) || (wcscmp(argv[i], L"-UNINSTALL") == 0) || (wcscmp(argv[i], L"-Uninstall") == 0))
           {
               Uninstall();
               break;
           }
-      if (StartServiceCtrlDispatcher(ServiceTable) != TRUE)
+      if (StartServiceCtrlDispatcherW(ServiceTable) != TRUE)
           return GetLastError();
       return 0;
   }
@@ -405,18 +405,21 @@
   AttachThreadInput(dwCurID, dwForeID, FALSE); // 断开两个进程的输入焦点
   ```
 
-- 关联文件后缀名
+- 关联文件后缀名：请参考<https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/winui/shell/appshellintegration/AutomaticJumpList/FileRegistrations.h>
 - 将窗口嵌入桌面（类似于动态壁纸那种效果）
 
   ```cpp
+  // 头文件：windows.h
+  // 库文件：User32.lib（User32.dll）
+
   static bool legacyMode = false;
   static HWND HWORKERW = nullptr;
 
   BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
       (void)lParam;
-      const HWND defview = FindWindowEx(hwnd, nullptr, TEXT("SHELLDLL_DefView"), nullptr);
+      const HWND defview = FindWindowExW(hwnd, nullptr, L"SHELLDLL_DefView", nullptr);
       if (defview != nullptr) {
-          HWORKERW = FindWindowEx(nullptr, hwnd, TEXT("WorkerW"), nullptr);
+          HWORKERW = FindWindowExW(nullptr, hwnd, L"WorkerW", nullptr);
           if (HWORKERW != nullptr) {
               return FALSE;
           }
@@ -425,7 +428,7 @@
   }
 
   HWND getProgman() {
-      return FindWindow(TEXT("Progman"), TEXT("Program Manager"));
+      return FindWindowW(L"Progman", L"Program Manager");
   }
 
   HWND getDesktop() {
@@ -498,7 +501,7 @@
   ```cpp
   // 头文件：shellapi.h
   // 库文件：Shell32.lib（Shell32.dll）
-  ShellExecute(nullptr, TEXT("TaskbarPin"), TEXT("快捷方式（.lnk文件）的绝对路径"), nullptr, nullptr, SW_SHOW);
+  ShellExecuteW(nullptr, L"TaskbarPin", L"快捷方式（.lnk文件）的绝对路径", nullptr, nullptr, SW_SHOW);
   // 快捷方式指向的文件一定要存在，即不能把一个失效的快捷方式固定到任务栏。当然了，快捷方式本身也一定要存在，不能把一个不存在的文件固定到任务栏。
   // 将“TaskbarPin”替换为“TaskbarUnpin”即可将已经固定在任务栏上的图标移除。
   ```
@@ -584,6 +587,9 @@
 - 使用Win32 API修改PE文件（exe、dll）的图标以及版本信息
 
   ```cpp
+  // 头文件：windows.h
+  // 库文件：Kernel32.lib（Kernel32.dll）、Version.lib
+
   // #pragmas are used here to insure that the structure's
   // packing in memory matches the packing of the EXE or DLL.
   #pragma pack(push)
@@ -792,4 +798,213 @@
   - 源码摘自 [Qt Installer Framework](https://code.qt.io/cgit/installer-framework/installer-framework.git/tree/src/libs/installer/fileutils.cpp), 并进行了一定的修改
   - MSDN官方资料：<https://docs.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)>, <https://docs.microsoft.com/en-us/windows/win32/api/winver/nf-winver-verqueryvaluew>
 - 创建指向网址的快捷方式（*.url）
+
+  ```cpp
+  // 头文件：shlobj.h
+  // 库文件：Shell32.lib（Shell32.dll）
+
+  struct DeCoInitializer {
+      DeCoInitializer() : neededCoInit(CoInitialize(nullptr) == S_OK) {}
+      ~DeCoInitializer() {
+          if (neededCoInit) {
+              CoUninitialize();
+          }
+      }
+      bool neededCoInit;
+  };
+
+  bool createLink(const QString &fileName, const QString &linkName, QString workingDir, const QString &arguments = QString(), const QString &iconPath = QString(), const QString &iconId = QString(), const QString &description = QString()) {
+      // CoInitialize cleanup object
+      DeCoInitializer _;
+
+      IUnknown *iunkn = nullptr;
+
+      if (fileName.toLower().startsWith(QLatin1String("http:")) || fileName.toLower().startsWith(QLatin1String("ftp:"))) {
+          IUniformResourceLocator *iurl = nullptr;
+          if (FAILED(CoCreateInstance(CLSID_InternetShortcut, nullptr, CLSCTX_INPROC_SERVER, IID_IUniformResourceLocator, reinterpret_cast<LPVOID *>(&iurl)))) {
+              return false;
+          }
+
+          if (FAILED(iurl->SetURL(reinterpret_cast<LPCWSTR>(fileName.utf16()), IURL_SETURL_FL_GUESS_PROTOCOL))) {
+              iurl->Release();
+              return false;
+          }
+          iunkn = iurl;
+      } else {
+          bool success = QFile::link(fileName, linkName);
+
+          if (!success) {
+              return success;
+          }
+
+          if (workingDir.isEmpty()) {
+              workingDir = QFileInfo(fileName).absolutePath();
+          }
+          workingDir = QDir::toNativeSeparators(workingDir);
+
+          IShellLink *psl = nullptr;
+          if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLink, reinterpret_cast<LPVOID *>(&psl)))) {
+              return success;
+          }
+
+          // TODO: implement this server side, since there's not Qt equivalent to set working dir and arguments
+          psl->SetPath(reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(fileName).utf16()));
+          psl->SetWorkingDirectory(reinterpret_cast<LPCWSTR>(workingDir.utf16()));
+          if (!arguments.isNull()) {
+              psl->SetArguments(reinterpret_cast<LPCWSTR>(arguments.utf16()));
+          }
+          if (!iconPath.isNull()) {
+              psl->SetIconLocation(reinterpret_cast<LPCWSTR>(iconPath.utf16()), iconId.toInt());
+          }
+          if (!description.isNull()) {
+              psl->SetDescription(reinterpret_cast<LPCWSTR>(description.utf16()));
+          }
+          iunkn = psl;
+      }
+
+      IPersistFile *ppf = nullptr;
+      if (SUCCEEDED(iunkn->QueryInterface(IID_IPersistFile, reinterpret_cast<void **>(&ppf)))) {
+          ppf->Save(reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(linkName).utf16()), true);
+          ppf->Release();
+      }
+      iunkn->Release();
+
+      PIDLIST_ABSOLUTE pidl;  // Force start menu cache update
+      if (SUCCEEDED(SHGetFolderLocation(0, CSIDL_STARTMENU, 0, 0, &pidl))) {
+          SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, pidl, 0);
+          CoTaskMemFree(pidl);
+      }
+      if (SUCCEEDED(SHGetFolderLocation(0, CSIDL_COMMON_STARTMENU, 0, 0, &pidl))) {
+          SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, pidl, 0);
+          CoTaskMemFree(pidl);
+      }
+
+      return true;
+  }
+  ```
+
 - 如何确保GUI程序输出的调试信息能被控制台窗口接收到？
+
+  ```cpp
+  // console.h
+  #pragma once
+
+  #include <fstream>
+  #include <iostream>
+
+  class Console {
+  public:
+      Console();
+      ~Console();
+
+  private:
+      bool parentConsole;
+      bool newConsoleCreated;
+
+      std::ofstream m_newCout;
+      std::ofstream m_newCerr;
+
+      std::streambuf* m_oldCout;
+      std::streambuf* m_oldCerr;
+  };
+
+  // console.cpp
+  #include "console.h"
+
+  #include <wincon.h>
+
+  static bool isRedirected(HANDLE stdHandle) {
+      if (stdHandle == nullptr) // launched from GUI
+          return false;
+      DWORD fileType = GetFileType(stdHandle);
+      if (fileType == FILE_TYPE_UNKNOWN) {
+          // launched from console, but no redirection
+          return false;
+      }
+      // redirected into file, pipe ...
+      return true;
+  }
+
+  /**
+   * Redirects stdout, stderr output to console
+   *
+   * Console is a RAII class that ensures stdout, stderr output is visible
+   * for GUI applications on Windows.
+   *
+   * If the application is launched from the explorer, startup menu etc
+   * a new console window is created.
+   *
+   * If the application is launched from the console (cmd.exe), output is
+   * printed there.
+   *
+   * If the application is launched from the console, but stdout is redirected
+   * (e.g. into a file), Console does not interfere.
+   */
+  Console::Console() :
+      m_oldCout(nullptr),
+      m_oldCerr(nullptr),
+      parentConsole(false),
+      newConsoleCreated(false)
+  {
+      bool isCoutRedirected = isRedirected(GetStdHandle(STD_OUTPUT_HANDLE));
+      bool isCerrRedirected = isRedirected(GetStdHandle(STD_ERROR_HANDLE));
+
+      if (!isCoutRedirected) { // verbose output only ends up in cout
+          // try to use parent console. else launch & set up new console
+          parentConsole = AttachConsole(ATTACH_PARENT_PROCESS);
+          if (!parentConsole) {
+              newConsoleCreated = true;
+              AllocConsole();
+              HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+              if (handle != INVALID_HANDLE_VALUE) {
+                  COORD largestConsoleWindowSize = GetLargestConsoleWindowSize(handle);
+                  largestConsoleWindowSize.X -= 3;
+                  largestConsoleWindowSize.Y = 5000;
+                  SetConsoleScreenBufferSize(handle, largestConsoleWindowSize);
+              }
+              handle = GetStdHandle(STD_INPUT_HANDLE);
+              if (handle != INVALID_HANDLE_VALUE)
+                  SetConsoleMode(handle, ENABLE_INSERT_MODE | ENABLE_QUICK_EDIT_MODE
+                                 | ENABLE_EXTENDED_FLAGS);
+  #ifndef Q_CC_MINGW
+              HMENU systemMenu = GetSystemMenu(GetConsoleWindow(), FALSE);
+              if (systemMenu != nullptr)
+                  RemoveMenu(systemMenu, SC_CLOSE, MF_BYCOMMAND);
+              DrawMenuBar(GetConsoleWindow());
+  #endif
+          }
+      }
+
+      if (!isCoutRedirected) {
+          m_oldCout = std::cout.rdbuf();
+          m_newCout.open("CONOUT$");
+          std::cout.rdbuf(m_newCout.rdbuf());
+      }
+
+      if (!isCerrRedirected) {
+          m_oldCerr = std::cerr.rdbuf();
+          m_newCerr.open("CONOUT$");
+          std::cerr.rdbuf(m_newCerr.rdbuf());
+      }
+  }
+
+  Console::~Console()
+  {
+      if (parentConsole) {
+          // simulate enter key to switch to boot prompt
+          PostMessage(GetConsoleWindow(), WM_KEYDOWN, 0x0D, 0);
+      } else if (newConsoleCreated) {
+          system("PAUSE");
+      }
+
+      if (m_oldCerr)
+          std::cerr.rdbuf(m_oldCerr);
+      if (m_oldCout)
+          std::cout.rdbuf(m_oldCout);
+
+      if (m_oldCout)
+          FreeConsole();
+  }
+  ```
+
+- 同一个应用程序如何开启多个选项卡（Win7开始添加的任务栏选项卡，Aero Peek）：请参考<https://github.com/microsoft/Windows-classic-samples/tree/master/Samples/Win7Samples/winui/shell/appshellintegration/TabThumbnails>
