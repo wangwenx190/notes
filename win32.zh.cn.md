@@ -3,7 +3,55 @@
 - 控制台程序隐藏命令行窗口：`#pragma comment(linker, "/SUBSYSTEM:WINDOWS /ENTRY:\"mainCRTStartup\"")`。如果编译时提示入口点错误，就把`mainCRTStartup`更改为`wmainCRTStartup`，是`UNICODE`的问题
 - 窗口程序显示命令行窗口：`#pragma comment(linker, "/SUBSYSTEM:CONSOLE /ENTRY:\"WinMainCRTStartup\"")`。如果编译时提示入口点错误，就把`WinMainCRTStartup`更改为`wWinMainCRTStartup`，是`UNICODE`的问题
 - 如何做到完美的开机自启：注册一个 Windows 服务，使用 Windows 服务来启动你的程序。这样做不仅可以使你的程序比任何程序都早运行，还可以做到以管理员权限运行而不弹出 UAC 提示框。注册服务时，注意选择为可与图形界面交互，否则无法启动 GUI 程序。很多资料都说，Windows Vista 之后的系统不支持服务程序启动 GUI 程序，但经过我的亲自测试，直到 Windows 10 都还支持。
-- 通过嵌入清单文件（*.manifest）实现完美的高 DPI 缩放：<https://msdn.microsoft.com/en-us/C9488338-D863-45DF-B5CB-7ED9B869A5E2>
+- 通过嵌入清单文件（*.manifest）开启系统的DPI缩放支持并设置相应的缩放策略
+
+  ```xml
+  <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+    <!-- Some basic information -->
+    <assemblyIdentity version="1.0.0.0" processorArchitecture="*" name="wangwenx190.myapplication.exe" type="win32"/>
+    <dependency>
+      <dependentAssembly>
+        <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*"/>
+      </dependentAssembly>
+    </dependency>
+    <!-- Claims that this application doesn't need UAC -->
+    <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+      <security>
+        <requestedPrivileges>
+          <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+        </requestedPrivileges>
+      </security>
+    </trustInfo>
+    <!-- Claims that this application supports Windows Vista ~ 10 -->
+    <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+      <application>
+        <!-- The ID below indicates app support for Windows Vista -->
+        <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/>
+        <!-- The ID below indicates app support for Windows 7 -->
+        <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"/>
+        <!-- The ID below indicates app support for Windows 8 -->
+        <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/>
+        <!-- The ID below indicates app support for Windows 8.1 -->
+        <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
+        <!-- The ID below indicates app support for Windows 10 -->
+        <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
+      </application>
+    </compatibility>
+    <!-- Claims that this application supports HiDPI scaling -->
+    <application xmlns="urn:schemas-microsoft-com:asm.v3">
+      <windowsSettings>
+        <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+        <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+        <gdiScaling xmlns="http://schemas.microsoft.com/SMI/2017/WindowsSettings">true</gdiScaling>
+      </windowsSettings>
+    </application>
+  </assembly>
+  ```
+
+  注：
+  - 经过清单文件的设置后，系统不会对程序的界面元素进行强制拉伸，但相应元素的大小调整完全要自行解决。除UWP程序外，系统不会替任何应用程序对DPI改变进行处理。此清单文件的作用是，禁止系统对程序的界面进行自动拉伸（因为这会导致界面很糊）。
+  - 参考资料：<https://docs.microsoft.com/en-us/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows>，<https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/mt846517(v=vs.85)>，<https://docs.microsoft.com/en-us/dotnet/framework/winforms/high-dpi-support-in-windows-forms>，<https://github.com/microsoft/Windows-classic-samples/tree/master/Samples/DPIAwarenessPerWindow>，<https://github.com/Microsoft/WPF-Samples/tree/master/PerMonitorDPI>
 - 自定义开始屏幕磁贴：<https://docs.microsoft.com/en-us/previous-versions/windows/apps/dn449733(v=win.10)>
 - 如何使用API将文件（夹）移动到回收站而不是直接彻底删除：
 
@@ -742,3 +790,5 @@
   注：
   - 源码摘自 [Qt Installer Framework](https://code.qt.io/cgit/installer-framework/installer-framework.git/tree/src/libs/installer/fileutils.cpp), 并进行了一定的修改
   - MSDN官方资料：<https://docs.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)>, <https://docs.microsoft.com/en-us/windows/win32/api/winver/nf-winver-verqueryvaluew>
+- 创建指向网址的快捷方式（*.url）
+- 如何确保GUI程序输出的调试信息能被控制台窗口接收到？
