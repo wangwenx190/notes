@@ -3,7 +3,7 @@
 - 控制台程序隐藏命令行窗口：`#pragma comment(linker, "/SUBSYSTEM:WINDOWS /ENTRY:\"mainCRTStartup\"")`。如果编译时提示入口点错误，就把`mainCRTStartup`更改为`wmainCRTStartup`，是`UNICODE`的问题
 - 窗口程序显示命令行窗口：`#pragma comment(linker, "/SUBSYSTEM:CONSOLE /ENTRY:\"WinMainCRTStartup\"")`。如果编译时提示入口点错误，就把`WinMainCRTStartup`更改为`wWinMainCRTStartup`，是`UNICODE`的问题
 - 如何做到完美的开机自启：注册一个 Windows 服务，使用 Windows 服务来启动你的程序。这样做不仅可以使你的程序比任何程序都早运行，还可以做到以管理员权限运行而不弹出 UAC 提示框。注册服务时，注意选择为可与图形界面交互，否则无法启动 GUI 程序。很多资料都说，Windows Vista 之后的系统不支持服务程序启动 GUI 程序，但经过我的亲自测试，直到 Windows 10 都还支持。
-- 通过嵌入 Manifest 文件实现完美的高 DPI 缩放：<https://msdn.microsoft.com/en-us/C9488338-D863-45DF-B5CB-7ED9B869A5E2>
+- 通过嵌入清单文件（*.manifest）实现完美的高 DPI 缩放：<https://msdn.microsoft.com/en-us/C9488338-D863-45DF-B5CB-7ED9B869A5E2>
 - 自定义开始屏幕磁贴：<https://docs.microsoft.com/en-us/previous-versions/windows/apps/dn449733(v=win.10)>
 - 如何使用API将文件（夹）移动到回收站而不是直接彻底删除：
 
@@ -583,6 +583,13 @@
   #pragma pack(pop)
 
   bool changeApplicationIcon(const QString &targetPath, const QString &iconPath) {
+      Q_ASSERT(!targetPath.isEmpty() && !iconPath.isEmpty());
+
+      if (!QFile::exists(targetPath) || !QFile::exists(iconPath)) {
+          qWarning() << "Target PE file or icon file not exist";
+          return false;
+      }
+
       const QFile iconFile(iconPath);
       if (!iconFile.open(QIODevice::ReadOnly)) {
           qWarning() << "Cannot open" << iconPath << ':' << iconFile.errorString();
@@ -641,9 +648,97 @@
 
       return true;
   }
+
+  struct LANGANDCODEPAGE {
+      WORD   wLanguage;
+      WORD   wCodePage;
+  } *lpTranslate;
+
+  bool changeVersionInfo(const QString &targetPath, const QString &valueName, const QString &newValue) {
+      Q_ASSERT(!targetPath.isEmpty() && !valueName.isEmpty() && !newValue.isEmpty());
+
+      if (!QFile::exists(targetPath)) {
+          qWarning() << "Target PE file not exist";
+          return false;
+      }
+
+      const auto *lpszFile = reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(targetPath).utf16());
+
+      DWORD dwHandle = 0;
+      const DWORD dwSize = GetFileVersionInfoSizeW(lpszFile, &dwHandle);
+      if (dwSize <= 0) {
+          qWarning() << "Cannot acquire file version info size";
+          return false;
+      }
+
+      LPBYTE lpBuffer = new BYTE[dwSize];
+      SecureZeroMemory(lpBuffer, sizeof(lpBuffer));
+
+      if (!GetFileVersionInfoW(lpszFile, dwHandle, dwSize, lpBuffer)) {
+          delete[] lpBuffer;
+          qWarning() << "Cannot acquire file version info";
+          return false;
+      }
+
+      const HANDLE hResource = BeginUpdateResourceW(lpszFile, FALSE);
+      if (!hResource) {
+          delete[] lpBuffer;
+          qWarning() << "Cannot begin updating resource";
+          return false;
+      }
+
+      UINT cbTranslate = 0;
+
+      if (!VerQueryValueW(lpBuffer, L"\\VarFileInfo\\Translation", reinterpret_cast<LPVOID *>(&lpTranslate), &cbTranslate)) {
+          delete[] lpBuffer;
+          qWarning() << "Cannot query translation values";
+          return false;
+      }
+
+      for (int i = 0; i < (cbTranslate / sizeof(struct LANGANDCODEPAGE)); ++i) {
+          const QString valuePath = QString("\\StringFileInfo\\%1%2\\%3").arg(lpTranslate[i].wLanguage, lpTranslate[i].wCodePage, valueName);
+          const auto *szTemp = reinterpret_cast<LPCWSTR>(valuePath.utf16());
+          LPVOID lpStringBuf = nullptr;
+          DWORD dwStringLen = 0;
+          if (!VerQueryValueW(lpBuffer, szTemp, &lpStringBuf, static_cast<PUINT>(&dwStringLen))) {
+              qWarning() << "Cannot query" << valueName;
+              continue;
+          }
+          const auto *szNewValue = reinterpret_cast<LPCWSTR>(newValue.utf16());
+          memcpy(lpStringBuf, szNewValue, wcslen(szNewValue) * sizeof(wchar_t));
+          if (valueName.contains("version", Qt::CaseInsensitive)) {
+              LPVOID lpFixedBuf = nullptr;
+              DWORD dwFixedLen = 0;
+              if (VerQueryValueW(lpBuffer, L"\\", &lpFixedBuf, static_cast<PUINT>(&dwFixedLen))) {
+                  QVersionNumber ver = QVersionNumber::fromString(newValue);
+                  auto *pFixedInfo = reinterpret_cast<VS_FIXEDFILEINFO *>(lpFixedBuf);
+                  if (valueName.contains("fileversion", Qt::CaseInsensitive)) {
+                      pFixedInfo->dwFileVersionMS = DWORD(ver.majorVersion());
+                      pFixedInfo->dwFileVersionLS = DWORD(ver.minorVersion());
+                  } else {
+                      pFixedInfo->dwProductVersionMS = DWORD(ver.majorVersion());
+                      pFixedInfo->dwProductVersionLS = DWORD(ver.minorVersion());
+                  }
+              } else {
+                  qWarning() << "Cannot query version info";
+              }
+          }
+          if (!UpdateResourceW(hResource, RT_VERSION, MAKEINTRESOURCE(VS_VERSION_INFO), lpTranslate[i]->wLanguage, lpBuffer, dwSize)) {
+              qWarning() << "Cannot update version resource";
+          }
+      }
+
+      delete[] lpBuffer;
+
+      if (!EndUpdateResourceW(hResource, FALSE)) {
+          qWarning() << "Cannot end updating resource";
+          return false;
+      }
+
+      return true;
+  }
   ```
 
   注：
   - 源码摘自 [Qt Installer Framework](https://code.qt.io/cgit/installer-framework/installer-framework.git/tree/src/libs/installer/fileutils.cpp), 并进行了一定的修改
-  - MSDN官方资料：<https://docs.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)>
-  - 关于如何修改版本信息，请自行参考：<https://blog.csdn.net/qq_22423659/article/details/53940245>
+  - MSDN官方资料：<https://docs.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)>, <https://docs.microsoft.com/en-us/windows/win32/api/winver/nf-winver-verqueryvaluew>

@@ -234,7 +234,27 @@
 
    摘自：<https://doc.qt.io/qt-5/qmake-environment-reference.html>
 - 在 Windows 平台上使用`MinGW`编译 Qt 时不能开启 LTO，否则会报错，不清楚具体的原因
-- 在 Windows 平台上如果想要嵌入 Manifest 文件，可以插入到资源文件中，但我试过几次，效果都不理想，可能是方法有问题
+- Windows 平台嵌入清单文件（*.manifest）
+  1. 禁止Qt自动嵌入默认的清单文件并添加我们自己的资源文件
+
+     ```text
+     # myapp.pro
+     CONFIG -= embed_manifest_exe
+     RC_FILE = myapp.rc # 清单文件只能通过这种方法间接嵌入
+     ```
+
+  2. 在资源脚本中嵌入清单文件
+
+     ```text
+     // myapp.rc
+     // ...
+     // 下面这一段放在什么位置都行（但不要拆开这3行），为了省事可以直接附加到资源脚本的末尾
+     #define RT_MANIFEST 24
+     #define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+     CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "myapp.manifest"
+     // ...
+     ```
+
 - 编译 Qt 时常用的参数：
 
    | 参数 | 作用 |
