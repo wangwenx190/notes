@@ -54,10 +54,31 @@
   </assembly>
   ```
 
-  注：
+  注意事项：
+  - 使用方法：将以上内容保存到一个文本文档（`.txt`）中（注意编码问题；不要打乱格式），并重命名为**应用程序文件名.exe.manifest**（例如：`wmplayer.exe.manifest`）即可，切记**此文件一定要放到与应用程序同级的目录中**。如果不想将此清单文件暴露在外部，可以将其插入到资源文件中，这样一来编译后清单文件就会被嵌入到程序中，就不需要在外部单独放一份清单文件了。
   - 经过清单文件的设置后，系统不会对程序的界面元素进行强制拉伸，但相应元素的大小调整完全要自行解决。除UWP程序外，系统不会替任何应用程序对DPI改变进行处理。此清单文件的作用是，禁止系统对程序的界面进行自动拉伸（因为这会导致界面很糊）。
   - 参考资料：<https://docs.microsoft.com/en-us/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows>，<https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/mt846517(v=vs.85)>，<https://docs.microsoft.com/en-us/dotnet/framework/winforms/high-dpi-support-in-windows-forms>，<https://github.com/microsoft/Windows-classic-samples/tree/master/Samples/DPIAwarenessPerWindow>，<https://github.com/Microsoft/WPF-Samples/tree/master/PerMonitorDPI>
-- 自定义开始屏幕磁贴：<https://docs.microsoft.com/en-us/previous-versions/windows/apps/dn449733(v=win.10)>
+- 自定义开始屏幕磁贴
+
+  ```xml
+  <Application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <VisualElements
+          <!-- 磁贴背景颜色：填写颜色的16进制代码 -->
+          BackgroundColor="#FF0000"
+          <!-- 是否在磁贴上显示应用的名字：填写on/off -->
+          ShowNameOnSquare150x150Logo="on"
+          <!-- 磁贴文字颜色，白色还是黑色：填写light/dark -->
+          ForegroundText="light"
+          <!-- 大磁贴图片：填写图片文件的相对路径 -->
+          Square150x150Logo="Assets\150x150Logo.png"
+          <!-- 小磁贴图片：填写图片文件的相对路径 -->
+          Square70x70Logo="Assets\70x70Logo.png"/>
+  </Application>
+  ```
+
+  注意事项：
+  - 使用方法：将以上内容保存到一个文本文档（`.txt`）中（注意编码问题；不要打乱格式），并重命名为**应用程序文件名.VisualElementsManifest.xml**（例如：`wmplayer.VisualElementsManifest.xml`）即可，切记**此文件一定要放到与应用程序同级的目录中**。**此文件只能放在外部**，嵌入到程序中会失效。
+  - 参考资料：<https://docs.microsoft.com/en-us/previous-versions/windows/apps/dn449733(v=win.10)>
 - 如何使用API将文件（夹）移动到回收站而不是直接彻底删除：
 
   ```cpp
