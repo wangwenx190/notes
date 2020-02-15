@@ -8,7 +8,7 @@
   ```xml
   <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-    <!-- Some basic information -->
+    <!-- Basic information settings -->
     <assemblyIdentity type="win32" name="myapplication.exe" version="1.0.0.0" processorArchitecture="*"/>
     <description>My test application</description>
     <dependency>
@@ -16,15 +16,16 @@
         <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*"/>
       </dependentAssembly>
     </dependency>
-    <!-- Claims that this application doesn't need UAC -->
+    <!-- Privileges settings -->
     <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
       <security>
         <requestedPrivileges>
+          <!-- Claims that this application doesn't need admin privileges -->
           <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
         </requestedPrivileges>
       </security>
     </trustInfo>
-    <!-- Claims that this application supports Windows Vista ~ 10 -->
+    <!-- Compatibility settings -->
     <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
       <application>
         <!-- Windows Vista and Windows Server 2008 -->
@@ -39,12 +40,15 @@
         <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
       </application>
     </compatibility>
-    <!-- Claims that this application supports HiDPI scaling -->
+    <!-- Windows settings -->
     <application xmlns="urn:schemas-microsoft-com:asm.v3">
       <windowsSettings>
+        <!-- Claims that this application supports High DPI scaling -->
         <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
         <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
         <gdiScaling xmlns="http://schemas.microsoft.com/SMI/2017/WindowsSettings">true</gdiScaling>
+        <!-- Claims that this application supports long path -->
+        <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
       </windowsSettings>
     </application>
   </assembly>
