@@ -2158,4 +2158,23 @@
   ```
 
   注：摘自Qt工具[qtdiag](https://code.qt.io/cgit/qt/qttools.git/tree/src/qtdiag/qtdiag.cpp)的源码。
-- 将文件（夹）移动到回收站/废纸篓，而不是彻底删除：请自行查阅`QFile::moveToTrash`的用法，此API于Qt 5.15引入。
+- 将文件（夹）移动到回收站/废纸篓，而不是彻底删除：`QFile::moveToTrash`，此API于Qt **5.15**引入。
+  - 方法1
+
+    ```cpp
+    QFile file;
+    file.setFileName("readme.txt");
+    if (file.moveToTrash()) {
+        // 支持获取文件在回收站/废纸篓中位置的系统，fileName()会返回其在回收站/废纸篓的路径
+        qDebug() << "File has been moved to" << file.fileName();
+    } else {
+        // 删除失败
+    }
+    ```
+
+  - 方法2
+
+    ```cpp
+    // 如果想获取被删除文件在回收站/废纸篓中的路径，请将一个QString传入第二个参数
+    QFile::moveToTrash("D:/test.dat");
+    ```
