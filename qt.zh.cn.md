@@ -2176,5 +2176,7 @@
 
     ```cpp
     // 如果想获取被删除文件在回收站/废纸篓中的路径，请将一个QString传入第二个参数
-    QFile::moveToTrash("D:/test.dat");
+    if (!QFile::moveToTrash("D:/test.dat")) {
+        qDebug() << "Failed to ...";
+    }
     ```
