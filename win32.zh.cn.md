@@ -32,26 +32,29 @@
   ```xml
   <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-    <!-- Basic information settings -->
-    <assemblyIdentity type="win32" name="myapplication.exe" version="1.0.0.0" processorArchitecture="*"/>
+    <!-- 基础信息设置，根据项目的实际信息填写，非必需。name不是应用程序名，而是Java风格的包名。 -->
+    <assemblyIdentity type="win32" name="com.mycompany.myapplication" version="1.0.0.0" processorArchitecture="*"/>
     <description>My test application</description>
+    <!-- 下面这个设置依赖项的区段是固定的，不要改动。必需。 -->
     <dependency>
       <dependentAssembly>
         <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*"/>
       </dependentAssembly>
     </dependency>
-    <!-- Privileges settings -->
+    <!-- 权限设置，根据项目的具体需求设置，非必需。 -->
     <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
       <security>
         <requestedPrivileges>
-          <!-- Claims that this application doesn't need admin privileges -->
+          <!-- 声明我们的程序不需要管理员权限 -->
+          <!-- asInvoker/highestAvailable/requireAdministrator -->
           <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
         </requestedPrivileges>
       </security>
     </trustInfo>
-    <!-- Compatibility settings -->
+    <!-- 兼容性设置，根据项目的具体需求设置，非必需。 -->
     <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
       <application>
+        <!-- 把不支持的系统从下面移除即可。注意下面的Id值都是固定的，不要乱改。 -->
         <!-- Windows Vista and Windows Server 2008 -->
         <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/>
         <!-- Windows 7 and Windows Server 2008 R2 -->
@@ -64,14 +67,15 @@
         <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
       </application>
     </compatibility>
-    <!-- Windows settings -->
+    <!-- Windows 设置，根据项目的具体需求设置，非必需。 -->
     <application xmlns="urn:schemas-microsoft-com:asm.v3">
       <windowsSettings>
-        <!-- Claims that this application supports High DPI scaling -->
+        <!-- 声明我们的程序支持高DPI缩放。如果不进行此项设置，系统会自动强行拉伸程序的界面，导致界面非常模糊 -->
         <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
         <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
-        <gdiScaling xmlns="http://schemas.microsoft.com/SMI/2017/WindowsSettings">true</gdiScaling>
-        <!-- Claims that this application supports long path -->
+        <!-- 下面这一行会导致程序界面变模糊，待调查 -->
+        <!-- <gdiScaling xmlns="http://schemas.microsoft.com/SMI/2017/WindowsSettings">true</gdiScaling> -->
+        <!-- 声明我们的程序支持长路径 -->
         <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
       </windowsSettings>
     </application>
