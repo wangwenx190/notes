@@ -2180,3 +2180,20 @@
         qDebug() << "Failed to ...";
     }
     ```
+
+- 开发Qt Quick插件时，如何使Qt Creator支持语法高亮
+
+  使用`qmlplugindump`工具生成`plugins.qmltypes`文件，将其放在与库文件同级的目录中。
+
+  同时将这个文件写入`qmldir`文件中：`typeinfo plugins.qmltypes`。
+- 开发Qt Quick插件时，如何将qml文件编译到库文件中，而不是直接暴露在外部
+  - 将qml文件添加到qrc文件中，使其编译到最终的库文件中
+  - 在C++中注册
+
+    ```cpp
+    qmlRegisterType(QUrl("qrc:/MySlider.qml"), "com.mycompany.myqmlcomponents", 1, 0, "Slider");
+    ```
+
+  作用：
+  - 保护知识产权
+  - 防止恶意篡改
