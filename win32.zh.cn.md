@@ -84,6 +84,16 @@
 
   注意事项：
   - 使用方法：将以上内容保存到一个文本文档（`.txt`）中（注意编码问题；不要打乱格式），并重命名为**应用程序文件名.exe.manifest**（例如：`wmplayer.exe.manifest`）即可，切记**此文件一定要放到与应用程序同级的目录中**。如果不想将此清单文件暴露在外部，可以将其插入到资源文件中，这样一来编译后清单文件就会被嵌入到程序中，就不需要在外部单独放一份清单文件了。
+
+    ```text
+    // 将以下语句写入rc文件即可
+    // #define RT_MANIFEST 24
+    // #define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+    // 如果资源编译器无法找到“CREATEPROCESS_MANIFEST_RESOURCE_ID”和“RT_MANIFEST”
+    // 的定义，就把上面两行取消注释，一起放入rc文件中，或者直接替换成对应的数值。
+    CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "myapp.manifest"
+    ```
+
   - 经过清单文件的设置后，系统不会对程序的界面元素进行强制拉伸，但相应元素的大小调整完全要自行解决。除UWP程序外，系统不会替任何应用程序对DPI改变进行处理。此清单文件的作用是，禁止系统对程序的界面进行自动拉伸（因为这会导致界面很糊）。
   - 参考资料：<https://docs.microsoft.com/en-us/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows>，<https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/mt846517(v=vs.85)>，<https://docs.microsoft.com/en-us/dotnet/framework/winforms/high-dpi-support-in-windows-forms>，<https://github.com/microsoft/Windows-classic-samples/tree/master/Samples/DPIAwarenessPerWindow>，<https://github.com/Microsoft/WPF-Samples/tree/master/PerMonitorDPI>
 - 自定义开始屏幕磁贴
@@ -379,7 +389,65 @@
   }
   ```
 
-- 获取系统是否已经开启了深色模式/浅色模式 & 将窗口设置为深色模式/浅色模式：<https://github.com/microsoft/terminal/blob/master/src/interactivity/win32/windowtheme.cpp>
+- 获取系统是否已经开启了深色模式/浅色模式 & 将窗口设置为深色模式/浅色模式
+
+  设置路径：设置->个性化->颜色->选择颜色->浅色/深色/自定义
+  - 系统层面
+
+    ```text
+    HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
+    ```
+
+    查看`AppsUseLightTheme`（程序使用浅色主题）和`SystemUsesLightTheme`（系统使用浅色主题）的键值，若为`0`则表示目前应用的是深色主题，若为`1`则表示目前应用的是浅色主题。修改此键值则可修改系统的相关设置。
+  - 程序层面
+
+    ```cpp
+    enum : WORD {
+        DwmwaUseImmersiveDarkMode = 20,
+        DwmwaUseImmersiveDarkModeBefore20h1 = 19
+    };
+
+    static inline bool shouldApplyDarkFrame(const QWindow *w) {
+        return w->isTopLevel() && !w->flags().testFlag(Qt::FramelessWindowHint);
+    }
+
+    static bool queryDarkBorder(HWND hwnd) {
+        BOOL result = FALSE;
+        const bool ok =
+            SUCCEEDED(DwmGetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, &result, sizeof(result)))
+            || SUCCEEDED(DwmGetWindowAttribute(hwnd, DwmwaUseImmersiveDarkModeBefore20h1, &result, sizeof(result)));
+        if (!ok)
+            qWarning("%s: Unable to retrieve dark window border setting.", __FUNCTION__);
+        return result == TRUE;
+    }
+
+    bool QWindowsWindow::setDarkBorderToWindow(HWND hwnd, bool d) {
+        const BOOL darkBorder = d ? TRUE : FALSE;
+        const bool ok =
+            SUCCEEDED(DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, &darkBorder, sizeof(darkBorder)))
+            || SUCCEEDED(DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkModeBefore20h1, &darkBorder, sizeof(darkBorder)));
+        if (!ok)
+            qWarning("%s: Unable to set dark window border.", __FUNCTION__);
+        return ok;
+    }
+
+    void QWindowsWindow::setDarkBorder(bool d) {
+        if (shouldApplyDarkFrame(window()) && queryDarkBorder(m_data.hwnd) != d)
+            setDarkBorderToWindow(m_data.hwnd, d);
+    }
+    ```
+
+    注意：调用`DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, &darkBorder, sizeof(darkBorder))`这个API的作用是将系统标题栏和窗口边框更改为深色/浅色主题的样式，但窗口内部各个控件/元素的颜色不会被修改，需要这个程序的开发者自行编写一个与之相匹配的主题调色板。因此，无边框程序执行此API无效。
+
+- 获取系统是否开启了“透明效果”
+
+  设置路径：设置->个性化->颜色->透明效果->开/关
+
+  ```text
+  HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
+  ```
+
+  查看`EnableTransparency`的键值，若为`0`则代表透明已关闭，若为`1`则代表透明已开启。修改此键值则可修改系统的相关设置。
 - 读写INI文件：<https://github.com/Chuyu-Team/CPPHelper/blob/master/IniHelper.h>
   - 读取
 
@@ -1061,3 +1129,21 @@
   ```
 
 - 同一个应用程序如何开启多个选项卡（Win7开始添加的任务栏选项卡，Aero Peek）：请参考<https://github.com/microsoft/Windows-classic-samples/tree/master/Samples/Win7Samples/winui/shell/appshellintegration/TabThumbnails>
+- 对于Win10系统，如何获取/修改显示主题色的区域
+
+  设置路径：设置->个性化->颜色->在以下区域显示主题色->“开始”菜单、任务栏和操作中心 & 标题栏和窗口边框
+  - “开始”菜单、任务栏和操作中心：
+
+    ```text
+    HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
+    ```
+
+    查看`ColorPrevalence`的键值，`0`代表显示系统默认颜色，`1`代表显示用户设置的主题色。读取此键值便可获取用户的设置，修改此键值便可修改用户的设置。
+
+  - 标题栏和窗口边框：
+
+    ```text
+    HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM
+    ```
+
+    查看`ColorPrevalence`的键值，`0`代表显示系统默认颜色，`1`代表显示用户设置的主题色。读取此键值便可获取用户的设置，修改此键值便可修改用户的设置。

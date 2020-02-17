@@ -248,9 +248,11 @@
      ```text
      // myapp.rc
      // ...
-     // 下面这一段放在什么位置都行（但不要拆开这3行），为了省事可以直接附加到资源脚本的末尾
-     #define RT_MANIFEST 24
-     #define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+     // 放在什么位置都行，为了省事可以直接附加到资源脚本的末尾
+     // #define RT_MANIFEST 24
+     // #define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+     // 如果资源编译器无法找到“CREATEPROCESS_MANIFEST_RESOURCE_ID”和“RT_MANIFEST”
+     // 的定义，就把上面两行取消注释，一起放入rc文件中，或者直接替换成对应的数值。
      CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "myapp.manifest"
      // ...
      ```
