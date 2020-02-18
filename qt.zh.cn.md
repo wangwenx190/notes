@@ -1384,7 +1384,9 @@
   具体的原理是处理小文件时rcc会将其翻译为C++代码，然后与项目其他的源文件一起参与编译和链接过程，而处理大文件时rcc会直接生成.obj文件，不参与编译过程，只参与最后的链接过程。
 - 如果需要窗口无边框，但是又需要保留操作系统的边框特性，例如可以自由拉伸边框和窗口阴影等，可以使用 `setWindowFlags(Qt::Window | Qt::CustomizeWindowHint);`。注意一定要用`setWindowFlags`而不是`setWindowFlag`，因为`CustomizeWindowHint`这个Flag会与其他Flag冲突，这些Flag并存时会导致`CustomizeWindowHint`失效，用前者正好可以顺便清除其他Flag。
 
-  注：`setWindowFlag(s)`是`QWidget`独有的函数，`QWindow`请使用`setFlag(s)`。
+  注意事项：
+  - `setWindowFlag(s)`是`QWidget`独有的函数，`QWindow`请使用`setFlag(s)`。
+  - 在Windows平台上，这种窗口的顶端会有一个几像素宽的白条，我专门请教过Qt公司的工程师*Friedemann Kleint*，他调试后告诉我，这个白条在这种状态下是无法去掉的，要去掉白条就只能将系统提供的窗口边框同时去掉，即那个白条和窗口边框是一体的，无法单独去掉。
 - Qt Quick在Linux平台无法播放视频：`sudo apt install libpulse-dev`即可解决
 - 判断一个类是否是`QWidget`或`QWindow`（或它们的派生类）：
 
