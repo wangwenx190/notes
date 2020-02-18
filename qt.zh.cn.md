@@ -2199,3 +2199,4 @@
   作用：
   - 保护知识产权
   - 防止恶意篡改
+- 如何修改Qt WebEngine编译时的参数：直接编辑`qtwebengine\src\3rdparty\chromium\build\config\compiler\BUILD.gn`
