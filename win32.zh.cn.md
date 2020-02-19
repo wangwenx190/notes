@@ -1154,3 +1154,80 @@
     ```
 
     查看`ColorPrevalence`的键值，`0`代表显示系统默认颜色，`1`代表显示用户设置的主题色。读取此键值便可获取用户的设置，修改此键值便可修改用户的设置。
+- 如何人为的弹出Win10设置窗口并自动跳转到我们想要打开的页面
+
+  Win10引入的UWP版设置程序（就是新版的控制面板），可以通过`ms-settings:`这个协议直接打开。以下是常见的URI及其对应的设置页面。
+
+  | 设置 | URI |
+  | --- | --- |
+  | 节电模式 | ms-settings:batterysaver |
+  | 电池使用 | ms-settings:batterysaver-settings |
+  | 鼠标 | ms-settings:batterysaver-usagedetails |
+  | 蓝牙 | ms-settings:bluetooth |
+  | 颜色 | ms-settings:colors |
+  | 数据使用量 | ms-settings:datausage |
+  | 日期和时间 | ms-settings:dateandtime |
+  | 隐藏字幕 | ms-settings:easeofaccess-closedcaptioning |
+  | 高对比度 | ms-settings:easeofaccess-highcontrast |
+  | 放大镜 | ms-settings:easeofaccess-magnifier |
+  | 讲述人 | ms-settings:easeofaccess-narrator |
+  | 键盘 | ms-settings:easeofaccess-keyboard |
+  | 鼠标 | ms-settings:easeofaccess-mouse |
+  | 锁屏 | ms-settings:lockscreen |
+  | 离线地图 | ms-settings:maps |
+  | 飞行模式 | ms-settings:network-airplanemode |
+  | 代理 | ms-settings:network-proxy |
+  | VPN | ms-settings:network-vpn |
+  | 通知和操作 | ms-settings:notifications |
+  | 账户信息 | ms-settings:privacy-accountinfo |
+  | 日历 | ms-settings:privacy-calendar |
+  | 联系人 | ms-settings:privacy-contacts |
+  | 其他设备 | ms-settings:privacy-customdevices |
+  | 反馈 | ms-settings:privacy-feedback |
+  | 位置 | ms-settings:privacy-location |
+  | 消息 | ms-settings:privacy-messaging |
+  | 麦克风 | ms-settings:privacy-microphone |
+  | 运动数据 | ms-settings:privacy-motion |
+  | 无线电收发器 | ms-settings:privacy-radios |
+  | 语音、墨迹书写和键入 | ms-settings:privacy-speechtyping |
+  | 摄像头 | ms-settings:privacy-webcam |
+  | 区域和语言 | ms-settings:regionlanguage |
+  | 语音 | ms-settings:speech |
+  | Windows更新 | ms-settings:windowsupdate |
+  | 连接工作或学校账户 | ms-settings:workplace |
+  | 已连接设备 | ms-settings:connecteddevices |
+  | 开发人员 | ms-settings:developers |
+  | 显示 | ms-settings:display |
+  | 鼠标和触摸板 | ms-settings:mousetouchpad |
+  | 拨号 | ms-settings:network-dialup |
+  | 以太网 | ms-settings:network-ethernet |
+  | 移动热点 | ms-settings:network-mobilehotspot |
+  | Wi-Fi | ms-settings:network-wifi |
+  | WiFi管理 | ms-settings:network-wifisettings |
+  | 可选功能 | ms-settings:optionalfeatures |
+  | 其他账户 | ms-settings:otherusers |
+  | 个性化 | ms-settings:personalization |
+  | 背景 | ms-settings:personalization-background |
+  | 颜色 | ms-settings:personalization-colors |
+  | 开始 | ms-settings:personalization-start |
+  | 电源和睡眠 | ms-settings:powersleep |
+  | 无线设备 | ms-settings:proximity |
+  | 显示 | ms-settings:screenrotation |
+  | 登录选项 | ms-settings:signinoptions |
+  | 存储感知 | ms-settings:storagesense |
+  | 主题 | ms-settings:themes |
+  | 输入 | ms-settings:typing |
+  | 平板模式 | ms-settings://tabletmode/ |
+  | 隐私 | ms-settings:privacy |
+  | 默认应用 | ms-settings:defaultapps |
+
+  注意事项：
+  - 把URI直接当一个文件路径打开就行，例如按下*Win+R*打开”运行“窗口，输入URI，点击”确定“或直接回车，即可打开对应的设置界面。当然也可以通过Win32 API打开：
+
+    ```cpp
+    ShellExecuteW(nullptr, nullptr, L"ms-settings:defaultapps", nullptr, nullptr, SW_SHOW);
+    ```
+
+  - URI的一般构成方式是`ms-settings:大分类英文名-小分类英文名`（分类名如果是多个单词，直接连在一起，不要加空格或符号）
+  - 以上URI命名规律是一般规律，有一小部分设置项并不遵守这个规律，大概是历史原因吧
+  - 随着Win10的不断地迭代升级，有些已有的URI会失效，也会有新增的URI，上面那个名单不是一直不变的，参考性的看看就行了，不要当成指导手册
