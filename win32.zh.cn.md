@@ -191,45 +191,52 @@
       bool neededCoInit;
   };
 
-  DeCoInitializer _deCoInitializer; // 虽然没有用到这个变量，但它的析构函数有用
+  bool runAsAdmin(const QString &path, const QString &params) {
+      // 虽然没有用到这个变量，但它的析构函数有用
+      DeCoInitializer _deCoInitializer;
 
-  // AdminAuthorization::execute uses UAC to ask for admin privileges. If the
-  // user is no administrator yet and the computer's policies are set to not
-  // use UAC (which is the case in some corporate networks), the call to
-  // execute() will simply succeed and not at all launch the child process. To
-  // avoid this, we detect this situation here and return early.
-  if (!hasAdminRights()) { // 使用上面提到的方法检测是否已经拥有管理员权限
-      QLatin1String key("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");
-      QSettings registry(key, QSettings::NativeFormat);
-      const QVariant enableLUA = registry.value(QLatin1String("EnableLUA"));
-      if ((enableLUA.type() == QVariant::Int) && (enableLUA.toInt() == 0)) {
+      // AdminAuthorization::execute uses UAC to ask for admin privileges. If the
+      // user is no administrator yet and the computer's policies are set to not
+      // use UAC (which is the case in some corporate networks), the call to
+      // execute() will simply succeed and not at all launch the child process. To
+      // avoid this, we detect this situation here and return early.
+      if (!hasAdminRights()) { // 使用上面提到的方法检测是否已经拥有管理员权限
+          QLatin1String key("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");
+          QSettings registry(key, QSettings::NativeFormat);
+          const QVariant enableLUA = registry.value(QLatin1String("EnableLUA"));
+          if ((enableLUA.type() == QVariant::Int) && (enableLUA.toInt() == 0)) {
+              return false;
+          }
+      }
+
+      SHELLEXECUTEINFOW sei;
+      SecureZeroMemory(sei, sizeof(sei));
+      // 这一行是关键，有了这一行才能以管理员权限执行
+      sei.lpVerb = L"RunAs";
+      sei.lpFile = reinterpret_cast<LPCWSTR>(path.utf16());
+      // 想隐藏程序窗口的话要加上这一句，否则不需要这一行
+      sei.nShow = SW_HIDE;
+      sei.lpParameters = reinterpret_cast<LPCWSTR>(params.utf16());
+      // 必需的参数，不要忘掉
+      sei.cbSize = sizeof(SHELLEXECUTEINFOW);
+      // 必需的参数，不要忘掉
+      sei.fMask = SEE_MASK_NOASYNC;
+
+      if (ShellExecuteExW(&sei) != TRUE) {
+          DWORD dwStatus = GetLastError();
+          if (dwStatus == ERROR_CANCELLED) {
+              std::cerr << "[UAC] : User denied to give admin privilege." << std::endl;
+          }
+          else if (dwStatus == ERROR_FILE_NOT_FOUND) {
+              std::cerr << "[UAC] : File not found." << std::endl;
+          }
+          else {
+              std::cerr << "[UAC] : balabalabala." << std::endl;
+          }
           return false;
       }
-  }
 
-  SHELLEXECUTEINFOW sei;
-  SecureZeroMemory(sei, sizeof(sei));
-  sei.lpVerb = L"RunAs"; // 这一行是关键，有了这一行才能以管理员权限执行
-  sei.lpFile = L"notepad.exe"; // 待启动程序的路径
-  sei.nShow = SW_HIDE; // 想隐藏程序窗口的话要加上这一句，否则不需要这一行
-  sei.lpParameters = L"/ABC /DEF"; // 要传给程序的参数，没有的话也不需要这一行
-  sei.cbSize = sizeof(SHELLEXECUTEINFOW); // 必需的参数，不要忘掉
-  sei.fMask = SEE_MASK_NOASYNC; // 必需的参数，不要忘掉
-  if(ShellExecuteExW(&sei) != TRUE)
-  {
-      DWORD dwStatus = GetLastError();
-      if(dwStatus == ERROR_CANCELLED)
-      {
-          std::cerr << "[UAC] : User denied to give admin privilege." << std::endl;
-      }
-      else if(dwStatus == ERROR_FILE_NOT_FOUND)
-      {
-          std::cerr << "[UAC] : File not found." << std::endl;
-      }
-      else
-      {
-          std::cerr << "[UAC] : balabalabala." << std::endl;
-      }
+      return true;
   }
   ```
 
@@ -333,7 +340,7 @@
   }
 
   // 服务主函数
-  VOID WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
+  VOID WINAPI ServiceMain(DWORD argc, LPWSTR *argv)
   {
       (void)argc;
       (void)argv;
@@ -453,26 +460,26 @@
 
     ```cpp
     // 获取整型数值（区段名，键名，默认值，INI文件路径）
-    UINT GetPrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nDefault, LPCTSTR lpFileName);
+    UINT GetPrivateProfileIntW(LPCWSTR lpAppName, LPCWSTR lpKeyName, INT nDefault, LPCWSTR lpFileName);
     // 获取指定区段的所有子键和它们的值（区段名，字符串返回值的指针，字符串长度，INI文件路径）
-    DWORD GetPrivateProfileSection(LPCTSTR lpAppName, LPTSTR lpReturnedString, DWORD nSize, LPCTSTR lpFileName);
+    DWORD GetPrivateProfileSectionW(LPCWSTR lpAppName, LPWSTR lpReturnedString, DWORD nSize, LPCWSTR lpFileName);
     // 获取所有区段的名字（字符串返回值的指针，字符串长度，INI文件路径）
-    DWORD GetPrivateProfileSectionNames(LPTSTR lpszReturnBuffer, DWORD nSize, LPCTSTR lpFileName);
+    DWORD GetPrivateProfileSectionNamesW(LPWSTR lpszReturnBuffer, DWORD nSize, LPCWSTR lpFileName);
     // 获取字符串（区段名，键名，默认值，字符串返回值的指针，字符串长度，INI文件路径）
-    DWORD GetPrivateProfileString(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpDefault, LPTSTR lpReturnedString, DWORD nSize, LPCTSTR lpFileName);
+    DWORD GetPrivateProfileStringW(LPCWSTR lpAppName, LPCWSTR lpKeyName, LPCWSTR lpDefault, LPWSTR lpReturnedString, DWORD nSize, LPCWSTR lpFileName);
     // 不太明白是干嘛的
-    BOOL GetPrivateProfileStruct(LPCTSTR lpszSection, LPCTSTR lpszKey, LPVOID lpStruct, UINT uSizeStruct, LPCTSTR szFile);
+    BOOL GetPrivateProfileStructW(LPCWSTR lpszSection, LPCWSTR lpszKey, LPVOID lpStruct, UINT uSizeStruct, LPCWSTR szFile);
     ```
 
   - 写入
 
     ```cpp
     // 替换指定区段的子键和它们的值（区段名，字符串，INI文件路径）
-    BOOL WritePrivateProfileSection(LPCSTR lpAppName, LPCSTR lpString, LPCSTR lpFileName);
+    BOOL WritePrivateProfileSectionW(LPCWSTR lpAppName, LPCWSTR lpString, LPCWSTR lpFileName);
     // 复制一个字符串到指定的区段中（区段名，键名，字符串，INI文件路径）
-    BOOL WritePrivateProfileString(LPCSTR lpAppName, LPCSTR lpKeyName, LPCSTR lpString, LPCSTR lpFileName);
+    BOOL WritePrivateProfileStringW(LPCWSTR lpAppName, LPCWSTR lpKeyName, LPCWSTR lpString, LPCWSTR lpFileName);
     // 不太明白是干嘛的
-    BOOL WritePrivateProfileStruct(LPCSTR lpszSection, LPCSTR lpszKey, LPVOID lpStruct, UINT uSizeStruct, LPCSTR szFile);
+    BOOL WritePrivateProfileStructW(LPCWSTR lpszSection, LPCWSTR lpszKey, LPVOID lpStruct, UINT uSizeStruct, LPCWSTR szFile);
     ```
 
 - 读写注册表：<https://github.com/Chuyu-Team/CPPHelper/blob/master/RegHelper.h>
