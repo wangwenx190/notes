@@ -770,22 +770,31 @@
   - 窗口阴影
 
     ```cpp
-    #include <QtWin> // Qt Windows Extras 模块
-    #include <dwmapi.h> // DWM 相关函数
+    // Qt Windows Extras 模块
+    #include <QtWin>
 
     Widget::Widget(QWidget *parent) : QWidget(parent) {
-        setWindowFlags(Qt::Window | Qt::FramelessWindowHint); // 去掉窗口自带的原生边框（与此同时标题栏和阴影也会被一并去掉）
-        if (QtWin::isCompositionEnabled()) { // 判断 DWM 特性是否已经启用（根据MSDN，自Win8开始默认总是启用，即此函数在Win8及更新版本的系统上总是返回true）
-            DWMNCRENDERINGPOLICY ncrp = DWMNCRP_ENABLED;
-            DwmSetWindowAttribute(reinterpret_cast<HWND>(winId()), DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp)); // 开启非客户区绘制（此句是带回窗口阴影的关键，不可缺少）
-            QtWin::resetExtendedFrame(this); // 是否多此一举？
-            QtWin::extendFrameIntoClientArea(this, -1, -1, -1, -1); // 当第2至第5个参数中至少有一个为负数时，意为对无边框控件绘制阴影（此句也是绘制窗口阴影的关键，也不能缺少）
-            QtWin::enableBlurBehindWindow(this); // 开启毛玻璃效果（此句与窗口阴影无关，仅是为了使窗口更加美观，因此一同启用；在Win8.1及更新版本的系统上无效，因为这些系统的毛玻璃效果已经被去掉）
+        // 去掉窗口自带的原生边框（与此同时标题栏和阴影也会被一并去掉）
+        // 注意不要漏掉“Qt::Window”这个flag，否则这个Widget不会变成窗口，会出现很多怪问题
+        setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
+        // 判断 DWM 特性是否已经启用（根据MSDN，自Win8开始默认总是启用，即此函数在Win8及更新版本的系统上总是返回true）
+        // 但仍有些特殊情况下会返回false，所以以防万一还是判断下比较好
+        if (QtWin::isCompositionEnabled()) {
+            // 开启非客户区绘制（此句是带回窗口阴影的关键，不可缺少）
+            // 下面这个API是我给Qt加的，Qt 6.0才会有。Qt5请自行使用DWM API实现，就两行，也不复杂。
+            QtWin::setWindowNonClientAreaRenderingPolicy(this, QtWin::WindowNonClientRenderingPolicy::Enabled);
+            // 当第2至第5个参数中至少有一个为负数时，意为对无边框控件绘制阴影（此句也是绘制窗口阴影的关键，也不能缺少）
+            // 如果又想还原系统的标准窗口边框，记得一定要调用QtWin::resetExtendedFrame(this)，否则窗口的边框线不会出现（不仔细看注意不到）
+            QtWin::extendFrameIntoClientArea(this, -1, -1, -1, -1);
+            // 开启毛玻璃效果（此句与窗口阴影无关，仅是为了使窗口更加美观，因此一同启用；在Win8.1及更新版本的系统上无效，因为这些系统的毛玻璃效果已经被去掉）
+            QtWin::enableBlurBehindWindow(this);
         }
     }
     ```
 
-    上面的代码可以给无边框窗口带回窗口阴影，但由于使用的是DWM函数，因此仅支持 Windows 平台。其他平台暂时不熟悉。
+    注意事项：
+    - 上面的代码可以给无边框窗口带回窗口阴影（不是自绘的，是系统提供的标准边框阴影），但由于使用的是DWM函数（Qt Windows Extras模块），因此仅支持 Windows 平台。其他平台暂时不熟悉。
+    - 如果对`QWindow`执行这些代码（例如Qt Quick程序），会导致`QWindow`整个变透明，不过没事，只要在上面放置不透明的元素就可以了，元素不会变透明。
 
 - Qt Quick获取正在显示QML文档的系统窗口
 
@@ -1769,25 +1778,26 @@
 - Qt显示PDF文档
 - Qt打印文件
 - Qt处理压缩文件
-- Qt获取窗口句柄
+- `winId()`、`effectiveWinId()`以及`windowHandle()->winId()`的区别
+  - `winId()`函数
 
-  ```cpp
-  HWND getHWND(QWidget *widget) {
-    if (widget == nullptr) {
-      return nullptr;
-    }
-    // 这一步获取的是widget对应的QWindow。如果本来就是要获取QWindow自身的句柄，直接用winId函数获取就可以了。也就是说，只有QWidget会多这么一步
-    // 不要直接对QWidget调用winId函数，这是Qt4时代的做法，现在已经不提倡这么做了（虽然用起来没什么问题）
-    // 也不要用effectiveWinId这个函数，这个函数获取的不一定是当前窗口的句柄
-    const auto windowHandle = widget->windowHandle();
-    if (windowHandle == nullptr) {
-      return nullptr;
-    }
-    return reinterpret_cast<HWND>(windowHandle->winId());
-  }
-  ```
+    `QWidget`和`QWindow`都有此函数，返回的是被执行对象的窗口系统标识符（我自己翻译的，不知道正规叫法是什么，Windows平台上是叫窗口句柄）。在Windows平台上就是`HWND`，但要用`reinterpret_cast`转换一下才能用。这个函数的返回值有可能会在运行时发生改变，如果你的程序对此变化敏感，请注意自行处理`QEvent::WinIdChange`这个事件。
 
-  注：`windowHandle`和`winId`这些Qt自己的函数都是跨平台的。虽然上面的例子只演示了如何在Windows平台获取窗口句柄，但是在Unix平台也是同样的做法，只不过最后获取到的句柄的类型不是`HWND`了。
+    `QWindow`用这个函数没什么需要注意的，但`QWidget`不同。`QWidget`很有可能是一个子控件（例如一个很复杂的窗口中的某个小部件），在这种情况下执行这个函数就会导致Qt为其创建一个窗口句柄，使其成为一个原生窗口。
+
+    用这个函数获取`QWidget`的窗口句柄是Qt4时代的做法，现在已经不推荐这样用了。如果您要获取一个`QWidget`的窗口句柄，请根据具体情况，使用下面两种方法中的一种。
+  - `effectiveWinId()`函数
+
+    此函数为`QWidget`独有，当被执行对象为原生窗口（即一个独立的窗口，不是什么窗口内部的子控件）时，返回窗口句柄，当不是原生窗口时，返回当前对象所在的顶级窗口的句柄。
+
+    注意不要储存这个函数的返回值，现用现取就可以了，因为这个函数的返回值可能会在运行时发生变化。
+  - `windowHandle()->winId()`函数
+
+    `windowHandle()`这个函数为`QWidget`独有，当`QWidget`是原生窗口时，它返回的是`QWidget`所绑定的`QWindow`（`QWidget`都是显示在`QWindow`上的）的指针，当`QWidget`不是原生窗口时，返回空指针。所以，`windowHandle()->winId()`的作用就是，当`QWidget`为原生窗口时返回其窗口句柄，当不是原生窗口时返回空指针（当然在这个过程中，你要自己判断下`windowHandle()`的返回值是否为空）。
+
+    同样不要存储这个函数的返回值，运行时会发生变化，现用现取即可。
+
+  对比：这三种方法中的后两种其实都是差不多的，第一种和后两种最主要的区别是，看你要获取的句柄到底是窗口的句柄还是控件的句柄。后两种都是用来获取窗口句柄的，第一种当`QWidget`是一个控件的时候获取到的是这个控件的句柄，而不是它所在的窗口的句柄。而`QWindow`就是底层的窗口类，本身就是不能作为控件使用的，因此对`QWindow`执行`winId()`总是返回其窗口句柄。
 - MVC
 - 添加、删除、更新和获取环境变量
 
