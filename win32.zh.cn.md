@@ -1231,7 +1231,6 @@
   - 以上URI命名规律是一般规律，有一小部分设置项并不遵守这个规律，大概是历史原因吧
   - 随着Win10的不断地迭代升级，有些已有的URI会失效，也会有新增的URI，上面那个名单不是一直不变的，参考性的看看就行了，不要当成指导手册
 - 关联文件+为不同的后缀名设置不同的图标+注册成为默认程序
-  0. 关于`ProgID`和`AppUserModelID`：`ProgID`的命名规则为`公司名.产品名[.子产品名.版本号]`，前两项必填，后两项选填
   1. 注册`.mp3`后缀（注册任何后缀名都是一样的套路，直接套下面这个模板就可以）。
 
       ```text
@@ -1260,6 +1259,7 @@
       ```
 
       注意事项：
+      - `ProgID`的命名规则为`公司名.产品名[.子产品名.版本号]`，前两项必填，后两项选填
       - `wangwenx190.MyApp.MP3.1`这个注册表项要在`HKEY_LOCAL_MACHINE\SOFTWARE\Classes`和`HKEY_CLASSES_ROOT`下都创建一份，两份的内容完全相同
       - 路径一定要用英文半角双引号括起来，不管路径中有没有空格
       - 尽量不要把路径写死，能用相对路径就用相对路径，能用环境变量就用环境变量
@@ -1315,34 +1315,34 @@
 
   5. 在Win8及更新的系统上打开系统设置窗口，提示用户设置默认程序
 
-    ```cpp
-    // 头文件：shobjidl.h
-    IApplicationAssociationRegistrationUI* pAARUI = nullptr;
-    const HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI));
-    const bool success = (SUCCEEDED(hr) && (pAARUI != nullptr));
-    if (success) {
-        // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
-        pAARUI->LaunchAdvancedAssociationUI(L"My Application");
-        pAARUI->Release();
-    }
-    ```
+      ```cpp
+      // 头文件：shobjidl.h
+      IApplicationAssociationRegistrationUI* pAARUI = nullptr;
+      const HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI));
+      const bool success = (SUCCEEDED(hr) && (pAARUI != nullptr));
+      if (success) {
+          // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
+          pAARUI->LaunchAdvancedAssociationUI(L"My Application");
+          pAARUI->Release();
+      }
+      ```
 
-    注意：从Win8开始，系统就不允许程序自身强行修改系统的默认程序了，只能将程序支持打开的文件类型通过以上步骤注册到系统中，然后打开系统的设置窗口，让用户自行选择默认程序。如果通过强行修改注册表的方式修改系统默认打开方式，会导致被修改的文件类型被系统强制还原为Windows默认打开方式，得不偿失。
+      注意：从Win8开始，系统就不允许程序自身强行修改系统的默认程序了，只能将程序支持打开的文件类型通过以上步骤注册到系统中，然后打开系统的设置窗口，让用户自行选择默认程序。如果通过强行修改注册表的方式修改系统默认打开方式，会导致被修改的文件类型被系统强制还原为Windows默认打开方式，得不偿失。
   6. 检查程序是否已经被用户设置为默认程序
 
-    ```cpp
-    CComPtr<IApplicationAssociationRegistration> m_pAAR;
-    ASSERT(SUCCEEDED(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&m_pAAR))));
-    BOOL bIsDefault = FALSE;
-    if (m_pAAR) {
-        // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
-        m_pAAR->QueryAppIsDefault(L".mp3", AT_FILEEXTENSION, AL_EFFECTIVE, L"My Application", &bIsDefault);
-    }
-    // 现在“bIsDefault”存放的就是针对某个特定的扩展名，我们的程序是不是默认打开程序
-    // 如果要检查所有扩展名的设置状况，只能使用循环，逐一判断，没法一次性全部判断
-    ```
+      ```cpp
+      CComPtr<IApplicationAssociationRegistration> m_pAAR;
+      ASSERT(SUCCEEDED(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&m_pAAR))));
+      BOOL bIsDefault = FALSE;
+      if (m_pAAR) {
+          // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
+          m_pAAR->QueryAppIsDefault(L".mp3", AT_FILEEXTENSION, AL_EFFECTIVE, L"My Application", &bIsDefault);
+      }
+      // 现在“bIsDefault”存放的就是针对某个特定的扩展名，我们的程序是不是默认打开程序
+      // 如果要检查所有扩展名的设置状况，只能使用循环，逐一判断，没法一次性全部判断
+      ```
 
-    注意：此方式仅Windows Vista/7支持，Windows XP只能通过手动检查注册表的方式确认，Win8及更新的系统不支持此类检查。
+      注意：此方式仅Windows Vista/7支持，Windows XP只能通过手动检查注册表的方式确认，Win8及更新的系统不支持此类检查。
 
   参考资料：<https://docs.microsoft.com/en-us/windows/win32/shell/default-programs>，<https://docs.microsoft.com/en-us/windows/win32/shell/fa-best-practices>，<https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/winui/shell/appshellintegration/AutomaticJumpList/FileRegistrations.h>
 - 如何将图标文件存放到一个单独的DLL中，供关联文件时使用
