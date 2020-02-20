@@ -83,7 +83,7 @@
   ```
 
   注意事项：
-  - 使用方法：将以上内容保存到一个文本文档（`.txt`）中（注意编码问题；不要打乱格式），并重命名为**应用程序文件名.exe.manifest**（例如：`wmplayer.exe.manifest`）即可，切记**此文件一定要放到与应用程序同级的目录中**。如果不想将此清单文件暴露在外部，可以将其插入到资源文件中，这样一来编译后清单文件就会被嵌入到程序中，就不需要在外部单独放一份清单文件了。
+  - 使用方法：将以上内容保存到一个文本文档（`.txt`）中（注意编码问题；不要打乱格式），并重命名为**应用程序文件名.exe.manifest**（例如：`wmplayer.exe.manifest`）即可，切记**此文件一定要放到与应用程序同级的目录中**。如果不想将此清单文件暴露在外部，可以将其插入到资源文件中，这样一来编译后清单文件就会被嵌入到程序中，就不需要在外部单独放一份清单文件了。嵌入到程序中后，外部就算有同名的清单文件，也会被系统自动忽略，程序不会受到任何影响，不用担心。
 
     ```text
     // 将以下语句写入rc文件即可
@@ -1231,7 +1231,7 @@
   - 以上URI命名规律是一般规律，有一小部分设置项并不遵守这个规律，大概是历史原因吧
   - 随着Win10的不断地迭代升级，有些已有的URI会失效，也会有新增的URI，上面那个名单不是一直不变的，参考性的看看就行了，不要当成指导手册
 - 关联文件+为不同的后缀名设置不同的图标+注册成为默认程序
-  0. 关于`ProgID`和`AppUserModelID`
+  0. 关于`ProgID`和`AppUserModelID`：`ProgID`的命名规则为`公司名.产品名[.子产品名.版本号]`，前两项必填，后两项选填
   1. 注册`.mp3`后缀（注册任何后缀名都是一样的套路，直接套下面这个模板就可以）。
 
       ```text
@@ -1320,7 +1320,7 @@
     const HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI));
     const bool success = (SUCCEEDED(hr) && (pAARUI != nullptr));
     if (success) {
-        // 下面用到的这个程序名一定要与”HKLM\SOFTWARE\RegisteredApplications“下的名字相对应
+        // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
         pAARUI->LaunchAdvancedAssociationUI(L"My Application");
         pAARUI->Release();
     }
@@ -1334,7 +1334,7 @@
     ASSERT(SUCCEEDED(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&m_pAAR))));
     BOOL bIsDefault = FALSE;
     if (m_pAAR) {
-        // 下面用到的这个程序名一定要与”HKLM\SOFTWARE\RegisteredApplications“下的名字相对应
+        // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
         m_pAAR->QueryAppIsDefault(L".mp3", AT_FILEEXTENSION, AL_EFFECTIVE, L"My Application", &bIsDefault);
     }
     // 现在“bIsDefault”存放的就是针对某个特定的扩展名，我们的程序是不是默认打开程序
