@@ -1,31 +1,32 @@
 # Win32 笔记
 
 - 控制台程序隐藏命令行窗口：共3个方法
-  - 代码
+  1. 代码
 
-    ```cpp
-    #if defined(UNICODE) || defined(_UNICODE)
-    #pragma comment(linker, "/SUBSYSTEM:WINDOWS /ENTRY:\"wmainCRTStartup\"")
-    #else
-    #pragma comment(linker, "/SUBSYSTEM:WINDOWS /ENTRY:\"mainCRTStartup\"")
-    #endif
-    ```
+     ```cpp
+     #if defined(UNICODE) || defined(_UNICODE)
+     #pragma comment(linker, "/SUBSYSTEM:WINDOWS /ENTRY:\"wmainCRTStartup\"")
+     #else
+     #pragma comment(linker, "/SUBSYSTEM:WINDOWS /ENTRY:\"mainCRTStartup\"")
+     #endif
+     ```
 
-  - Visual Studio 设置：选中项目->右键“属性”->连接器->系统->子系统->选择子系统，选中项目->右键“属性”->连接器->高级->入口点->填写入口点。
-  - 连接器参数：通过IDE的设置或修改编译时的脚本，将上面的两个参数传给连接器即可
+  2. Visual Studio 设置：选中项目->右键“属性”->连接器->系统->子系统->选择子系统，选中项目->右键“属性”->连接器->高级->入口点->填写入口点。
+  3. 连接器参数：通过IDE的设置或修改编译时的脚本，将上面的两个参数传给连接器即可
+
 - 窗口程序显示命令行窗口：共3个方法
-  - 代码
+  1. 代码
 
-    ```cpp
-    #if defined(UNICODE) || defined(_UNICODE)
-    #pragma comment(linker, "/SUBSYSTEM:CONSOLE /ENTRY:\"wWinMainCRTStartup\"")
-    #else
-    #pragma comment(linker, "/SUBSYSTEM:CONSOLE /ENTRY:\"WinMainCRTStartup\"")
-    #endif
-    ```
+     ```cpp
+     #if defined(UNICODE) || defined(_UNICODE)
+     #pragma comment(linker, "/SUBSYSTEM:CONSOLE /ENTRY:\"wWinMainCRTStartup\"")
+     #else
+     #pragma comment(linker, "/SUBSYSTEM:CONSOLE /ENTRY:\"WinMainCRTStartup\"")
+     #endif
+     ```
 
-  - Visual Studio 设置：选中项目->右键“属性”->连接器->系统->子系统->选择子系统，选中项目->右键“属性”->连接器->高级->入口点->填写入口点。
-  - 连接器参数：通过IDE的设置或修改编译时的脚本，将上面的两个参数传给连接器即可
+  2. Visual Studio 设置：选中项目->右键“属性”->连接器->系统->子系统->选择子系统，选中项目->右键“属性”->连接器->高级->入口点->填写入口点。
+  3. 连接器参数：通过IDE的设置或修改编译时的脚本，将上面的两个参数传给连接器即可
 - 如何做到完美的开机自启：注册一个 Windows 服务，使用 Windows 服务来启动你的程序。这样做不仅可以使你的程序比任何程序都早运行，还可以做到以管理员权限运行而不弹出 UAC 提示框。注册服务时，注意选择为可与图形界面交互，否则无法启动 GUI 程序。很多资料都说，Windows Vista 之后的系统不支持服务程序启动 GUI 程序，但经过我的亲自测试，直到 Windows 10 都还支持。
 - 通过嵌入清单文件（*.manifest）开启系统的DPI缩放支持并设置相应的缩放策略
 
@@ -1256,6 +1257,15 @@
                         Command
                            // “%n”代表第n个参数
                            (Default) = "%ProgramFiles%\wangwenx190\MyApp\app.exe" "%1"
+      ```
+
+      ```text
+      HKEY_CLASSES_ROOT
+         .mp3
+            OpenWithProgIDs
+               // 一定要与上面那个注册表项的名字对应起来
+               // 只需要写入键名，键值为空，键值类型为REG_NONE
+               wangwenx190.MyApp.MP3.1 = null
       ```
 
       注意事项：
