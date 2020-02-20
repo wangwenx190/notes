@@ -533,7 +533,6 @@
   AttachThreadInput(dwCurID, dwForeID, FALSE); // 断开两个进程的输入焦点
   ```
 
-- 关联文件后缀名：请参考<https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/winui/shell/appshellintegration/AutomaticJumpList/FileRegistrations.h>
 - 将窗口嵌入桌面（类似于动态壁纸那种效果）
 
   ```cpp
@@ -1231,3 +1230,176 @@
   - URI的一般构成方式是`ms-settings:大分类英文名-小分类英文名`（分类名如果是多个单词，直接连在一起，不要加空格或符号）
   - 以上URI命名规律是一般规律，有一小部分设置项并不遵守这个规律，大概是历史原因吧
   - 随着Win10的不断地迭代升级，有些已有的URI会失效，也会有新增的URI，上面那个名单不是一直不变的，参考性的看看就行了，不要当成指导手册
+- 关联文件+为不同的后缀名设置不同的图标+注册成为默认程序
+  0. 关于`ProgID`和`AppUserModelID`
+  1. 注册`.mp3`后缀（注册任何后缀名都是一样的套路，直接套下面这个模板就可以）。
+
+      ```text
+      HKEY_LOCAL_MACHINE
+         SOFTWARE
+            Classes
+               // 此注册表项的名字只要符合ProgID的命名规则就可以了，可以随便起名，没有什么固定的格式。主要注意不要和别人的重名。
+               wangwenx190.MyApp.MP3.1
+                  // 下面这个是此类型文件的描述，除了可以像下面这样使用DLL中的资源，还可以直接把文字写入到此处
+                  (Default) = "%ProgramFiles%\wangwenx190\MyApp\data.dll",12
+                  // 下面这个是对用户更加友好的描述，可以与上面那个完全相同，也可以使用更加详细的描述。这个子键不是必需的，可以没有。
+                  FriendlyTypeName = "%ProgramFiles%\wangwenx190\MyApp\data.dll",12
+                  // MIME专用，不懂就去掉这一项，影响不大
+                  CLSID
+                     (Default) = {D92B76F4-CFA0-4b93-866B-7730FEB4CD7B}
+                  // 默认图标
+                  DefaultIcon
+                     (Default) = "%ProgramFiles%\wangwenx190\MyApp\icons.dll",12
+                  // 支持的命令
+                  Shell
+                     // 打开
+                     Open
+                        Command
+                           // “%n”代表第n个参数
+                           (Default) = "%ProgramFiles%\wangwenx190\MyApp\app.exe" "%1"
+      ```
+
+      注意事项：
+      - `wangwenx190.MyApp.MP3.1`这个注册表项要在`HKEY_LOCAL_MACHINE\SOFTWARE\Classes`和`HKEY_CLASSES_ROOT`下都创建一份，两份的内容完全相同
+      - 路径一定要用英文半角双引号括起来，不管路径中有没有空格
+      - 尽量不要把路径写死，能用相对路径就用相对路径，能用环境变量就用环境变量
+      - 路径中尽量用`\`而不是`/`
+      - 涉及到显示给用户的文字，尽量使用嵌入DLL的资源而不是直接往注册表中写字符串，以便实现国际化（否则注册表里写的是什么，系统就显示什么，无法针对用户设置的语言和地区进行切换）
+      - `(Default)`代表的是此注册表项（注意不是子键）的默认值，`=`前面是键名，后面是键值
+      - `CLSID`这一项是针对`MIME`类型的，其值是系统提供的不是自己编的，不支持或不熟悉可以没有这一项
+  2. 将程序注册到*默认程序*列表（只有这样，你的程序才能在系统的“默认程序”的列表中出现）
+
+      ```text
+      HKEY_LOCAL_MACHINE
+         SOFTWARE
+            wangwenx190
+               MyApp
+                  Capabilities
+                     // 程序描述
+                     ApplicationDescription = This is a test application.
+                     // 程序名字
+                     ApplicationName = My Application
+                     // 支持的文件后缀
+                     FileAssociations
+                        .mp3 = wangwenx190.MyApp.MP3.1
+                        .mpeg = wangwenx190.MyApp.MPG.1
+                     // 支持的MIME类型，可选，可以没有
+                     MimeAssociations
+                        audio/mp3 = wangwenx190.MyApp.MP3.1
+                        audio/mpeg = wangwenx190.MyApp.MPG.1
+      ```
+
+      注意事项：
+      - `ApplicationDescription`此键必须要有且需要好好填写，否则系统会忽略你的程序
+      - `ApplicationName`是系统在“默认程序”窗口显示的名字，不是什么内部的产品名，一定要好好填。不填的话系统会用程序的文件名代替。
+      - `FileAssociations`下的各个子键就是你的程序所支持的**所有**后缀名，子键的键名就是以英文半角句点开头的完整后缀名，键值就是在上一步创建那个注册表项的名字，注意**名字一定要一一对应**，字母的大小写也不能有错
+      - `MimeAssociations`下的各个子键是你的程序所支持的所有的MIME类型，不熟悉的可以跳过此部分，非必需。注意，只有填写了`CLSID`的注册表项才支持填在`MimeAssociations`下面
+  3. 注册成为默认程序
+
+      ```text
+      HKEY_LOCAL_MACHINE
+         SOFTWARE
+            RegisteredApplications
+               My Application = SOFTWARE\wangwenx190\MyApp\Capabilities
+      ```
+
+      注意事项：`RegisteredApplications`下的各个子键就是系统的默认程序，将你的程序写入到此项的子键即可使你的程序也成为系统的默认程序之一。子键的键名为程序的名字（这里写什么都无所谓，因为系统会从你在上一步的设置里读取具体的名字，但还是照实填写比较好），键值为你在上一步创建的注册表项`Capabilities`的路径。
+  4. 通知系统文件扩展名已经进行了修改，使系统立即进行一次刷新
+
+      ```cpp
+      // 头文件：Shlobj.h
+      // 库文件：Shell32.lib（Shell32.dll）
+      SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSH, nullptr, nullptr);
+      ```
+
+  5. 在Win8及更新的系统上打开系统设置窗口，提示用户设置默认程序
+
+    ```cpp
+    // 头文件：shobjidl.h
+    IApplicationAssociationRegistrationUI* pAARUI = nullptr;
+    const HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI));
+    const bool success = (SUCCEEDED(hr) && (pAARUI != nullptr));
+    if (success) {
+        // 下面用到的这个程序名一定要与”HKLM\SOFTWARE\RegisteredApplications“下的名字相对应
+        pAARUI->LaunchAdvancedAssociationUI(L"My Application");
+        pAARUI->Release();
+    }
+    ```
+
+    注意：从Win8开始，系统就不允许程序自身强行修改系统的默认程序了，只能将程序支持打开的文件类型通过以上步骤注册到系统中，然后打开系统的设置窗口，让用户自行选择默认程序。如果通过强行修改注册表的方式修改系统默认打开方式，会导致被修改的文件类型被系统强制还原为Windows默认打开方式，得不偿失。
+  6. 检查程序是否已经被用户设置为默认程序
+
+    ```cpp
+    CComPtr<IApplicationAssociationRegistration> m_pAAR;
+    ASSERT(SUCCEEDED(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&m_pAAR))));
+    BOOL bIsDefault = FALSE;
+    if (m_pAAR) {
+        // 下面用到的这个程序名一定要与”HKLM\SOFTWARE\RegisteredApplications“下的名字相对应
+        m_pAAR->QueryAppIsDefault(L".mp3", AT_FILEEXTENSION, AL_EFFECTIVE, L"My Application", &bIsDefault);
+    }
+    // 现在“bIsDefault”存放的就是针对某个特定的扩展名，我们的程序是不是默认打开程序
+    // 如果要检查所有扩展名的设置状况，只能使用循环，逐一判断，没法一次性全部判断
+    ```
+
+    注意：此方式仅Windows Vista/7支持，Windows XP只能通过手动检查注册表的方式确认，Win8及更新的系统不支持此类检查。
+
+  参考资料：<https://docs.microsoft.com/en-us/windows/win32/shell/default-programs>，<https://docs.microsoft.com/en-us/windows/win32/shell/fa-best-practices>，<https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/winui/shell/appshellintegration/AutomaticJumpList/FileRegistrations.h>
+- 如何将图标文件存放到一个单独的DLL中，供关联文件时使用
+  - 头文件`iconlib.h`
+
+    ```cpp
+    // 下面这个顺序非常重要，系统获取图标就是按照这个顺序来的
+    #define IDI_NONE        -1
+    #define IDI_OTHER_ICON   0
+    #define IDI_AAC_ICON     1
+    #define IDI_AC3_ICON     2
+    #define IDI_AIFF_ICON    3
+    #define IDI_ALAC_ICON    4
+    #define IDI_AMR_ICON     5
+    ```
+
+  - 源文件`iconlib.cpp`
+
+    ```cpp
+    #include "iconlib.h"
+    #include <windows.h>
+    // main函数虽然没有用但仍不可缺少，否则此DLL文件就不能实现我们想要的功能了
+    int main() {
+        return 0;
+    }
+    // 下面这个函数是为了方便我们自己的程序使用而编写的，系统本身是用不到这个函数的
+    // 如果你用不到类似的功能，可以去掉这个函数
+    extern "C" __declspec(dllexport) int GetIconIndex(LPCWSTR ext) {
+        int iconIndex = IDI_NONE;
+        if (wcscmp(ext, L".3g2") == 0) {
+            iconIndex = IDI_MOV_ICON;
+        } else if (wcscmp(ext, L".3ga") == 0) {
+            iconIndex = IDI_MP4_ICON;
+        } else if (wcscmp(ext, L".3gp") == 0) {
+            iconIndex = IDI_MP4_ICON;
+        } else if (wcscmp(ext, L".3gp2") == 0) {
+            iconIndex = IDI_MOV_ICON;
+        } else if (wcscmp(ext, L".3gpp") == 0) {
+            iconIndex = IDI_MP4_ICON;
+        } else if (wcscmp(ext, L".aac") == 0) {
+            iconIndex = IDI_AAC_ICON;
+        }
+        return iconIndex;
+    }
+    ```
+
+  - 资源文件`iconlib.rc`
+
+    ```text
+    #include "iconlib.h"
+    #include <windows.h>
+    // 顺序一定要与头文件里的相同
+    // 注意资源的序号最小是0，不能写负数
+    IDI_OTHER_ICON   ICON   "icons\\other.ico"
+    IDI_AAC_ICON     ICON   "icons\\aac.ico"
+    IDI_AC3_ICON     ICON   "icons\\ac3.ico"
+    IDI_AIFF_ICON    ICON   "icons\\aiff.ico"
+    IDI_ALAC_ICON    ICON   "icons\\alac.ico"
+    IDI_AMR_ICON     ICON   "icons\\amr.ico"
+    // 需要版本信息的话可以在下面接着写，不会影响上面的东西
+    ```
