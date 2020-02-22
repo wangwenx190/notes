@@ -193,13 +193,10 @@
   };
 
   bool runAsAdmin(const QString &path, const QString &params) {
-      // 虽然没有用到这个变量，但它的析构函数有用
-      DeCoInitializer _deCoInitializer;
-
-      // AdminAuthorization::execute uses UAC to ask for admin privileges. If the
+      // This function uses UAC to ask for admin privileges. If the
       // user is no administrator yet and the computer's policies are set to not
       // use UAC (which is the case in some corporate networks), the call to
-      // execute() will simply succeed and not at all launch the child process. To
+      // this function will simply succeed and not at all launch the child process. To
       // avoid this, we detect this situation here and return early.
       if (!hasAdminRights()) { // 使用上面提到的方法检测是否已经拥有管理员权限
           QLatin1String key("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");
@@ -209,6 +206,9 @@
               return false;
           }
       }
+
+      // 虽然没有用到这个变量，但它的析构函数有用
+      DeCoInitializer _deCoInitializer;
 
       SHELLEXECUTEINFOW sei;
       SecureZeroMemory(sei, sizeof(sei));
