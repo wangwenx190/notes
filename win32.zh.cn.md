@@ -773,8 +773,8 @@
           return false;
       }
 
-      const QFile iconFile(iconPath);
-      if (!iconFile.open(QIODevice::ReadOnly)) {
+      QFile iconFile(iconPath);
+      if (!iconFile.open(QFile::ReadOnly)) {
           qWarning() << "Cannot open" << iconPath << ':' << iconFile.errorString();
           return false;
       }
@@ -792,7 +792,7 @@
       }
 
       const QByteArray temp = iconFile.readAll();
-      const auto *ig = reinterpret_cast<LPICONDIR>(temp.data());
+      const auto *ig = reinterpret_cast<LPICONDIR>(const_cast<char *>(temp.data()));
 
       const DWORD newSize = sizeof(GRPICONDIR) + sizeof(GRPICONDIRENTRY) * (ig->idCount - 1);
       auto *newDir = reinterpret_cast<LPGRPICONDIR>(new char[newSize]);
@@ -813,12 +813,12 @@
           newDir->idEntries[i].dwBytesInRes = ig->idEntries[i].dwBytesInRes;
           newDir->idEntries[i].nID = i + 1;
 
-          if (!UpdateResourceW(updateRes, RT_ICON, MAKEINTRESOURCE(i + 1), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), temp1, size1)) {
+          if (!UpdateResourceW(updateRes, RT_ICON, MAKEINTRESOURCEW(i + 1), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), const_cast<char *>(temp1), size1)) {
               qWarning() << "Cannot update icon" << i + 1;
           }
       }
 
-      if (!UpdateResourceW(updateRes, RT_GROUP_ICON, MAKEINTRESOURCE(1), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), newDir, newSize)) {
+      if (!UpdateResourceW(updateRes, RT_GROUP_ICON, MAKEINTRESOURCEW(1), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), newDir, newSize)) {
           qWarning() << "Cannot update group icon";
       }
 
