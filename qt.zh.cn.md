@@ -2212,3 +2212,13 @@
   - 保护知识产权
   - 防止恶意篡改
 - 如何修改Qt WebEngine编译时的参数：直接编辑`qtwebengine\src\3rdparty\chromium\build\config\compiler\BUILD.gn`
+- Qt可以在编译前的配置时通过`-qtnamespace <namespace>`将所有Qt函数和类都移入一个指定的命名空间（默认是没有的，这个功能只有特殊场景才需要），因此如果你对Qt的类使用了前置声明，一定要用`QT_BEGIN_NAMESPACE`和`QT_END_NAMESPACE`这两个宏进行包裹，否则在这种带命名空间的Qt上无法编译通过。
+
+  ```cpp
+  QT_BEGIN_NAMESPACE
+  class QWindow;
+  class QWidget;
+  QT_END_NAMESPACE
+  ```
+
+- `QObject`是一个非常重型的类，初始化较慢，且实例化后占用内存较多，如果只是做一些简单的工作或完全不需要Qt的元对象系统，就不要继承自该类。虽然是在编写Qt程序，但一定不要无脑派生该类。
