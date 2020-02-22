@@ -2222,3 +2222,17 @@
   ```
 
 - `QObject`是一个非常重型的类，初始化较慢，且实例化后占用内存较多，如果只是做一些简单的工作或完全不需要Qt的元对象系统，就不要继承自该类。虽然是在编写Qt程序，但一定不要无脑派生该类。
+- 善用`qScopeGuard`来执行各种“清理”操作。`QScopeGuard`：在当前代码块的生命周期结束前，执行指定的代码，但不可抛出异常。
+
+  ```cpp
+  void myComplexCodeWithMultipleReturnPoints(int v) {
+      // The lambda will be executed right before your function returns
+      auto cleanup = qScopeGuard([]() { /* code you want executed goes HERE */ });
+      if (v == -1)
+          return;
+      int v2 = code_that_might_throw_exceptions();
+      if (v2 == -1)
+          return;
+      // (...)
+  }
+  ```
