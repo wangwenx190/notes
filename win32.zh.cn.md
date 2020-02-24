@@ -1328,7 +1328,7 @@
       ```cpp
       // 头文件：shobjidl.h
       IApplicationAssociationRegistrationUI* pAARUI = nullptr;
-      const HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pAARUI));
+      const HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI));
       const bool success = (SUCCEEDED(hr) && (pAARUI != nullptr));
       if (success) {
           // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
