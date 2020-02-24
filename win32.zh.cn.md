@@ -1342,7 +1342,7 @@
 
       ```cpp
       CComPtr<IApplicationAssociationRegistration> m_pAAR;
-      ASSERT(SUCCEEDED(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pAAR))));
+      ASSERT(SUCCEEDED(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&m_pAAR))));
       BOOL bIsDefault = FALSE;
       if (m_pAAR) {
           // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
