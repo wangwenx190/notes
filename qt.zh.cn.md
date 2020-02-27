@@ -1839,7 +1839,7 @@
   QList<QByteArray> QObject::dynamicPropertyNames() const;
   ```
 
-- 获取类的元属性及其值（非弱属性）
+- 获取类的元对象属性及其值（非弱属性）
 
   ```cpp
   const auto* metaObject = obj->metaObject();
