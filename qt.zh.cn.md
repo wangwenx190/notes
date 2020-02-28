@@ -304,6 +304,7 @@
    // 创建一个名为 linkName 的快捷方式/软链接，目标文件指向 fileName()
    bool QFile::link(const QString &linkName);
    // 特别的，在 Windows 平台上创建快捷方式时，必须以 .lnk 作为文件的后缀名
+   // 此函数不能创建指向网址的快捷方式（.url文件），那种快捷方式只能用Win32 API自行创建
    ```
 
 - 包含`QScopedPointer`/`std::unique_ptr`的类不能使其析构函数内联，例如`~MyClass() override = default;`或`~MyClass() override { ...; }`之类的，否则会无法编译。
@@ -312,6 +313,10 @@
   ```text
   [static] void QGuiApplication::setOverrideCursor(const QCursor &cursor);
   [static] void QGuiApplication::restoreOverrideCursor();
+  void QWidget::setCursor(const QCursor &);
+  void QWidget::unsetCursor();
+  void QWindow::setCursor(const QCursor &);
+  void QWindow::unsetCursor();
   // 请参考 Qt::CursorShape 这个枚举来获取更多鼠标指针的不同形状
   // 特别的，设置为“Qt::BlankCursor”可以隐藏鼠标指针。
   ```
@@ -510,7 +515,16 @@
   QIcon QStyle::standardIcon(QStyle::StandardPixmap standardIcon, const QStyleOption *option = ..., const QWidget *widget = ...) const
   ```
 
-  注：`QStyle::StandardPixmap`这个枚举里包含很多很常用的标准图标，比如最小化按钮，最大化按钮以及关闭按钮等，尽量多利用，不要再费心费力去第三方网站上找或者自己绘制相关的图片素材了。
+  注意事项
+  - `QStyle::StandardPixmap`这个枚举里包含很多很常用的标准图标，比如最小化按钮，最大化按钮以及关闭按钮等，尽量多利用，不要再费心费力去第三方网站上找或者自己绘制相关的图片素材了。
+  - 使用这个函数时一定要记得把一个`QStyleOption`的指针作为第二个参数传给它，有了这个参数后`QStyle`内部会根据系统的DPI自动进行尺寸换算，没有这个参数的话返回的图标是没有针对DPI进行调整的。
+
+    ```cpp
+    QStyleOption option;
+    option.initFrom(this);
+    const QIcon icon = style()->standardIcon(QStyle::StandardPixmap::SP_TitleBarMinButton, &option);
+    ```
+
 - 对`QLCDNumber`控件设置样式，需要将`QLCDNumber`的`segmentStyle`设置为`flat`（`void setSegmentStyle(QLCDNumber::SegmentStyle);`
 ）。
 - 使用`inherits`函数判断是否属于某个类
@@ -570,7 +584,16 @@
   [pure virtual] int QStyle::pixelMetric(QStyle::PixelMetric metric, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const
   ```
 
-  注：`PM_TitleBarHeight`是`QStyle::PixelMetric`这个枚举里的一个，这个枚举里还包含很多系统标准控件的尺寸，都可以通过这个函数获取。这个函数的第二个和第三个参数都不要管，用默认值就可以了。
+  注意事项
+  - `PM_TitleBarHeight`是`QStyle::PixelMetric`这个枚举里的一个，这个枚举里还包含很多系统标准控件的尺寸，都可以通过这个函数获取。
+  - 使用`pixelMetric`函数时一定要记得把一个`QStyleOption`的指针作为第二个参数传给它，有了这个参数后`pixelMetric`内部会根据系统的DPI自动进行换算，没有这个参数的话返回的是一个无视DPI的固定值。
+
+    ```cpp
+    QStyleOption option;
+    option.initFrom(this);
+    const int val = style()->pixelMetric(QStyle::PixelMetric::PM_TitleBarHeight, &option);
+    ```
+
 - 获取桌面的总尺寸以及可用尺寸（即去掉任务栏后的尺寸）：
 
   ```cpp
@@ -866,39 +889,310 @@
 - 下载文件
 
   ```cpp
-  QNetworkAccessManager manager;
-  connect(&manager, &QNetworkAccessManager::finished, this, [](QNetworkReply *reply) {
-    // 重定向不会导致错误的发生
-    if (reply->error() != QNetworkReply::NoError) {
-      // 处理错误
-    } else {
-      // 暂时还不知道在下载文件时怎么处理重定向，先跳过这种情况
-      const int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-      if ((statusCode == 301) || (statusCode == 302) || (statusCode == 303) || (statusCode == 305) || (statusCode == 307) || (statusCode == 308)) {
-        // 处理重定向
-        QVariant target = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-        if (target.isValid()) {
-          QUrl redirectUrl = target.toUrl();
-          if (redirectUrl.isRelative()) {
-            QUrl requestUrl = reply->request().url();
-            redirectUrl = requestUrl.resolved(redirectUrl);
+  class QPU_API Downloader : public QObject {
+      Q_OBJECT
+      Q_DISABLE_COPY_MOVE(Downloader)
+      Q_PROPERTY(QUrl url READ url WRITE setUrl)
+      Q_PROPERTY(QString saveDirectory READ saveDirectory WRITE setSaveDirectory)
+      Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
+      Q_PROPERTY(Speed speed READ speed NOTIFY speedChanged)
+      Q_PROPERTY(int timeout READ timeout WRITE setTimeout)
+      Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+
+  public:
+      enum class Status { Idle, Downloading, Finished, Aborted };
+
+      using Speed = struct QPU_DL_Speed {
+          qreal value = 0.0;
+          std::string unit;
+      };
+
+      explicit Downloader(QObject *parent = nullptr);
+      ~Downloader() override;
+
+      static QString uniqueFileName(const QUrl &value, const QString &dirPath);
+
+  public Q_SLOTS:
+      void start();
+      void pause();
+      void resume();
+      void stop();
+
+      QUrl url() const;
+      void setUrl(const QUrl &value);
+
+      QString saveDirectory() const;
+      void setSaveDirectory(const QString &value);
+
+      int timeout() const;
+      void setTimeout(int value = 30000);
+
+      qreal progress() const;
+
+      Speed speed() const;
+
+      Status status() const;
+
+  Q_SIGNALS:
+      void finished();
+      void progressChanged();
+      void speedChanged();
+      void statusChanged();
+
+  private:
+      QUrl m_url;
+      QFile file;
+      QNetworkAccessManager manager;
+      QNetworkReply *reply = nullptr;
+      QElapsedTimer timer;
+      QString m_saveDirectory;
+      qreal m_progress = 0.0;
+      int m_timeout = 0;
+      Speed m_speed;
+  };
+
+  QtPlatformUtils::Downloader::Downloader(QObject *parent) : QObject(parent) {
+      QNetworkProxyFactory::setUseSystemConfiguration(true);
+  #if (QT_VERSION >= QT_VERSION_CHECK(5, 9, 0))
+      manager.setRedirectPolicy(
+          QNetworkRequest::RedirectPolicy::NoLessSafeRedirectPolicy);
+  #endif
+  #if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+      manager.setAutoDeleteReplies(true);
+  #endif
+  }
+
+  QtPlatformUtils::Downloader::~Downloader() {
+      if (reply) {
+          if (reply->isRunning()) {
+              reply->abort();
           }
-          QTextStream(stderr) << tr("Redirected to: ") << redirectUrl.toDisplayString() << endl;
-        }
-      } else {
-        // 写入到本地文件
-        QFile file(QLatin1String("D:/test.dat"));
-        file.open(QFile::WriteOnly);
-        // QNetworkReply是QIODevice的派生类
-        file.write(reply->readAll());
-        file.close();
+          reply->disconnect();
+          // deleteLater() ?
+          reply = nullptr;
       }
-    }
-  });
-  // 此处的网址仅作演示之用，并不实际存在
-  const QUrl url = QUrl::fromEncoded("https://download.qt.io/balabalabala.dat");
-  QNetworkRequest request(url);
-  manager.get(request);
+      if (file.isOpen()) {
+          file.close();
+      }
+  }
+
+  QString QtPlatformUtils::Downloader::uniqueFileName(const QUrl &value,
+                                                      const QString &dirPath) {
+      QString fileName = value.fileName();
+      if (fileName.isEmpty()) {
+          fileName = QString::fromUtf8("download.tmp");
+      }
+      const QFileInfo fileInfo(fileName);
+      const QString suffix = fileInfo.suffix();
+      QString baseName = fileInfo.completeBaseName();
+      if (QFile::exists(QString::fromUtf8("%1/%2").arg(dirPath, fileName))) {
+          // already exists, don't overwrite
+          int i = 1;
+          baseName += QString::fromUtf8(" (");
+          while (QFile::exists(
+              QString::fromUtf8("%1/%2%3).%4")
+                  .arg(dirPath, baseName, QString::number(i), suffix))) {
+              ++i;
+          }
+          baseName += QString::number(i) + QChar::fromLatin1(')');
+      }
+      return QString::fromUtf8("%1.%2").arg(baseName, suffix);
+  }
+
+  void QtPlatformUtils::Downloader::start() {
+      if (!m_url.isValid() || m_saveDirectory.isEmpty()) {
+          qDebug()
+              << "The URL is not valid and/or the save directory is not set.";
+          return;
+      }
+      if (file.isOpen()) {
+          file.close();
+          file.remove();
+      }
+      file.setFileName(QString::fromUtf8("%1/%2").arg(
+          m_saveDirectory, uniqueFileName(m_url, m_saveDirectory)));
+      if (!file.open(QFile::WriteOnly | QFile::Truncate)) {
+          qDebug() << "Cannot open file for writing.";
+          return;
+      }
+      timer.start();
+      QNetworkRequest request(m_url);
+  #if (QT_VERSION < QT_VERSION_CHECK(5, 9, 0))
+      request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+  #endif
+      reply = manager.get(request);
+      connect(reply, &QNetworkReply::downloadProgress,
+              [=](qint64 bytesReceived, qint64 bytesTotal) {
+                  if (bytesTotal > 0) {
+                      m_progress = qreal(bytesReceived) / qreal(bytesTotal);
+                      Q_EMIT progressChanged();
+                  }
+                  m_speed.value =
+                      qreal(bytesReceived) * 1000.0 / qreal(timer.elapsed());
+                  if (m_speed.value < 1024.0) {
+                      m_speed.unit = "byte/s";
+                  } else if (m_speed.value < 1024.0 * 1024.0) {
+                      m_speed.value /= 1024.0;
+                      m_speed.unit = "KB/s";
+                  } else {
+                      m_speed.value /= 1024.0 * 1024.0;
+                      m_speed.unit = "MB/s";
+                  }
+                  Q_EMIT speedChanged();
+              });
+      connect(reply, &QNetworkReply::finished, [=]() {
+          reply->close();
+          if (file.isOpen()) {
+              file.close();
+          }
+          if (reply->networkError() != QNetworkReply::NoError) {
+              file.remove();
+              qDebug() << "Download failed:" << reply->errorString();
+          }
+          reply->disconnect();
+  #if (QT_VERSION < QT_VERSION_CHECK(5, 14, 0))
+          reply->deleteLater();
+  #endif
+          reply = nullptr;
+          m_speed.value = 0.0;
+          m_speed.unit.clear();
+          m_progress = 0.0;
+          Q_EMIT statusChanged();
+          Q_EMIT finished();
+          // Q_EMIT speedChanged();
+          // Q_EMIT progressChanged();
+      });
+      connect(reply, &QNetworkReply::readyRead, [=]() {
+          if (!file.isOpen()) {
+              // Return or open it?
+              qDebug() << "File is not open for writing.";
+              return;
+          }
+          QByteArray buffer(32768, Qt::Uninitialized);
+          while (reply->bytesAvailable()) {
+              const qint64 read = reply->read(buffer.data(), buffer.size());
+              qint64 written = 0;
+              while (written < read) {
+                  const qint64 toWrite =
+                      file.write(buffer.constData() + written, read - written);
+                  if (toWrite < 0) {
+                      qDebug()
+                          << QString::fromUtf8(
+                                 R"(Writing to file "%1" failed: %2)")
+                                 .arg(QDir::toNativeSeparators(file.fileName()),
+                                      file.errorString());
+                      stop();
+                      return;
+                  }
+                  written += toWrite;
+              }
+          }
+      });
+      connect(reply, &QNetworkReply::redirected, [=](const QUrl &value) {
+          // Don't abort current network reply.
+          if (file.isOpen()) {
+              file.close();
+          }
+          file.remove();
+          qDebug() << "Source URL" << m_url.toDisplayString()
+                   << "has been redirected to" << value.toDisplayString();
+          m_url = value;
+          start();
+      });
+      Q_EMIT statusChanged();
+  }
+
+  QUrl QtPlatformUtils::Downloader::url() const { return m_url; }
+
+  void QtPlatformUtils::Downloader::setUrl(const QUrl &value) {
+      if (!value.isValid()) {
+          qDebug() << "The given URL is not valid.";
+          return;
+      }
+      if (m_url != value) {
+          m_url = value;
+      }
+  }
+
+  QString QtPlatformUtils::Downloader::saveDirectory() const {
+      return QDir::toNativeSeparators(m_saveDirectory);
+  }
+
+  void QtPlatformUtils::Downloader::setSaveDirectory(const QString &value) {
+      if (value.isEmpty()) {
+          qDebug() << "The given path is empty.";
+          return;
+      }
+      if (m_saveDirectory != value) {
+          const QDir dir(value);
+          if (!dir.exists()) {
+              dir.mkpath(QChar::fromLatin1('.'));
+          }
+          m_saveDirectory = value;
+      }
+  }
+
+  int QtPlatformUtils::Downloader::timeout() const { return qMax(m_timeout, 0); }
+
+  void QtPlatformUtils::Downloader::setTimeout(int value) {
+      if (value < 0) {
+          qDebug() << "The minimum of timeout is zero.";
+          return;
+      }
+      if (m_timeout != value) {
+          m_timeout = value;
+  #if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
+          manager.setTransferTimeout(m_timeout);
+  #endif
+      }
+  }
+
+  qreal QtPlatformUtils::Downloader::progress() const {
+      return qBound(0.0, m_progress, 1.0);
+  }
+
+  QtPlatformUtils::Downloader::Speed QtPlatformUtils::Downloader::speed() const {
+      return m_speed;
+  }
+
+  QtPlatformUtils::Downloader::Status
+  QtPlatformUtils::Downloader::status() const {
+      if (!reply) {
+          return Status::Idle;
+      }
+      if (reply->isRunning()) {
+          return Status::Downloading;
+      }
+      if (reply->networkError() == QNetworkReply::NoError) {
+          return Status::Finished;
+      }
+      return Status::Aborted;
+  }
+
+  void QtPlatformUtils::Downloader::pause() {}
+
+  void QtPlatformUtils::Downloader::resume() {}
+
+  void QtPlatformUtils::Downloader::stop() {
+      if (reply->isRunning()) {
+          reply->abort();
+      }
+      if (file.isOpen()) {
+          file.close();
+      }
+      file.remove();
+      if (reply) {
+          reply->disconnect();
+          // deleteLater() ?
+          reply = nullptr;
+      }
+      m_speed.value = 0.0;
+      m_speed.unit.clear();
+      m_progress = 0.0;
+      Q_EMIT statusChanged();
+      // Q_EMIT speedChanged();
+      // Q_EMIT progressChanged();
+  }
   ```
 
 - 计算文件哈希值：`QCryptographicHash`
@@ -908,8 +1202,7 @@
   file.open(QFile::ReadOnly);
   // 其他算法请参考 QCryptographicHash::Algorithm 这个枚举。
   QCryptographicHash cryptographicHash(QCryptographicHash::Sha256);
-  cryptographicHash.addData(file.readAll());
-  file.close();
+  cryptographicHash.addData(&file);
   const QString hash = QLatin1String(cryptographicHash.result().toHex());
   ```
 
@@ -2234,5 +2527,38 @@
       if (v2 == -1)
           return;
       // (...)
+  }
+  ```
+
+- `QWidget`无法在构造函数里获取其所在`QWindow`的指针，如果有什么工作必须要在窗口显示出来之前进行，可以在这个Widget的`showEvent`中操作，在这个事件里`QWindow`是能被获取到的。
+
+  ```cpp
+  void FramelessWidget::showEvent(QShowEvent *event) {
+      QWidget::showEvent(event);
+      // windowHandle() will always return nullptr before the QWidget itself is
+      // shown. So we can't do this in the constructor function, it will result in
+      // a crash.
+      const QWindow *win = windowHandle();
+      if (win) {
+          const auto hwnd = reinterpret_cast<HWND>(windowHandle()->winId());
+          if (hwnd) {
+              const DWMNCRENDERINGPOLICY ncrp = DWMNCRP_ENABLED;
+              if (FAILED(DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY,
+                                               &ncrp, sizeof(ncrp)))) {
+                  qDebug() << "Failed to enable non-client area rendering.";
+                  return;
+              }
+              MARGINS margins = {0, 0, 0, 0};
+              if (FAILED(DwmExtendFrameIntoClientArea(hwnd, &margins))) {
+                  qDebug() << "Failed to reset window frame.";
+                  return;
+              }
+              margins = {-1, -1, -1, -1};
+              if (FAILED(DwmExtendFrameIntoClientArea(hwnd, &margins))) {
+                  qDebug() << "Failed to bring frame shadow back.";
+                  return;
+              }
+          }
+      }
   }
   ```

@@ -127,7 +127,7 @@
   BOOL MoveToRecycleBin(LPCWSTR pszPath, BOOL bDelete)
   {
     SHFILEOPSTRUCTW sfos;
-    SecureZeroMemory(sfos, sizeof(sfos));
+    SecureZeroMemory(&sfos, sizeof(sfos));
     sfos.fFlags |= FOF_NO_UI; // 不显示任何窗口
     sfos.wFunc = FO_DELETE; // 关键，不可缺少：指定此操作为删除操作
     sfos.pFrom = pszPath; // 关键，不可缺少：待删除的文件（夹）
@@ -201,7 +201,7 @@
       if (!hasAdminRights()) { // 使用上面提到的方法检测是否已经拥有管理员权限
           QLatin1String key("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");
           QSettings registry(key, QSettings::NativeFormat);
-          const QVariant enableLUA = registry.value(QLatin1String("EnableLUA"));
+          const QVariant enableLUA = registry.value(QLatin1String("EnableLUA"), 0);
           if ((enableLUA.type() == QVariant::Int) && (enableLUA.toInt() == 0)) {
               return false;
           }
@@ -211,7 +211,7 @@
       DeCoInitializer _deCoInitializer;
 
       SHELLEXECUTEINFOW sei;
-      SecureZeroMemory(sei, sizeof(sei));
+      SecureZeroMemory(&sei, sizeof(sei));
       // 这一行是关键，有了这一行才能以管理员权限执行
       sei.lpVerb = L"RunAs";
       sei.lpFile = reinterpret_cast<LPCWSTR>(path.utf16());
@@ -272,7 +272,7 @@
           if (hService != nullptr)
           {
               SERVICE_DESCRIPTIONW sdesc;
-              SecureZeroMemory(sdesc, sizeof(sdesc));
+              SecureZeroMemory(&sdesc, sizeof(sdesc));
               sdesc.lpDescription = const_cast<LPWSTR>(SERVICE_DESCRIPTION);
               result = ChangeServiceConfig2W(hService, SERVICE_CONFIG_DESCRIPTION, &sdesc);
               CloseServiceHandleW(hService);
@@ -348,7 +348,7 @@
       serviceStatusHandle = RegisterServiceCtrlHandlerW(SERVICE_NAME, ServiceCtrlHandler);
       if (serviceStatusHandle == nullptr)
           return;
-      SecureZeroMemory(serviceStatus, sizeof(serviceStatus));
+      SecureZeroMemory(&serviceStatus, sizeof(serviceStatus));
       serviceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS;
       serviceStatus.dwControlsAccepted = 0;
       serviceStatus.dwCurrentState = SERVICE_START_PENDING;
@@ -521,7 +521,7 @@
     ShowWindow(hWnd, SW_SHOW);
   }
   WINDOWPLACEMENT wndpmt;
-  SecureZeroMemory(wndpmt, sizeof(wndpmt));
+  SecureZeroMemory(&wndpmt, sizeof(wndpmt));
   if (GetWindowPlacement(hWnd, &wndpmt) != FALSE) {
     // 如果窗口被最小化了，还原回去
     if ((wndpmt.showCmd == SW_SHOWMINIMIZED) || (wndpmt.showCmd == SW_MINIMIZE) || (wndpmt.showCmd == SW_FORCEMINIMIZE)) {
@@ -928,7 +928,7 @@
 - 创建指向网址的快捷方式（*.url）
 
   ```cpp
-  // 头文件：shlobj.h
+  // 头文件：shlobj.h、intshcut.h
   // 库文件：Shell32.lib（Shell32.dll）
 
   struct DeCoInitializer {
@@ -941,72 +941,104 @@
       bool neededCoInit;
   };
 
-  bool createLink(const QString &fileName, const QString &linkName, QString workingDir, const QString &arguments = QString(), const QString &iconPath = QString(), const QString &iconId = QString(), const QString &description = QString()) {
-      // CoInitialize cleanup object
-      DeCoInitializer _;
-
+  bool QtPlatformUtils::createShortcut(
+      const QString &fileName, const QString &linkName, const QString &workingDir,
+      const QStringList &arguments, const QString &iconPath,
+      const QString &iconId, const QString &description) {
+      if (fileName.isEmpty() || linkName.isEmpty()) {
+          qDebug() << "Target file name and shortcut file name cannot be empty.";
+          return false;
+      }
+      const QFileInfo fileInfo(fileName);
+      if ((fileInfo.isFile() || fileInfo.isDir()) && !fileInfo.exists()) {
+          qDebug() << "Target file doesn't exist.";
+          return false;
+      }
+      DeCoInitializer deCoInitializer;
       IUnknown *iunkn = nullptr;
-
-      if (fileName.toLower().startsWith(QLatin1String("http:")) || fileName.toLower().startsWith(QLatin1String("ftp:"))) {
-          IUniformResourceLocator *iurl = nullptr;
-          if (FAILED(CoCreateInstance(CLSID_InternetShortcut, nullptr, CLSCTX_INPROC_SERVER, IID_IUniformResourceLocator, reinterpret_cast<LPVOID *>(&iurl)))) {
+      QString _linkName = linkName;
+      if (fileName.startsWith(QString::fromUtf8("https:"), Qt::CaseInsensitive) ||
+          fileName.startsWith(QString::fromUtf8("http:"), Qt::CaseInsensitive) ||
+          fileName.startsWith(QString::fromUtf8("ftp:"), Qt::CaseInsensitive)) {
+          IUniformResourceLocatorW *iurl = nullptr;
+          if (FAILED(CoCreateInstance(CLSID_InternetShortcut, nullptr,
+                                      CLSCTX_INPROC_SERVER,
+                                      IID_IUniformResourceLocatorW,
+                                      reinterpret_cast<LPVOID *>(&iurl)))) {
+              qDebug() << "Failed to initialize the operation.";
               return false;
           }
-
-          if (FAILED(iurl->SetURL(reinterpret_cast<LPCWSTR>(fileName.utf16()), IURL_SETURL_FL_GUESS_PROTOCOL))) {
+          if (FAILED(iurl->SetURL(
+                  reinterpret_cast<const wchar_t *>(fileName.utf16()),
+                  IURL_SETURL_FL_GUESS_PROTOCOL))) {
               iurl->Release();
+              qDebug() << "Failed to set URL of the shortcut.";
               return false;
           }
           iunkn = iurl;
       } else {
-          bool success = QFile::link(fileName, linkName);
-
-          if (!success) {
-              return success;
+          // The shortcut file name must ends with ".lnk" to let QFile::link()
+          // work.
+          const char *postfix = ".lnk";
+          if (!_linkName.endsWith(QString::fromUtf8(postfix),
+                                  Qt::CaseInsensitive)) {
+              _linkName.append(QString::fromUtf8(postfix));
           }
-
-          if (workingDir.isEmpty()) {
-              workingDir = QFileInfo(fileName).absolutePath();
+          if (!QFile::link(fileName, _linkName)) {
+              qDebug() << "Failed to create the shortcut.";
+              return false;
           }
-          workingDir = QDir::toNativeSeparators(workingDir);
-
-          IShellLink *psl = nullptr;
-          if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLink, reinterpret_cast<LPVOID *>(&psl)))) {
-              return success;
+          const QString _workingDir =
+              workingDir.isEmpty() ? fileInfo.absolutePath() : workingDir;
+          IShellLinkW *psl = nullptr;
+          if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr,
+                                      CLSCTX_INPROC_SERVER, IID_IShellLinkW,
+                                      reinterpret_cast<LPVOID *>(&psl)))) {
+              qDebug() << "Failed to initialize the operation.";
+              return false;
           }
-
-          // TODO: implement this server side, since there's not Qt equivalent to set working dir and arguments
-          psl->SetPath(reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(fileName).utf16()));
-          psl->SetWorkingDirectory(reinterpret_cast<LPCWSTR>(workingDir.utf16()));
-          if (!arguments.isNull()) {
-              psl->SetArguments(reinterpret_cast<LPCWSTR>(arguments.utf16()));
+          // TODO: implement this server side, since there's not Qt equivalent to
+          // set working dir and arguments
+          psl->SetPath(reinterpret_cast<const wchar_t *>(
+              QDir::toNativeSeparators(fileName).utf16()));
+          psl->SetWorkingDirectory(reinterpret_cast<const wchar_t *>(
+              QDir::toNativeSeparators(_workingDir).utf16()));
+          if (!arguments.isEmpty()) {
+              psl->SetArguments(reinterpret_cast<const wchar_t *>(
+                  arguments.join(QChar::fromLatin1(' ')).utf16()));
           }
-          if (!iconPath.isNull()) {
-              psl->SetIconLocation(reinterpret_cast<LPCWSTR>(iconPath.utf16()), iconId.toInt());
+          if (!iconPath.isEmpty()) {
+              psl->SetIconLocation(
+                  reinterpret_cast<const wchar_t *>(
+                      QDir::toNativeSeparators(iconPath).utf16()),
+                  iconId.toInt());
           }
-          if (!description.isNull()) {
-              psl->SetDescription(reinterpret_cast<LPCWSTR>(description.utf16()));
+          if (!description.isEmpty()) {
+              psl->SetDescription(
+                  reinterpret_cast<const wchar_t *>(description.utf16()));
           }
           iunkn = psl;
       }
-
       IPersistFile *ppf = nullptr;
-      if (SUCCEEDED(iunkn->QueryInterface(IID_IPersistFile, reinterpret_cast<void **>(&ppf)))) {
-          ppf->Save(reinterpret_cast<LPCWSTR>(QDir::toNativeSeparators(linkName).utf16()), true);
+      if (SUCCEEDED(iunkn->QueryInterface(IID_IPersistFile,
+                                          reinterpret_cast<void **>(&ppf)))) {
+          ppf->Save(reinterpret_cast<const wchar_t *>(
+                        QDir::toNativeSeparators(_linkName).utf16()),
+                    true);
           ppf->Release();
       }
       iunkn->Release();
-
-      PIDLIST_ABSOLUTE pidl;  // Force start menu cache update
+      // Force start menu cache update
+      PIDLIST_ABSOLUTE pidl;
       if (SUCCEEDED(SHGetFolderLocation(0, CSIDL_STARTMENU, 0, 0, &pidl))) {
           SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, pidl, 0);
           CoTaskMemFree(pidl);
       }
-      if (SUCCEEDED(SHGetFolderLocation(0, CSIDL_COMMON_STARTMENU, 0, 0, &pidl))) {
+      if (SUCCEEDED(
+              SHGetFolderLocation(0, CSIDL_COMMON_STARTMENU, 0, 0, &pidl))) {
           SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, pidl, 0);
           CoTaskMemFree(pidl);
       }
-
       return true;
   }
   ```
@@ -1135,6 +1167,7 @@
   }
   ```
 
+  使用方法：在第一次输出调试信息前，实例化一个`Console`类的对象即可。
 - 同一个应用程序如何开启多个选项卡（Win7开始添加的任务栏选项卡，Aero Peek）：请参考<https://github.com/microsoft/Windows-classic-samples/tree/master/Samples/Win7Samples/winui/shell/appshellintegration/TabThumbnails>
 - 对于Win10系统，如何获取/修改显示主题色的区域
 
@@ -1154,6 +1187,104 @@
     ```
 
     查看`ColorPrevalence`的键值，`0`代表显示系统默认颜色，`1`代表显示用户设置的主题色。读取此键值便可获取用户的设置，修改此键值便可修改用户的设置。
+  - 程序实现
+
+    ```cpp
+    enum class ColorizationSurfaces {
+        None,
+        StartTaskbarAndActionCenter,
+        TitleBarsAndWindowBorders,
+        All
+    };
+
+    const char *PERSONALIZATION_REGISTRY_KEY =
+        R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)";
+    const char *DWM_REGISTRY_KEY =
+        R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM)";
+
+    bool QtPlatformUtils::isWin10OrNewer() {
+        return (QOperatingSystemVersion::current() >=
+                QOperatingSystemVersion::Windows10);
+    }
+
+    // 获取用户设置的主题色显示区域
+    QtPlatformUtils::ColorizationSurfaces QtPlatformUtils::colorizationSurfaces() {
+        if (!isWin10OrNewer()) {
+            qDebug(
+                "Querying colorization surfaces is meaningless below Windows 10.");
+            return ColorizationSurfaces::None;
+        }
+        bool ok = false;
+        const QSettings themeRegistry(
+            QString::fromUtf8(PERSONALIZATION_REGISTRY_KEY),
+            QSettings::NativeFormat);
+        const bool themeSurfaces =
+            themeRegistry.value(QString::fromUtf8("ColorPrevalence"), 0)
+                .toULongLong(&ok) != 0;
+        if (ok) {
+            ok = false;
+        } else {
+            qDebug("Failed to query colorization surfaces from theme settings.");
+        }
+        const QSettings dwmRegistry(QString::fromUtf8(DWM_REGISTRY_KEY),
+                                    QSettings::NativeFormat);
+        const bool dwmSurfaces =
+            dwmRegistry.value(QString::fromUtf8("ColorPrevalence"), 0)
+                .toULongLong(&ok) != 0;
+        if (!ok) {
+            qDebug("Failed to query colorization surfaces from DWM settings.");
+        }
+        ColorizationSurfaces surfaces = ColorizationSurfaces::None;
+        if (themeSurfaces && dwmSurfaces) {
+            surfaces = ColorizationSurfaces::All;
+        } else if (themeSurfaces) {
+            surfaces = ColorizationSurfaces::StartTaskbarAndActionCenter;
+        } else if (dwmSurfaces) {
+            surfaces = ColorizationSurfaces::TitleBarsAndWindowBorders;
+        }
+        return surfaces;
+    }
+
+    // 设置
+    bool QtPlatformUtils::setColorizationSurfaces(ColorizationSurfaces surfaces) {
+        if (!isWin10OrNewer()) {
+            qDebug(
+                "Setting colorization surfaces is only available on Windows 10.");
+            return false;
+        }
+        QSettings themeRegistry(QString::fromUtf8(PERSONALIZATION_REGISTRY_KEY),
+                                QSettings::NativeFormat);
+        if (!isDarkModeEnabled() &&
+            ((surfaces == ColorizationSurfaces::StartTaskbarAndActionCenter) ||
+             (surfaces == ColorizationSurfaces::All))) {
+            qDebug("Cannot apply theme color to start, taskbar and action center "
+                   "when system is in light mode.");
+            return false;
+        }
+        QSettings dwmRegistry(QString::fromUtf8(DWM_REGISTRY_KEY),
+                              QSettings::NativeFormat);
+        switch (surfaces) {
+        case ColorizationSurfaces::None:
+            themeRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 0);
+            dwmRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 0);
+            break;
+        case ColorizationSurfaces::StartTaskbarAndActionCenter:
+            themeRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 1);
+            dwmRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 0);
+            break;
+        case ColorizationSurfaces::TitleBarsAndWindowBorders:
+            themeRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 0);
+            dwmRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 1);
+            break;
+        case ColorizationSurfaces::All:
+            themeRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 1);
+            dwmRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 1);
+            break;
+        }
+        return true;
+    }
+    ```
+
 - 如何人为的弹出Win10设置窗口并自动跳转到我们想要打开的页面
 
   Win10引入的UWP版设置程序（就是新版的控制面板），可以通过`ms-settings:`这个协议直接打开。以下是常见的URI及其对应的设置页面。
@@ -1353,6 +1484,171 @@
       ```
 
       注意：此方式仅Windows Vista/7支持，Windows XP只能通过手动检查注册表的方式确认，Win8及更新的系统不支持此类检查。
+  7. 程序实现
+
+      ```cpp
+      // Only extensionName can't be empty. CLSID is used when you want to register
+      // MIME types.
+      struct FileAssocId {
+          QString extensionName;
+          QString description;
+          QString friendlyTypeName;
+          QString mimeType;
+          QString CLSID;
+          QString defaultIcon;
+          QString operation;
+          QString command;
+      };
+      using FileAssocIdList = QVector<FileAssocId>;
+
+      bool QtPlatformUtils::registerFileType(const QString &applicationPath,
+                                             const QString &applicationDisplayName,
+                                             const QString &applicationDescription,
+                                             const QString &companyName,
+                                             FileAssocIdList assocIdList) {
+          if (applicationPath.isEmpty() || applicationDescription.isEmpty() ||
+              companyName.isEmpty()) {
+              qDebug() << "Application path, application description and company "
+                          "name cannot be empty.";
+              return false;
+          }
+          if (!isAdminProcess()) {
+              qDebug() << "Cannot register file types without admin privileges.";
+              return false;
+          }
+          if (assocIdList.isEmpty()) {
+              qDebug() << "Empty file type list.";
+              return false;
+          }
+          const QFileInfo fileInfo(applicationPath);
+          if (!fileInfo.exists()) {
+              qDebug() << "The given application doesn't exist.";
+              return false;
+          }
+          if (!fileInfo.isExecutable()) {
+              qDebug() << "The given path is not an executable.";
+              return false;
+          }
+          QString exePath = QDir::toNativeSeparators(fileInfo.canonicalFilePath());
+          if (!exePath.startsWith(QChar::fromLatin1('"'))) {
+              exePath.prepend(QChar::fromLatin1('"'));
+          }
+          if (!exePath.endsWith(QChar::fromLatin1('"'))) {
+              exePath.append(QChar::fromLatin1('"'));
+          }
+          const QString displayName = applicationDisplayName.isEmpty()
+              ? fileInfo.completeBaseName()
+              : applicationDisplayName;
+          QString progid_com = companyName;
+          progid_com.remove(QChar::fromLatin1(' '));
+          QString progid_app = displayName;
+          progid_app.remove(QChar::fromLatin1(' '));
+          bool reg = false;
+          for (auto &&assocId : std::as_const(assocIdList)) {
+              if (assocId.extensionName.isEmpty()) {
+                  qDebug() << "Empty extension name. Skipping.";
+                  continue;
+              }
+              QString ext = assocId.extensionName.toLower();
+              QString progid_ext = ext.toUpper();
+              if (ext.startsWith(QChar::fromLatin1('.'))) {
+                  progid_ext.remove(0, 1);
+              } else {
+                  ext.prepend(QChar::fromLatin1('.'));
+              }
+              const QString ProgID = QString::fromUtf8("%1.%2.%3.1000")
+                                         .arg(progid_com, progid_app, progid_ext);
+              const QString regKey1 =
+                  QString::fromUtf8(R"(HKEY_LOCAL_MACHINE\SOFTWARE\Classes\%1)")
+                      .arg(ProgID);
+              QSettings settings1(regKey1, QSettings::NativeFormat);
+              if (!assocId.description.isEmpty()) {
+                  settings1.setValue(QString::fromUtf8(""), assocId.description);
+              }
+              if (!assocId.friendlyTypeName.isEmpty()) {
+                  settings1.setValue(QString::fromUtf8("FriendlyTypeName"),
+                                     assocId.friendlyTypeName);
+              }
+              if (!assocId.CLSID.isEmpty()) {
+                  QSettings settings1_clsid(
+                      QString::fromUtf8(R"(%1\CLSID)").arg(regKey1),
+                      QSettings::NativeFormat);
+                  settings1_clsid.setValue(QString::fromUtf8(""),
+                                           assocId.CLSID.toUpper());
+              }
+              if (!assocId.defaultIcon.isEmpty()) {
+                  settings1.setValue(QString::fromUtf8("DefaultIcon"),
+                                     QDir::toNativeSeparators(assocId.defaultIcon));
+              }
+              if (!assocId.operation.isEmpty()) {
+                  QSettings settings1_command(
+                      QString::fromUtf8(R"(%1\Shell\%2\Command)")
+                          .arg(regKey1, assocId.operation),
+                      QSettings::NativeFormat);
+                  const QString cmd = assocId.command.isEmpty()
+                      ? (exePath + QString::fromUtf8(R"( "%1")"))
+                      : QDir::toNativeSeparators(assocId.command);
+                  settings1_command.setValue(QString::fromUtf8(""), cmd);
+              }
+              const QString regKey2 =
+                  QString::fromUtf8(R"(HKEY_CLASSES_ROOT\%1\OpenWithProgIDs)")
+                      .arg(ext);
+              QSettings settings2(regKey2, QSettings::NativeFormat);
+              settings2.setValue(ProgID, QVariant());
+              const QString regKey3 =
+                  QString::fromUtf8(
+                      R"(HKEY_LOCAL_MACHINE\SOFTWARE\%1\%2\Capabilities)")
+                      .arg(progid_com, progid_app);
+              QSettings settings3(regKey3, QSettings::NativeFormat);
+              // ApplicationDescription MUST NOT BE EMPTY!!!
+              settings3.setValue(QString::fromUtf8("ApplicationDescription"),
+                                 applicationDescription);
+              settings3.setValue(QString::fromUtf8("ApplicationName"), displayName);
+              QSettings settings3_fileAssociations(
+                  QString::fromUtf8(R"(%1\FileAssociations)").arg(regKey3),
+                  QSettings::NativeFormat);
+              settings3_fileAssociations.setValue(ext, ProgID);
+              if (!assocId.mimeType.isEmpty()) {
+                  QSettings settings3_mimeAssociations(
+                      QString::fromUtf8(R"(%1\MimeAssociations)").arg(regKey3),
+                      QSettings::NativeFormat);
+                  settings3_mimeAssociations.setValue(assocId.mimeType.toLower(),
+                                                      ProgID);
+              }
+              const QString regKey4 = QString::fromUtf8(
+                  R"(HKEY_LOCAL_MACHINE\SOFTWARE\RegisteredApplications)");
+              QSettings settings4(regKey4, QSettings::NativeFormat);
+              settings4.setValue(displayName,
+                                 QString::fromUtf8(R"(SOFTWARE\%1\%2\Capabilities)")
+                                     .arg(progid_com, progid_app));
+              reg = true;
+          }
+          if (!reg) {
+              qDebug() << "No file types have been registered.";
+              return false;
+          }
+          // Tell the system to flush itself immediately.
+          SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSH, nullptr,
+                         nullptr);
+          if (isWin8OrNewer()) {
+              // Let the user choose the default application.
+              IApplicationAssociationRegistrationUI *pAARUI = nullptr;
+              const HRESULT hr =
+                  CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI,
+                                   nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI));
+              if (SUCCEEDED(hr) && (pAARUI != nullptr)) {
+                  pAARUI->LaunchAdvancedAssociationUI(
+                      reinterpret_cast<const wchar_t *>(displayName.utf16()));
+                  pAARUI->Release();
+              } else {
+                  qDebug() << "Failed to launch advanced association UI.";
+                  // No need to return false because we have registered all file
+                  // types successfully.
+              }
+          }
+          return true;
+      }
+      ```
 
   参考资料：<https://docs.microsoft.com/en-us/windows/win32/shell/default-programs>，<https://docs.microsoft.com/en-us/windows/win32/shell/fa-best-practices>，<https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/winui/shell/appshellintegration/AutomaticJumpList/FileRegistrations.h>
 - 如何将图标文件存放到一个单独的DLL中，供关联文件时使用
@@ -1414,3 +1710,183 @@
     IDI_AMR_ICON     ICON   "icons\\amr.ico"
     // 需要版本信息的话可以在下面接着写，不会影响上面的东西
     ```
+
+- 打开文件管理器（explorer.exe），并在其中定位某个文件或文件夹
+
+  ```cpp
+  bool QtPlatformUtils::showContainingFolder(const QString &path) {
+      if (path.isEmpty()) {
+          qDebug() << "Cannot locate the given file: empty path.";
+          return false;
+      }
+      const QFileInfo fileInfo(path);
+      if (!fileInfo.exists()) {
+          qDebug() << "Cannot locate a file which do not exist.";
+          return false;
+      }
+      // It's OK if we are locating a shortcut file, no need to check whether it's
+      // a broken shortcut or not.
+      // Don't use canonicalFilePath() here because we want to locate the file
+      // itself, not the target file of the shortcut.
+      QStringList params = {
+          QDir::toNativeSeparators(fileInfo.absoluteFilePath())};
+      if (!fileInfo.isDir()) {
+          params.prepend(QString::fromUtf8("/select,"));
+      }
+      // In case there is another "explorer.exe" ...
+      return QProcess::startDetached(
+          QString::fromUtf8(R"(%SystemRoot%\explorer.exe)"), params);
+  }
+  ```
+
+- 打开命令提示符窗口并将工作路径切换到指定位置
+
+  ```cpp
+  bool QtPlatformUtils::openTerminal(const QString &workingDir) {
+      STARTUPINFOW si;
+      SecureZeroMemory(&si, sizeof(si));
+      si.cb = sizeof(si);
+      PROCESS_INFORMATION pinfo;
+      SecureZeroMemory(&pinfo, sizeof(pinfo));
+      const QString ComSpec = qEnvironmentVariable(
+          "ComSpec", QString::fromUtf8(R"(%SystemRoot%\System32\cmd.exe)"));
+      // lpCommandLine is assumed to be detached. See:
+      // https://devblogs.microsoft.com/oldnewthing/?p=18083
+      BOOL result =
+          CreateProcessW(nullptr,
+                         reinterpret_cast<wchar_t *>(const_cast<ushort *>(
+                             QDir::toNativeSeparators(ComSpec).utf16())),
+                         nullptr, nullptr, FALSE,
+                         CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT, nullptr,
+                         workingDir.isEmpty()
+                             ? nullptr
+                             : reinterpret_cast<const wchar_t *>(
+                                   QDir::toNativeSeparators(workingDir).utf16()),
+                         &si, &pinfo);
+      if (result) {
+          CloseHandle(pinfo.hThread);
+          CloseHandle(pinfo.hProcess);
+      } else {
+          qDebug() << "Failed to launch cmd.exe";
+      }
+      return result;
+  }
+  ```
+
+- 如何获取用户设置的桌面壁纸的文件路径以及设置系统的桌面壁纸
+  - 获取
+
+    ```cpp
+    QString QtPlatformUtils::wallpaper() {
+        wchar_t *path = new wchar_t[MAX_PATH];
+        if (!SystemParametersInfoW(SPI_GETDESKWALLPAPER, 0, path, 0)) {
+            qDebug() << "Failed to query wallpaper path.";
+            return QString();
+        }
+        if (!path) {
+            qDebug() << "Failed to query wallpaper path.";
+            return QString();
+        }
+        const QString result = QString::fromWCharArray(path);
+        delete[] path;
+        return result;
+    }
+    ```
+
+  - 设置
+
+    ```cpp
+    bool QtPlatformUtils::setWallpaper(const QString &path) {
+        if (path.isEmpty()) {
+            qDebug() << "Failed to set wallpaper: empty path.";
+            return false;
+        }
+        const QFileInfo fileInfo(path);
+        if (!fileInfo.exists()) {
+            qDebug() << "Failed to set wallpaper: file doesn't exist.";
+            return false;
+       }
+        if (!fileInfo.isFile() || fileInfo.isShortcut()) {
+            qDebug() << "Failed to set wallpaper: file type mismatch.";
+            return false;
+        }
+        const auto *_path = reinterpret_cast<const wchar_t *>(
+            QDir::toNativeSeparators(path).utf16());
+        if (!SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0,
+                                   const_cast<wchar_t *>(_path),
+                                   SPIF_UPDATEINIFILE | SPIF_SENDCHANGE)) {
+            qDebug() << "Failed to set wallpaper.";
+            return false;
+        }
+        return true;
+    }
+    ```
+
+- 获取用户是否开启了高对比度模式以及开启/关闭高对比度模式
+  - 获取
+
+    ```cpp
+    bool QtPlatformUtils::isHighContrastModeEnabled() {
+        HIGHCONTRASTW hc;
+        SecureZeroMemory(&hc, sizeof(hc));
+        hc.cbSize = sizeof(hc);
+        if (!SystemParametersInfoW(SPI_GETHIGHCONTRAST, 0, &hc, 0)) {
+            qDebug() << "Failed to query high contrast mode state.";
+            return false;
+        }
+        return (hc.dwFlags & HCF_HIGHCONTRASTON);
+    }
+    ```
+
+  - 设置
+
+    ```cpp
+    bool QtPlatformUtils::setHighContrastModeEnabled(bool enable) {
+        HIGHCONTRASTW hc;
+        SecureZeroMemory(&hc, sizeof(hc));
+        hc.cbSize = sizeof(hc);
+        if (enable) {
+            hc.dwFlags = HCF_HIGHCONTRASTON;
+        }
+        // FIXME: What is the default scheme?
+        // hc.lpszDefaultScheme = L"aaa";
+        if (!SystemParametersInfoW(SPI_SETHIGHCONTRAST, 0, &hc,
+                                   SPIF_UPDATEINIFILE | SPIF_SENDCHANGE)) {
+            qDebug() << "Failed to change High Contrast Mode's state.";
+            return false;
+        }
+        return true;
+    }
+    ```
+
+- 获取用户设置的主题色
+  - 方法1：Win32 API `DwmGetColorizationColor()`
+
+    ```cpp
+    QColor QtPlatformUtils::colorizationColor() {
+        DWORD color = 0;
+        BOOL dummy = FALSE;
+        if (FAILED(DwmGetColorizationColor(&color, &dummy))) {
+            qDebug() << "Failed to query DWM colorization color.";
+            return QColorConstants::White;
+        }
+        return QColor::fromRgba(color);
+    }
+    ```
+
+  - 方法2：读取注册表
+
+    ```cpp
+    QColor QtWin::realColorizationColor() {
+        bool ok = false;
+        const QSettings registry(R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM)", QSettings::NativeFormat);
+        const quint64 value = registry.value("ColorizationColor", 0).toULongLong(&ok);
+        if (!ok) {
+            qDebug("Failed to read colorization color.");
+            return QColorConstants::White;
+        }
+        return QColor::fromRgba(value);
+    }
+    ```
+
+  区别及注意事项：以上两个方法都是用来获取用户设置的主题色的，区别在于在某些情况下两者获取到的颜色会有所不同，`DwmGetColorizationColor()`可能会返回一个半透明的灰色，具体原因未知，因此最保险的就是读注册表。
