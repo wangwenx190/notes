@@ -1890,3 +1890,10 @@
     ```
 
   区别及注意事项：以上两个方法都是用来获取用户设置的主题色的，区别在于在某些情况下两者获取到的颜色会有所不同，`DwmGetColorizationColor()`可能会返回一个半透明的灰色，具体原因未知，因此最保险的就是读注册表。
+- 如何查看一个exe或dll是32位的还是64位的以及有没有启用*Control Flow Guard*
+
+  ```bat
+  dumpbin.exe /headers /loadconfig avcodec-58.dll
+  ```
+
+  dll的导入库（.lib文件）也可以用这个方法查看
