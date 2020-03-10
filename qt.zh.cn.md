@@ -722,10 +722,10 @@
   QSurfaceFormat::setDefaultFormat(surfaceFormat);
   ```
 
-  注：以上代码必须在`Q(Core|Gui)Application`构造前使用，否则不会生效。【？？？待确认？？？】
+  注：以上代码必须在第一次调用OpenGL前使用，否则不会生效。
 - 如何使能进行翻译的字符串都被`tr`函数包裹，不被遗漏：
 
-  在全局定义`QT_NO_CAST_FROM_ASCII`这个宏，之后在编译时任何没有被`QLatin1String`包裹的字符串都会被提示出来（或直接报错？不太确定）。
+  在全局定义`QT_NO_CAST_FROM_ASCII`这个宏，之后在编译时任何没有被`QLatin1String`（其等价于`QString::fromLatin1()`）或`QString::fromUtf8()`包裹的字符串都会报错。
 
   注：使用`QT_NO_CAST_TO_ASCII`可以禁止`QString`到本地8位编码字符串（`char *`）的转换。
 - 在Linux平台发布Qt程序：
@@ -805,7 +805,7 @@
         if (QtWin::isCompositionEnabled()) {
             // 开启非客户区绘制（此句是带回窗口阴影的关键，不可缺少）
             // 下面这个API是我给Qt加的，Qt 6.0才会有。Qt5请自行使用DWM API实现，就两行，也不复杂。
-            QtWin::setWindowNonClientAreaRenderingPolicy(this, QtWin::WindowNonClientRenderingPolicy::Enabled);
+            QtWin::setWindowNonClientAreaRenderingPolicy(this, QtWin::NonClientRenderingPolicyEnabled);
             // 当第2至第5个参数中至少有一个为负数时，意为对无边框控件绘制阴影（此句也是绘制窗口阴影的关键，也不能缺少）
             // 如果又想还原系统的标准窗口边框，记得一定要调用QtWin::resetExtendedFrame(this)，否则窗口的边框线不会出现（不仔细看注意不到）
             QtWin::extendFrameIntoClientArea(this, -1, -1, -1, -1);
@@ -1404,7 +1404,7 @@
   }
   // 第二步：如果窗口被最小化了，恢复原始的大小和状态
   // QWindow 没有 isMinimized 函数，请使用以下语句进行判断
-  // if (windowStates() & Qt::WindowMinimized) { /* ... */ }
+  // if (windowStates().testFlag(Qt::WindowMinimized)) { /* ... */ }
   if (isMinimized()) {
     // QWindow 没有 setWindowState 以及 windowState 函数，请使用 setWindowStates 以及 windowStates 函数代替。
     setWindowState(windowState() & ~Qt::WindowMinimized);
