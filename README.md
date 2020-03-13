@@ -1,19 +1,14 @@
-# Notes -> [zh-CN](/README.zh.cn.md)
+# 学习笔记
 
-A record of problems encountered during programming and their solutions
+这个仓库是我在学习编程过程所记的笔记，有些知识是我自己从官方的资料库（比如官网、官方Wiki等）扒下来的，有些则是摘抄自网上，由于非常零碎，而且经过了多重转载，因此原作者很难考证了，目前比较清楚的就是我有部分Qt技巧是从刘典武大神的仓库、博客以及知乎文章那里直接复制过来的。如果您发现我有内容是直接来源于您的文章或其他资料，但我没有明确注明出处，还请告知，我会在核实后马上补上。
 
-## Contents
+如果您发现我的笔记有疏漏甚至谬误，欢迎提交issue告知，也可以给我的QQ邮箱发邮件告知
 
-- ANGLE -> [zh-CN](/angle.zh.cn.md), en-US
-- Clang -> [zh-CN](/clang.zh.cn.md), en-US
-- CMake -> [zh-CN](/cmake.zh.cn.md), en-US
-- Console -> [zh-CN](/console.zh.cn.md), en-US
-- C/C++ -> [zh-CN](/cpp.zh.cn.md), en-US
-- Git -> [zh-CN](/git.zh.cn.md), en-US
-- Manjaro -> [zh-CN](/manjaro.zh.cn.md), en-US
-- MinGW -> [zh-CN](/mingw.zh.cn.md), en-US
-- mpv -> [zh-CN](/mpv.zh.cn.md), en-US
-- MSVC -> [zh-CN](/msvc.zh.cn.md), en-US
-- Qt -> [zh-CN](/qt.zh.cn.md), en-US
-- Ubuntu -> [zh-CN](/ubuntu.zh.cn.md), en-US
-- Win32 -> [zh-CN](/win32.zh.cn.md), en-US
+## 说明
+
+- Git笔记主要是翻译的官网提供的英文教程，由于英文水平有限，所以无法保证专业性和准确性，也无法保证绝对正确。
+- mpv的笔记可能有较多疏漏，而且无法保证正确性。
+- 有关Linux系统的一些技巧可能是过时的甚至不正确的。
+- Qt笔记有一部分是直接复制的刘典武大神的文章，也有一部分是直接复制自网上的博客（不过效果我亲自都验证过，至少保证代码或技巧是有效且无害的），当然我原创的部分还是占多数。
+- Win32笔记中有不少代码是摘自Qt Installer Framework，也有不少是直接摘自MSDN自带的示例。
+- 有不少代码或技巧是摘自GitHub上的开源项目。
