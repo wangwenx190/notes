@@ -50,6 +50,7 @@
     ```
 
     在输出占位符之前调用一次此函数即可。此为一次性函数，在程序运行后调用一次即可，不过程序重启后还需再次调用。
+  - MSDN参考：<https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences>
 
 - 控制台如何覆盖同一行进行输出？实现方法是将光标移到行首再重新输出，这样新输出的内容就会覆盖掉原来行的内容。
   1. 光标移到行首：输出`\r`
