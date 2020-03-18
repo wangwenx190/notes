@@ -1897,3 +1897,4 @@
   ```
 
   dll的导入库（.lib文件）也可以用这个方法查看
+- 判断系统版本：引入`VersionHelpers.h`（来自Windows SDK）后你会发现惊喜
