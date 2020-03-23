@@ -1778,8 +1778,8 @@
 
     ```cpp
     QString QtPlatformUtils::wallpaper() {
-        wchar_t *path = new wchar_t[MAX_PATH];
-        if (!SystemParametersInfoW(SPI_GETDESKWALLPAPER, 0, path, 0)) {
+        wchar_t *path = nullptr;
+        if (!SystemParametersInfoW(SPI_GETDESKWALLPAPER, 0, (LPWSTR)&path, 0)) {
             qDebug() << "Failed to query wallpaper path.";
             return QString();
         }
@@ -1788,7 +1788,7 @@
             return QString();
         }
         const QString result = QString::fromWCharArray(path);
-        delete[] path;
+        LocalFree(path);
         return result;
     }
     ```
