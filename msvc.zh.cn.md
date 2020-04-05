@@ -18,3 +18,18 @@
   | 7.0 | 1300 | - |
   | 6.0 | 1200 | - |
   | 5.0 | 1100 | - |
+
+- 根据宏定义判断编译时系统版本
+
+  | 系统版本 | `WINVER`及`_WIN32_WINNT`的值 | 相关宏定义 |
+  | ------ | ---------------------------- | -- |
+  | Windows 10 | 0x0A00 | `_WIN32_WINNT_WIN10`/`_WIN32_WINNT_WINTHRESHOLD`/`NTDDI_WIN10`/`NTDDI_WIN10_TH2`/`NTDDI_WIN10_RS1`/`NTDDI_WIN10_RS2`/`NTDDI_WIN10_RS3`/`NTDDI_WIN10_RS4`/`NTDDI_WIN10_RS5`/`NTDDI_WIN10_19H1` |
+  | Windows 8.1 | 0x0603 | `_WIN32_WINNT_WINBLUE`/`NTDDI_WINBLUE` |
+  | Windows 8 | 0x0602 | `_WIN32_WINNT_WIN8`/`NTDDI_WIN8` |
+  | Windows 7 | 0x0601 | `_WIN32_WINNT_WIN7`/`NTDDI_WIN7` |
+  | Windows Vista/Windows Server 2008 | 0x0600 | `_WIN32_WINNT_VISTA`/`_WIN32_WINNT_WIN6`/`_WIN32_WINNT_WS08`/`_WIN32_WINNT_LONGHORN` |
+  | Windows Server 2003 | 0x0502 | `_WIN32_WINNT_WS03` |
+  | Windows XP | 0x0501 | `_WIN32_WINNT_WINXP` |
+  | Windows 2000 | 0x0500 | `_WIN32_WINNT_WIN2K` |
+
+  注：`WINVER`及`_WIN32_WINNT`这两个宏总是存在并且值相等
