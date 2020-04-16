@@ -72,8 +72,8 @@
     <application xmlns="urn:schemas-microsoft-com:asm.v3">
       <windowsSettings>
         <!-- 声明我们的程序支持高DPI缩放。如果不进行此项设置，系统会自动强行拉伸程序的界面，导致界面非常模糊 -->
-        <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
-        <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+        <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">True/PM</dpiAware>
+        <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
         <!-- 下面这一行会导致程序界面变模糊，待调查 -->
         <!-- <gdiScaling xmlns="http://schemas.microsoft.com/SMI/2017/WindowsSettings">true</gdiScaling> -->
         <!-- 声明我们的程序支持长路径 -->
