@@ -1651,65 +1651,58 @@
       ```
 
   参考资料：<https://docs.microsoft.com/en-us/windows/win32/shell/default-programs>，<https://docs.microsoft.com/en-us/windows/win32/shell/fa-best-practices>，<https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/winui/shell/appshellintegration/AutomaticJumpList/FileRegistrations.h>
-- 如何将图标文件存放到一个单独的DLL中，供关联文件时使用
-  - 头文件`iconlib.h`
+- 如何将图标文件或本地化的字符串存放到一个单独的DLL中，供外部程序使用
+  - 头文件`resources.h`
 
     ```cpp
-    // 下面这个顺序非常重要，系统获取图标就是按照这个顺序来的
-    #define IDI_NONE        -1
+    // 图标资源
+    // 序号是大于或等于0的整数，不允许重复，最好从小到大顺序书写，最好也不要间隔。
+    // 这里所写的序号，就是以后你调用时所用的序号：“res.dll,5”
     #define IDI_OTHER_ICON   0
     #define IDI_AAC_ICON     1
     #define IDI_AC3_ICON     2
     #define IDI_AIFF_ICON    3
     #define IDI_ALAC_ICON    4
     #define IDI_AMR_ICON     5
+    // 字符串资源
+    // 注意不要与前面的序号重复
+    #define IDS_WARNING_STRING     100
+    #define IDS_ERROR_STRING       101
+    #define IDS_QUESTION_STRING    102
+    #define IDS_INFORMATION_STRING 103
+    #define IDS_TEST_STRING        104
+    #define IDS_ABOUT_STRING       105
     ```
 
-  - 源文件`iconlib.cpp`
-
-    ```cpp
-    #include "iconlib.h"
-    #include <windows.h>
-    // main函数虽然没有用但仍不可缺少，否则此DLL文件就不能实现我们想要的功能了
-    int main() {
-        return 0;
-    }
-    // 下面这个函数是为了方便我们自己的程序使用而编写的，系统本身是用不到这个函数的
-    // 如果你用不到类似的功能，可以去掉这个函数
-    extern "C" __declspec(dllexport) int GetIconIndex(LPCWSTR ext) {
-        int iconIndex = IDI_NONE;
-        if (wcscmp(ext, L".3g2") == 0) {
-            iconIndex = IDI_MOV_ICON;
-        } else if (wcscmp(ext, L".3ga") == 0) {
-            iconIndex = IDI_MP4_ICON;
-        } else if (wcscmp(ext, L".3gp") == 0) {
-            iconIndex = IDI_MP4_ICON;
-        } else if (wcscmp(ext, L".3gp2") == 0) {
-            iconIndex = IDI_MOV_ICON;
-        } else if (wcscmp(ext, L".3gpp") == 0) {
-            iconIndex = IDI_MP4_ICON;
-        } else if (wcscmp(ext, L".aac") == 0) {
-            iconIndex = IDI_AAC_ICON;
-        }
-        return iconIndex;
-    }
-    ```
-
-  - 资源文件`iconlib.rc`
+  - 资源文件`resources.rc`
 
     ```text
-    #include "iconlib.h"
+    #include "resources.h"
     #include <windows.h>
     // 顺序一定要与头文件里的相同
-    // 注意资源的序号最小是0，不能写负数
-    IDI_OTHER_ICON   ICON   "icons\\other.ico"
-    IDI_AAC_ICON     ICON   "icons\\aac.ico"
-    IDI_AC3_ICON     ICON   "icons\\ac3.ico"
-    IDI_AIFF_ICON    ICON   "icons\\aiff.ico"
-    IDI_ALAC_ICON    ICON   "icons\\alac.ico"
-    IDI_AMR_ICON     ICON   "icons\\amr.ico"
+    // 图标资源（相对路径和绝对路径都可以）
+    IDI_OTHER_ICON ICON "icons\\other.ico"
+    IDI_AAC_ICON   ICON "icons\\aac.ico"
+    IDI_AC3_ICON   ICON "icons\\ac3.ico"
+    IDI_AIFF_ICON  ICON "icons\\aiff.ico"
+    IDI_ALAC_ICON  ICON "icons\\alac.ico"
+    IDI_AMR_ICON   ICON "icons\\amr.ico"
+    // 字符串资源
+    STRINGTABLE
+    BEGIN
+        IDS_WARNING_STRING     "警告"
+        IDS_ERROR_STRING       "错误"
+        IDS_QUESTION_STRING    "问题"
+        IDS_INFORMATION_STRING "信息"
+        IDS_TEST_STRING        "测试"
+        IDS_ABOUT_STRING       "关于"
+    END
     // 需要版本信息的话可以在下面接着写，不会影响上面的东西
     ```
+
+    存放字符串时，由于存在字符编码问题，最好不同语言使用不同的DLL存放，每个DLL使用其对应的本地代码页，比如简体中文（936）。
+
+  - 链接器添加`/NOENTRY`参数（属性->链接器->高级->无入口点->是），编译DLL
 
 - 打开文件管理器（explorer.exe），并在其中定位某个文件或文件夹
 
