@@ -1678,8 +1678,9 @@
 
     ```text
     #include "resources.h"
+    // 这个头文件是必需的
     #include <windows.h>
-    // 顺序一定要与头文件里的相同
+    // 需要版本信息的话可以写在这里，不会影响下面的东西
     // 图标资源（相对路径和绝对路径都可以）
     IDI_OTHER_ICON ICON "icons\\other.ico"
     IDI_AAC_ICON   ICON "icons\\aac.ico"
@@ -1688,6 +1689,9 @@
     IDI_ALAC_ICON  ICON "icons\\alac.ico"
     IDI_AMR_ICON   ICON "icons\\amr.ico"
     // 字符串资源
+    // 中文（简体，中国）
+    LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+    #pragma code_page(936)
     STRINGTABLE
     BEGIN
         IDS_WARNING_STRING     "警告"
@@ -1697,12 +1701,37 @@
         IDS_TEST_STRING        "测试"
         IDS_ABOUT_STRING       "关于"
     END
-    // 需要版本信息的话可以在下面接着写，不会影响上面的东西
+    // 中文（繁体，台湾）
+    LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+    #pragma code_page(950)
+    STRINGTABLE
+    BEGIN
+        IDS_WARNING_STRING     "警告"
+        IDS_ERROR_STRING       "错误"
+        IDS_QUESTION_STRING    "问题"
+        IDS_INFORMATION_STRING "信息"
+        IDS_TEST_STRING        "测试"
+        IDS_ABOUT_STRING       "关于"
+    END
+    // 英文（美国）
+    LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+    #pragma code_page(1252)
+    STRINGTABLE
+    BEGIN
+        IDS_WARNING_STRING     "warning"
+        IDS_ERROR_STRING       "error"
+        IDS_QUESTION_STRING    "question"
+        IDS_INFORMATION_STRING "information"
+        IDS_TEST_STRING        "test"
+        IDS_ABOUT_STRING       "about"
+    END
     ```
 
-    存放字符串时，由于存在字符编码问题，最好不同语言使用不同的DLL存放，每个DLL使用其对应的本地代码页，比如简体中文（936）。
+    存放字符串时，可以使用`L""`的形式存放Unicode字符串，例如：`IDS_RUSSIANSTRING L"\x0421\x043f\x0440\x0430\x0432\x043a\x0430"`。
 
   - 链接器添加`/NOENTRY`参数（属性->链接器->高级->无入口点->是），编译DLL
+
+  参考资料：<https://docs.microsoft.com/en-us/windows/win32/menurc/stringtable-resource>
 
 - 打开文件管理器（explorer.exe），并在其中定位某个文件或文件夹
 
