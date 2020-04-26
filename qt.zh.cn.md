@@ -570,8 +570,17 @@
 - Qt5提供了`QScroller`这个类直接将控件滚动：
 
   ```cpp
+  //禁用横向滚动条
+  ui->listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  //禁用纵向滚动条
+  ui->listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  //设置横向按照像素值为单位滚动
   ui->listWidget->setHorizontalScrollMode(QListWidget::ScrollPerPixel);
+  //设置纵向按照像素值为单位滚动
+  ui->listWidget->setVerticalScrollMode(QListWidget::ScrollPerPixel);
+  //设置滚动对象以及滚动方式为鼠标左键拉动滚动
   QScroller::grabGesture(ui->listWidget, QScroller::LeftMouseButtonGesture);
+  //还有个QScrollerProperties可以设置滚动的一些参数
   ```
 
 - 如何解决`Fault tolerant heap shim applied to current process. This is usually due to previous crashes.`这样的错误：
