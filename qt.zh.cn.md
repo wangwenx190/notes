@@ -15,7 +15,7 @@
   注：JOM仅支持原生Windows环境，任何Unix或类Unix环境（例如MinGW）均不支持。
 - Qt官方下载地址：
   - Qt 官方下载站：<http://download.qt.io/>
-  - Qt 国内镜像站（有好多个，这只是其中一个）：<http://mirrors.ustc.edu.cn/qtproject/>
+  - Qt 国内镜像站（有好多个，这只是其中两个）：<https://mirrors.tuna.tsinghua.edu.cn/qt/>、<http://mirrors.ustc.edu.cn/qtproject/>
 - 在 Windows 平台上编译 Qt 时，编译`ANGLE`时需要一个叫`WindowsSdkVerBinPath`的环境变量，其路径指向`fxc.exe`(Microsoft Direct3D Shader Compiler)所在的文件夹，常见路径为`C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0`
 
   注：`10.0.17763.0`为你所安装的Win SDK的版本号。
@@ -31,7 +31,7 @@
 
   | 编译器选项 | MSVC参数 | Clang参数 | GCC参数 | ICC参数 | qmake |
   | --------- | -------- | -------- | ------- | ------- | ----- |
-  | 为速度优化 | `/O2`    | `-Ofast`（clang-cl：`/clang:-Ofast`） | `-Ofast` | `-Ofast`（icl：`/O3`） | `CONFIG += optimize_full` |
+  | 为速度优化 | `/O2`    | `-O3`（clang-cl：`/clang:-O3`） | `-O3` | `-O3`（icl：`/O3`） | `CONFIG += optimize_full` |
   | 为大小优化 | `/O1`    | `-Oz`（clang-cl：`/clang:-Oz`） | `-Os` | `-Os`（icl：与MSVC相同） | `CONFIG += optimize_size` |
   | 启用链接时间代码生成 | `/GL`（编译器），`/LTCG`（连接器） | `-flto=thin`（clang-cl：`-flto=thin`；只有lld-link不需要额外的参数，其他任何连接器都要传这个参数） | `-flto -fno-fat-objects`（连接器还要多一个`-fuse-linker-plugin`参数） | `-ipo -fno-fat-objects`（icl：`/Qipo`） | `CONFIG += ltcg` |
   | 静态连接运行时 | `/MT`/`/MTd` | `-static`（clang-cl：与MSVC相同） | `-static` | `-static`（icl：与MSVC相同） | `CONFIG += static_runtime` |
@@ -106,7 +106,7 @@
   注意：*Schannel*与*OpenSSL*这两个特性是互斥的，这两个中最多只能启用一个。
 - QMake区分调试版本和发布版本：`CONFIG(debug, debug|release)`（debug时返回true），`CONFIG(release, debug|release)`（release时返回true），`contains(CONFIG, debug)`（debug时返回true），`contains(CONFIG, release)`（release时返回true），或者更简单的`debug:`和`release:`。在代码中，可以通过`#ifdef _DEBUG`来判断，但请注意，发布版本并没有`_RELEASE`这样的宏（某些构建系统和编译器可能会自动给发布版本添加`NDEBUG`的宏定义，但不具有通用性）。
 - QMake区分 Qt 是静态链接还是动态链接的：`CONFIG(static, static|shared)`，`CONFIG(shared, static|shared)`，`contains(CONFIG, static)`，`contains(CONFIG, shared)`，`static:`，`shared:`。在代码中，可以通过`#ifdef QT_STATIC`和`#ifdef QT_SHARED`来判断。
-- QMake区分32位还是64位：`contains(QMAKE_TARGET.arch, x86_64)`，`contains(QMAKE_HOST.arch, x86_64)`，`contains(QT_ARCH, x86_64)`，以上三条语句在编译64位程序时返回true。其中`x86_64`替换为其他架构，例如`i386`，也是可行的，只不过判断的就不一定是64位了。在代码中，Windows 平台上可以通过`#ifdef WIN64`或`#ifdef _WIN64`来判断是不是64位，不要用`WIN32`来判断，因为`WIN32`这个会在两个架构上都有定义。
+- QMake区分32位还是64位：`contains(QMAKE_TARGET.arch, x86_64)`，`contains(QMAKE_HOST.arch, x86_64)`，`contains(QT_ARCH, x86_64)`，以上三条语句在编译64位程序时返回true。其中`x86_64`替换为其他架构，例如`i386`，也是可行的，只不过判断的就不一定是64位了。在代码中，可以通过`Q_PROCESSOR_X86_64`和`Q_PROCESSOR_X86_32`等Qt提供的宏来判断。Windows 平台上还可以通过`#ifdef WIN64`或`#ifdef _WIN64`来判断是不是64位，不要用`WIN32`来判断，因为`WIN32`这个会在两个架构上都有定义。
 - QMake区分应用程序和库：`contains(TEMPLATE, app)`，`contains(TEMPLATE, lib)`
 - Windows 平台上添加图标及属性信息：
   - QMake：
@@ -129,6 +129,7 @@
      QMAKE_TARGET_COPYRIGHT = "My copyright info"
      # 设置公司
      QMAKE_TARGET_COMPANY = "My company name"
+     # 至于备注、原始文件名和商标等条目的设置是不支持的，QMake仅支持以上设置，其他剩余条目的设置只能通过rc文件实现
      ```
 
      如果你有一个已经编写好的资源脚本（.rc文件），可以用以下语句使用：
@@ -781,53 +782,7 @@
   const quint32 value = QRandomGenerator::global()->bounded(quint32 lowest, quint32 highest);
   ```
 
-- 无边框窗口+自定义标题栏+拖动窗体+8向拉伸+窗口阴影
-  - 窗口无边框
-
-    ```text
-    // QWidget:
-    setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
-    // QWindow:
-    setFlags(Qt::Window | Qt::FramelessWindowHint);
-    // QML:
-    flags: Qt.Window | Qt.FramelessWindowHint
-    ```
-
-  - 自定义标题栏
-
-    把窗口边框去掉的同时也会把窗口自带的原生标题栏去掉，我们再绘制一个自己的标题栏即可。原本标题栏的功能可以通过拦截鼠标事件实现。*QWidget*和*Qt Quick*都是这个思路。
-  - 8方向自由拉伸+窗体拖动
-
-    Qt 自 **5.15** 引入了跨平台（Windows+X11+Wayland+macOS）接口`startSystemMove`和`startSystemResize`，使用这两个接口可以很方便的实现以上功能，具体用法请自行查看文档。
-  - 窗口阴影
-
-    ```cpp
-    // Qt Windows Extras 模块
-    #include <QtWin>
-
-    Widget::Widget(QWidget *parent) : QWidget(parent) {
-        // 去掉窗口自带的原生边框（与此同时标题栏和阴影也会被一并去掉）
-        // 注意不要漏掉“Qt::Window”这个flag，否则这个Widget不会变成窗口，会出现很多怪问题
-        setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
-        // 判断 DWM 特性是否已经启用（根据MSDN，自Win8开始默认总是启用，即此函数在Win8及更新版本的系统上总是返回true）
-        // 但仍有些特殊情况下会返回false，所以以防万一还是判断下比较好
-        if (QtWin::isCompositionEnabled()) {
-            // 开启非客户区绘制（此句是带回窗口阴影的关键，不可缺少）
-            // 下面这个API是我给Qt加的，Qt 6.0才会有。Qt5请自行使用DWM API实现，就两行，也不复杂。
-            QtWin::setWindowNonClientAreaRenderingPolicy(this, QtWin::NonClientRenderingPolicyEnabled);
-            // 当第2至第5个参数中至少有一个为负数时，意为对无边框控件绘制阴影（此句也是绘制窗口阴影的关键，也不能缺少）
-            // 如果又想还原系统的标准窗口边框，记得一定要调用QtWin::resetExtendedFrame(this)，否则窗口的边框线不会出现（不仔细看注意不到）
-            QtWin::extendFrameIntoClientArea(this, -1, -1, -1, -1);
-            // 开启毛玻璃效果（此句与窗口阴影无关，仅是为了使窗口更加美观，因此一同启用；在Win8.1及更新版本的系统上无效，因为这些系统的毛玻璃效果已经被去掉）
-            QtWin::enableBlurBehindWindow(this);
-        }
-    }
-    ```
-
-    注意事项：
-    - 上面的代码可以给无边框窗口带回窗口阴影（不是自绘的，是系统提供的标准边框阴影），但由于使用的是DWM函数（Qt Windows Extras模块），因此仅支持 Windows 平台。其他平台暂时不熟悉。
-    - 如果对`QWindow`执行这些代码（例如Qt Quick程序），会导致`QWindow`整个变透明，不过没事，只要在上面放置不透明的元素就可以了，元素不会变透明。
-
+- 无边框窗口+自定义标题栏+拖动窗体+8向拉伸+窗口阴影：<https://github.com/wangwenx190/framelesshelper>
 - Qt Quick获取正在显示QML文档的系统窗口
 
   ```cpp
@@ -895,7 +850,7 @@
 
     - Linux：D-Bus。使用`Qt D-Bus`模块实现。用法较简单，请自行查阅Qt手册。
     - Linux：Session Management。暂不了解。
-- 下载文件：由于代码较多，我放到了一个单独的仓库中 https://github.com/wangwenx190/simpledownloader
+- 下载文件：由于代码较多，我放到了一个单独的仓库中 <https://github.com/wangwenx190/simpledownloader>
 - 计算文件哈希值：`QCryptographicHash`
 
   ```cpp
@@ -2194,6 +2149,8 @@
   使用`qmlplugindump`工具生成`plugins.qmltypes`文件，将其放在与库文件同级的目录中。
 
   同时将这个文件写入`qmldir`文件中：`typeinfo plugins.qmltypes`。
+
+  注：Qt 5.15 引入了一个新的生成该文件的方式：在.pro文件中写入`CONFIG += qmltypes`即可，但仅支持QMake，CMake的支持要等到Qt 6才有。
 - 开发Qt Quick插件时，如何将qml文件编译到库文件中，而不是直接暴露在外部
   - 将qml文件添加到qrc文件中，使其编译到最终的库文件中
   - 在C++中注册
@@ -2263,3 +2220,19 @@
       }
   }
   ```
+
+- 如果要保存某个`QObject`或其派生类的指针，不涉及指针所指向的对象的所有权，建议使用`QPointer`，因为它会在对象销毁后自动重置为空指针。其用法与正常指针一样，因此基本可以无缝迁移。
+
+  ```cpp
+  // 声明。就当成一个普通的指针。
+  QPointer<QWidget> mywidget = nullptr;
+  // 赋值。直接把指针传过去就行。
+  mywidget = ui->pushButton_ok;
+  // 使用。对象被销毁后QPointer会自动重置为空指针
+  if (mywidget) {
+      mywidget->show();
+  }
+  // QPointer只会保存指针，不会转移其所有权，因此就算QPointer本身被销毁了，它所保存的指针也不会受到任何影响。即QPointer本身不会对其所保存的指针进行任何操作，与智能指针是完全不同的东西。
+  ```
+
+  注：`QPointer`只支持`QObject`及其派生类。
