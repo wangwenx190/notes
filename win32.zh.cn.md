@@ -78,6 +78,8 @@
         <!-- <gdiScaling xmlns="http://schemas.microsoft.com/SMI/2017/WindowsSettings">true</gdiScaling> -->
         <!-- 声明我们的程序支持长路径 -->
         <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
+        <!-- 将进程的代码页设置为 UTF-8 -->
+        <activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>
       </windowsSettings>
     </application>
   </assembly>
