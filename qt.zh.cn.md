@@ -1334,7 +1334,20 @@
 - 当想要注释大段的内容时，建议用 `#if 0` 和 `#endif` 将代码块包起来，而不是将该段代码选中然后全部 `//` ，想要取消注释时只要把`0`改成`1`即可，效率大大提升。
 - 在使用`QFile`的过程中，不建议频繁的打开文件写入然后再关闭文件，比如间隔5ms输出日志，IO性能瓶颈很大，这种情况建议先打开文件不要关闭，等待合适的时机比如析构函数中或者日期变了需要重新变换日志文件的时候关闭文件。不然短时间内大量的打开关闭文件会很卡，文件越大越卡。
 - 有时候在界面上加了弹簧，需要动态改变弹簧对应的拉伸策略，对应方法为`changeSize`，很多人会选择使用`set`开头去找，找不到的。
-- Qt中继承`QWidget`之后，样式表不起作用：在构造函数中调用`setAttribute(Qt::WA_StyledBackground);`即可解决
+- Qt中继承`QWidget`之后，样式表不起作用：三个方法
+  1. 设置属性`setAttribute(Qt::WA_StyledBackground, true);`
+  2. 改成继承`QFrame`，因为`QFrame`自带`paintEvent`函数已做了实现，在使用样式表时会进行解析和绘制。
+  3. 重新实现`QWidget`的`paintEvent`函数时，使用`QStylePainter`绘制。
+
+     ```cpp
+     void myclass::paintEvent(QPaintEvent *) {
+         QStyleOption o;
+         o.initFrom(this);
+         QPainter p(this);
+         style()->drawPrimitive(QStyle::PE_Widget, &o, &p, this);
+     }
+     ```
+
 - Qt默认不支持大资源文件，需要的话要手动开启：
   - QMake：`CONFIG += resources_big`
   - CMake：`qt5_add_big_resources(<VAR> file1.qrc [file2.qrc ...] [OPTIONS ...])`
@@ -2236,3 +2249,36 @@
   ```
 
   注：`QPointer`只支持`QObject`及其派生类。
+- 默认情况下控件获取焦点以后会有虚边框，如果看着觉得碍眼不舒服可以去掉，设置样式即可：`setStyleSheet("*{outline:0px;}");`
+- Qt表格控件一些常用的设置封装，`QTableWidget`继承自`QTableView`，所以下面这个函数支持传入`QTableWidget`。
+
+  ```cpp
+  void QUIHelper::initTableView(QTableView *tableView, int rowHeight, bool headVisible, bool edit) {
+      //奇数偶数行颜色交替
+      tableView->setAlternatingRowColors(false);
+      //垂直表头是否可见
+      tableView->verticalHeader()->setVisible(headVisible);
+      //选中一行表头是否加粗
+      tableView->horizontalHeader()->setHighlightSections(false);
+      //最后一行拉伸填充
+      tableView->horizontalHeader()->setStretchLastSection(true);
+      //行标题最小宽度尺寸
+      tableView->horizontalHeader()->setMinimumSectionSize(0);
+      //行标题最大高度
+      tableView->horizontalHeader()->setMaximumHeight(rowHeight);
+      //默认行高
+      tableView->verticalHeader()->setDefaultSectionSize(rowHeight);
+      //选中时一行整体选中
+      tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+      //只允许选择单个
+      tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+      //表头不可单击
+      tableView->horizontalHeader()->setSectionsClickable(false);
+      //鼠标按下即进入编辑模式
+      if (edit) {
+          tableView->setEditTriggers(QAbstractItemView::CurrentChanged | QAbstractItemView::DoubleClicked);
+      } else {
+          tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+      }
+  }
+  ```
