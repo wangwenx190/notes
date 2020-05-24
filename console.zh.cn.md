@@ -85,3 +85,35 @@
   - 以上以`Get`开头的函数几乎都有其对应的`Set`开头的函数，具体作用我想不用多说了
   - 代码页请参考：<https://docs.microsoft.com/en-us/windows/win32/intl/code-page-identifiers>
   - MSDN参考：<https://docs.microsoft.com/en-us/windows/console/console-functions>
+- GUI程序创建一个控制台窗口，并将标准输入输出流重定向到这个控制台窗口
+
+  ```cpp
+  BOOL CreateConsole() {
+      // 成功调用AllocConsole()后，一定要在程序结束运行前调用FreeConsole()。这两者是成对使用的。
+      if (!AllocConsole()) {
+          // 创建失败，在此处处理错误。使用GetLastError()获取错误码。
+          return FALSE;
+      }
+      // std::cout, std::clog, std::cerr, std::cin
+      freopen("CONOUT$", "w", stdout);
+      freopen("CONOUT$", "w", stderr);
+      freopen("CONIN$", "r", stdin);
+      std::cout.clear();
+      std::clog.clear();
+      std::cerr.clear();
+      std::cin.clear();
+      // std::wcout, std::wclog, std::wcerr, std::wcin
+      const HANDLE hConOut = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+      const HANDLE hConIn = CreateFileW(L"CONIN$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+      SetStdHandle(STD_OUTPUT_HANDLE, hConOut);
+      SetStdHandle(STD_ERROR_HANDLE, hConOut);
+      SetStdHandle(STD_INPUT_HANDLE, hConIn);
+      std::wcout.clear();
+      std::wclog.clear();
+      std::wcerr.clear();
+      std::wcin.clear();
+      return TRUE;
+  }
+  ```
+
+  注：仅Windows需要此种设置，UNIX平台如果在控制台里启动程序，会自动重定向到该控制台，不需要专门创建一个控制台窗口。
