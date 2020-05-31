@@ -2282,3 +2282,67 @@
       }
   }
   ```
+
+- Qt日志输出技巧：使用`QLoggingCategory`
+
+  使用`QLoggingCategory`可以做到输出日志时连同日志分类一起输出（如果日志格式没有被更改），还能使用一定的规则对日志消息进行过滤。如果不使用这个类，单纯使用`qDebug`等函数进行输出，最大的缺点就是无法对日志消息进行过滤，要输出就全都输出，要屏蔽就全都屏蔽，不能针对某一类消息进行过滤。
+
+  - 声明
+
+    ```cpp
+    // 在头文件中
+    #include <QLoggingCategory>
+    // 使用Q_DECLARE_LOGGING_CATEGORY这个宏来声明一个日志分类
+    // 这个宏只能在头文件里使用，不要在cpp文件里用
+    // 这个宏的参数是你日志分类的名称，每个分类都要这样声明一次，而且不要重复声明
+    // 这个分类名称是内部使用的，不会对外展示，所以叫什么名字都可以，但不要以qt开头，而且不要与C++和Qt的关键字重名，最好是纯字母，连数字和下划线都不要有
+    Q_DECLARE_LOGGING_CATEGORY(lcMyLoggingCategory)
+    // -----------------------------------------------
+    // 在源文件中
+    // 使用Q_LOGGING_CATEGORY这个宏来完善这个日志分类的声明
+    // 这个宏最好不要在头文件里用，没有特殊理由就在cpp文件里用
+    // 这个宏的第一个参数就是你在头文件里声明的分类名，这里的名字一定要和头文件里的那个完全相同，保险起见可以直接复制粘贴过来
+    // 这个宏的第二个参数是对应日志分类的具体的名字，用于向用户展示，过滤消息时用的也是这个名字，所以这个名字一定要有意义，不能随便起
+    Q_LOGGING_CATEGORY(lcMyLoggingCategory, "myapp.myloggingcategory")
+    ```
+
+  - 使用
+
+    ```cpp
+    // 用起来和以前唯一的区别就是多了个“C”和分类名：qInfo->qCInfo(分类名), qDebug->qCDebug(分类名)等等
+    qCInfo(lcMyLoggingCategory) << "my message.";
+    qCDebug(lcMyLoggingCategory) << "my message.";
+    qCWarning(lcMyLoggingCategory) << "my message.";
+    qCCritical(lcMyLoggingCategory) << "my message.";
+    ```
+
+  - 过滤
+
+    有三种方式对日志消息进行过滤：C++函数、INI配置文件和环境变量。通过调用静态函数`QLoggingCategory::setFilterRules()`可以设置过滤规则；INI配置文件位于`[QLibraryInfo::DataPath]/qtlogging.ini`和`[QStandardPaths::GenericConfigLocation]/QtProject/qtlogging.ini`（后者优先级高于前者），文件的内容就是日志的过滤规则，和你使用函数时传递的参数一样，Qt程序会在启动时自动加载这个文件，你在这个文件里设置的规则会自动生效，如果你将规则写入到别的地方了，就只能手动加载了；环境变量的名字是`QT_LOGGING_RULES`，内容也是过滤规则。这三个方式的优先级是环境变量>C++ API>INI文件。如果你想知道你的程序是从哪里加载的规则，设置`QT_LOGGING_DEBUG`这个环境变量就能看到了。
+
+    我这里只是简略的提了下，还有很多详细的内容没写，具体用法请自行查阅Qt手册。
+- 如何使`qDebug`等函数支持我自己的数据类型？
+
+  ```cpp
+  #ifndef QT_NO_DEBUG_STREAM
+  QDebug operator<<(QDebug d, const MdkObject::Chapters &chapters) {
+      QDebugStateSaver saver(d);
+      d.nospace();
+      d.noquote();
+      QString chaptersStr = QString();
+      for (auto &&chapter : qAsConst(chapters)) {
+          chaptersStr.append(
+              QString::fromUtf8("(title: %1, beginTime: %2, endTime: %3)")
+                  .arg(chapter.title, QString::number(chapter.beginTime),
+                       QString::number(chapter.endTime)));
+      }
+      d << "QVector(" << chaptersStr << ')';
+      return d;
+  }
+  #endif
+  ```
+
+  注意事项：
+  - Qt支持编译时去掉日志功能以减小二进制文件的大小和提高程序的性能，所以要先用`QT_NO_DEBUG_STREAM`这个宏判断一下，否则这个代码在这种配置的Qt上会无法编译
+  - `QDebugStateSaver`是用于在其对象销毁时还原`QDebug`的设置，如果你没有修改`QDebug`的格式，是不需要这个的，但如果不放心的话可以无脑带上，反正没坏处
+  - 重载了`QDebug`的`<<`运算符就足够了，`qInfo`、`qWarning`和`qCritical`也都能用
