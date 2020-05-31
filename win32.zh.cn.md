@@ -1506,7 +1506,7 @@
                                              const QString &applicationDisplayName,
                                              const QString &applicationDescription,
                                              const QString &companyName,
-                                             FileAssocIdList assocIdList) {
+                                             const FileAssocIdList &assocIdList) {
           if (applicationPath.isEmpty() || applicationDescription.isEmpty() ||
               companyName.isEmpty()) {
               qDebug() << "Application path, application description and company "
@@ -1564,7 +1564,7 @@
                       .arg(ProgID);
               QSettings settings1(regKey1, QSettings::NativeFormat);
               if (!assocId.description.isEmpty()) {
-                  settings1.setValue(QString::fromUtf8(""), assocId.description);
+                  settings1.setValue(QString::fromUtf8("Default"), assocId.description);
               }
               if (!assocId.friendlyTypeName.isEmpty()) {
                   settings1.setValue(QString::fromUtf8("FriendlyTypeName"),
@@ -1574,7 +1574,7 @@
                   QSettings settings1_clsid(
                       QString::fromUtf8(R"(%1\CLSID)").arg(regKey1),
                       QSettings::NativeFormat);
-                  settings1_clsid.setValue(QString::fromUtf8(""),
+                  settings1_clsid.setValue(QString::fromUtf8("Default"),
                                            assocId.CLSID.toUpper());
               }
               if (!assocId.defaultIcon.isEmpty()) {
@@ -1589,7 +1589,7 @@
                   const QString cmd = assocId.command.isEmpty()
                       ? (exePath + QString::fromUtf8(R"( "%1")"))
                       : QDir::toNativeSeparators(assocId.command);
-                  settings1_command.setValue(QString::fromUtf8(""), cmd);
+                  settings1_command.setValue(QString::fromUtf8("Default"), cmd);
               }
               const QString regKey2 =
                   QString::fromUtf8(R"(HKEY_CLASSES_ROOT\%1\OpenWithProgIDs)")
