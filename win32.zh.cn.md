@@ -1595,7 +1595,7 @@
                   QString::fromUtf8(R"(HKEY_CLASSES_ROOT\%1\OpenWithProgIDs)")
                       .arg(ext);
               QSettings settings2(regKey2, QSettings::NativeFormat);
-              settings2.setValue(ProgID, QVariant());
+              settings2.setValue(ProgID, QString::fromUtf8(""));
               const QString regKey3 =
                   QString::fromUtf8(
                       R"(HKEY_LOCAL_MACHINE\SOFTWARE\%1\%2\Capabilities)")
