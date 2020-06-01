@@ -1455,7 +1455,7 @@
       SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSH, nullptr, nullptr);
       ```
 
-  5. 在Win8及更新的系统上打开系统设置窗口，提示用户设置默认程序
+  5. 在Win7及更新的系统上打开系统设置窗口，提示用户设置默认程序
 
       ```cpp
       // 头文件：shobjidl.h
@@ -1631,7 +1631,10 @@
           // Tell the system to flush itself immediately.
           SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSH, nullptr,
                          nullptr);
-          if (isWin8OrNewer()) {
+          if (isWin10OrNewer()) {
+              ShellExecuteW(nullptr, nullptr, L"ms-settings:defaultapps", nullptr,
+                      nullptr, SW_SHOW);
+          } else if (isWin7OrNewer()) {
               // Let the user choose the default application.
               IApplicationAssociationRegistrationUI *pAARUI = nullptr;
               const HRESULT hr =
