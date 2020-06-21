@@ -35,6 +35,8 @@
   <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
     <!-- 基础信息设置，根据项目的实际信息填写，非必需。name不是应用程序名，而是Java风格的包名。 -->
     <assemblyIdentity type="win32" name="com.mycompany.myapplication" version="1.0.0.0"/>
+    <!-- 应用程序描述，根据项目的实际信息填写，非必需。 -->
+    <description>My application</description>
     <!-- 下面这个设置依赖项的区段是固定的，不要改动。必需。 -->
     <dependency>
       <dependentAssembly>
