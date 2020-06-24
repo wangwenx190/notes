@@ -47,7 +47,7 @@
 | CMAKE_RELEASE_POSTFIX | 为速度优化版本库文件后缀 | set(CMAKE_RELEASE_POSTFIX "_release") |
 | CMAKE_RELWITHDEBINFO_POSTFIX | 发布版本（带调试符号）库文件后缀 | set(CMAKE_RELWITHDEBINFO_POSTFIX "_relwithdebinfo") |
 | CMAKE_INTERPROCEDURAL_OPTIMIZATION | 是否开启*链接时间代码生成*（*LTCG*） | set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON) |
-| CMAKE_MSVC_RUNTIME_LIBRARY | 设置MSVC运行时（仅限MSVC/clang-cl/icl），可选值为`MultiThreaded`（即`MT`）、`MultiThreadedDLL`（即`MD`）、`MultiThreadedDebug`（即`MTd`）以及`MultiThreadedDebugDLL`（即`MDd`）。如果将此值设置为空，则CMake不会主动添加任何参数。 | set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded) |
+| CMAKE_MSVC_RUNTIME_LIBRARY | 设置MSVC运行时（仅限MSVC/clang-cl/intel-cl），可选值为`MultiThreaded`（即`MT`）、`MultiThreadedDLL`（即`MD`）、`MultiThreadedDebug`（即`MTd`）以及`MultiThreadedDebugDLL`（即`MDd`）。如果将此值设置为空，则CMake不会主动添加任何参数。 | set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded) |
 
 注：
 
@@ -273,4 +273,22 @@
   file(GLOB_RECURSE HEADERS FOLLOW_SYMLINKS LIST_DIRECTORIES false CONFIGURE_DEPENDS *.h)
   file(GLOB_RECURSE SOURCES FOLLOW_SYMLINKS LIST_DIRECTORIES false CONFIGURE_DEPENDS *.cpp)
   file(GLOB_RECURSE FORMS FOLLOW_SYMLINKS LIST_DIRECTORIES false CONFIGURE_DEPENDS *.ui)
+  ```
+
+- 修改输出文件的文件名
+
+  ```cmake
+  # 不会影响 DEBUG_POSTFIX
+  set_target_properties(mytarget PROPERTIES OUTPUT_NAME MyNewName)
+  ```
+
+- 如何为库附加包含目录（对外部使用者而言）
+
+  ```cmake
+  # 一定要 PUBLIC
+  # ${CMAKE_CURRENT_LIST_DIR} 可以修改成你自己的路径
+  # 如果要包含多个路径，不能写在一起，要多次调用 target_include_directories
+  target_include_directories(mytarget PUBLIC
+      "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>"
+  )
   ```
