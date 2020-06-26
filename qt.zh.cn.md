@@ -723,10 +723,14 @@
 - 设置Qt默认使用的OpenGL版本：
 
   ```cpp
-  QSurfaceFormat surfaceFormat;
-  // 此处以4.6版本为例
-  surfaceFormat.setMajorVersion(4);
-  surfaceFormat.setMinorVersion(6);
+  // 先获取原本的设置
+  QSurfaceFormat surfaceFormat = QSurfaceFormat::defaultFormat();
+  // 使用 QSurfaceFormat::OpenGLES 可以切换到 ANGLE
+  // 等价于 QCoreApplication::setAttribute(Qt::AA_UseOpenGLES)
+  // 或者 QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL)
+  surfaceFormat.setRenderableType(QSurfaceFormat::OpenGL);
+  // 此处以 4.6 版本为例，不进行此项设置的话默认是 2.0，版本很老
+  surfaceFormat.setVersion(4, 6);
   // 使用 QSurfaceFormat::CoreProfile 来禁用老旧的或废弃的 API
   surfaceFormat.setProfile(QSurfaceFormat::CompatibilityProfile);
   QSurfaceFormat::setDefaultFormat(surfaceFormat);
