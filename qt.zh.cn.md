@@ -2350,3 +2350,15 @@
   - Qt支持编译时去掉日志功能以减小二进制文件的大小和提高程序的性能，所以要先用`QT_NO_DEBUG_STREAM`这个宏判断一下，否则这个代码在这种配置的Qt上会无法编译
   - `QDebugStateSaver`是用于在其对象销毁时还原`QDebug`的设置，如果你没有修改`QDebug`的格式，是不需要这个的，但如果不放心的话可以无脑带上，反正没坏处
   - 重载了`QDebug`的`<<`运算符就足够了，`qInfo`、`qWarning`和`qCritical`也都能用
+- 连接信号和槽函数而槽函数又是一个匿名函数时，有无槽函数父对象指针的区别
+
+  ```cpp
+  // QObject::connect函数
+  connect(ui->pushButton, &QPushButton::clicked, this, [](){});
+  connect(ui->pushButton, &QPushButton::clicked, [](){});
+  // QTimer::singleShot函数
+  QTimer::singleShot(50, this, [](){});
+  QTimer::singleShot(50, [](){});
+  ```
+
+  从上面的代码可以明显看出，两个连接方式唯一的区别就是有没有槽函数父对象的指针，当然此处的槽函数是我们自己写的匿名函数。在槽函数的执行上，这两种写法没有任何区别，但对于指定了槽函数父对象的方式，Qt会在调用槽函数前首先检查其父对象是否已经销毁，如果已经销毁，会自动执行`disconnect`并忽略槽函数的执行。如果没有指定槽函数的父对象，会无视其父对象的生命周期，只要触发相关信号就会调用所绑定的槽函数。
