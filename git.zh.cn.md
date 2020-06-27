@@ -10,7 +10,7 @@
    | **commit** [options] | 将当前提交合入本地仓库或修改提交 | -a：自动添加所有被修改的文件（就不用专门add了）；--author=<new_author>：覆盖原始作者；--date=<new_date>：覆盖原始日期；-m <commit_message>：设置提交信息，不添加这个参数的话git会启动默认文本编辑器，让你输入提交信息；--amend：修改提交，不添加额外的参数意为修改上一次提交，如果要修改的不是上一次提交，请将需修改的提交的ID附在此参数后面；-s：添加Sign-off-by，推荐使用此参数 | git commit -a -m "What have I done?" |
    | **branch** [options] [branch_name] | 查看或修改分支 | -D <branch_name>：删除本地分支；-r：列出或删除（如果与“-d”一起使用）远端分支；-a：列出远端和本地的所有分支；-m：移动或重命名一个分支；-c：复制一个分支；-l：列出所有本地分支 | git branch -d -r origin/test |
    | **checkout** [options] <branch_name> | 切换或新建分支 | 不加任何参数意为切换到<branch_name>分支；使用“-b <branch_name> --track <remote_name>/<remote_branch_name>”可以创建并切换到一个新的分支 | git checkout -b patch-fix --track origin/master |
-   | **merge** [options] <branch_names> | 合并其他分支到当前分支 | --no-ff：为合并分支这个操作创建一个单独的提交；-m <commit_message>：设置提交信息；--abort：中断当前合并操作并恢复到合并前的状态；--continue：（冲突解决后）继续被中断的合并操作 | git merge --no-ff -m "Merge some patches" my-fix-1 my-fix-2 |
+   | **merge** [options] <branch_names> | 合并其他分支到当前分支 | --no-ff：为合并分支这个操作创建一个单独的提交；-m <commit_message>：设置提交信息；--signoff：添加Sign-off-by，注意merge这个命令不能用-s做这个，因为-s有别的含义；--abort：中断当前合并操作并恢复到合并前的状态；--continue：（冲突解决后）继续被中断的合并操作 | git merge --no-ff -m "Merge some patches" my-fix-1 my-fix-2 |
    | **log** [options] | 查看当前分支提交记录 | --oneline：显示最简化的信息；--graph：显示视图；--pretty=short/medium：部分简化信息 | git log --pretty=short --graph |
    | **tag** [options] <tag_name> [commit_id] | 打标签或修改标签 | -s：创建GPG签名的标签；-f：强制覆盖同名的标签；-d <tag_name>：删除已经存在的标签；-v <tag_name>：验证给定标签的GPG签名；-l：列出所有标签；-m <tag_message>：设置标签信息 | git tag -m "New release" v1.2.3 |
    | **fetch** [repo_url] [branch_name] | 从远端仓库获取提交（不一定必须与本地是同一个仓库） | 什么参数也不加意为从当前远端更新本地仓库的当前分支（单纯的fetch，并没有真实的修改本地文件） | git fetch <https://ex.git> master |
