@@ -1948,3 +1948,433 @@
   | 10.0.18362 | Windows 10 Version 1903 (May 2019 Update) |
   | 10.0.18363 | Windows 10 Version 1909 (November 2019 Update) |
   | 10.0.19041 | Windows 10 Version 2004 (May 2020 Update) |
+
+- 使用Win32 API获取系统常见文件夹的路径
+
+  ```cpp
+  QString Utils::expandConstant(const QString &value)
+  {
+      QString str = value;
+      if (str.contains(QRegularExpression(QString::fromUtf8(R"(\{auto[a-zA-Z]*\d*\})")))) {
+          str.replace(QString::fromUtf8("{auto"),
+                      isAdminProcess() ? QString::fromUtf8("{common") : QString::fromUtf8("{user"),
+                      Qt::CaseInsensitive);
+          return expandConstant(str);
+      }
+      //str.replace(QString::fromUtf8("{app}"), QString::fromUtf8(""), Qt::CaseInsensitive);
+      if (str.contains(QString::fromUtf8("{win}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Windows, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{win}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{sys}"), Qt::CaseInsensitive)
+          || str.contains(QString::fromUtf8("{sysnative}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_System, KF_FLAG_DEFAULT, nullptr, &path))) {
+              const QString qstr = QString::fromWCharArray(path);
+              str.replace(QString::fromUtf8("{sys}"), qstr, Qt::CaseInsensitive);
+              str.replace(QString::fromUtf8("{sysnative}"), qstr, Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{syswow64}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_SystemX86, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{syswow64}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      str.replace(QString::fromUtf8("{src}"),
+                  QDir::toNativeSeparators(QCoreApplication::applicationDirPath()),
+                  Qt::CaseInsensitive);
+      str.replace(QString::fromUtf8("{sd}"),
+                  qEnvironmentVariable("SystemDrive", QString::fromUtf8("C:")),
+                  Qt::CaseInsensitive);
+      if (str.contains(QString::fromUtf8("{commonpf}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commonpf}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commonpf32}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_ProgramFilesX86, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commonpf32}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commonpf64}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_ProgramFilesX64, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commonpf64}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commoncf}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_ProgramFilesCommon, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commoncf}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commoncf32}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_ProgramFilesCommonX86,
+                                             KF_FLAG_DEFAULT,
+                                             nullptr,
+                                             &path))) {
+              str.replace(QString::fromUtf8("{commoncf32}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commoncf64}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_ProgramFilesCommonX64,
+                                             KF_FLAG_DEFAULT,
+                                             nullptr,
+                                             &path))) {
+              str.replace(QString::fromUtf8("{commoncf64}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{tmp}"), Qt::CaseInsensitive)) {
+          const DWORD bufferSize = BUFFER_SIZE;
+          auto path = new WCHAR[bufferSize];
+          if (GetTempPathW(bufferSize, path)) {
+              for (int i = bufferSize; i != 0; --i) {
+                  if ((path[i] == '\\') || (path[i] == '/')) {
+                      path[i] = '\0';
+                      break;
+                  }
+              }
+              str.replace(QString::fromUtf8("{tmp}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              delete[] path;
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{fonts}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Fonts, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{fonts}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      //str.replace(QString::fromUtf8("{group}"), QString::fromUtf8(""), Qt::CaseInsensitive);
+      if (str.contains(QString::fromUtf8("{localappdata}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{localappdata}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{userappdata}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{userappdata}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commonappdata}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_ProgramData, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commonappdata}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{usercf}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_UserProgramFilesCommon,
+                                             KF_FLAG_DEFAULT,
+                                             nullptr,
+                                             &path))) {
+              str.replace(QString::fromUtf8("{usercf}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{userdesktop}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Desktop, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{userdesktop}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commondesktop}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_PublicDesktop, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commondesktop}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{userdocs}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{userdocs}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commondocs}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_PublicDocuments, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commondocs}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{userfavorites}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Favorites, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{userfavorites}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{userpf}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_UserProgramFiles, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{userpf}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{userprograms}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Programs, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{userprograms}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commonprograms}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_CommonPrograms, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commonprograms}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{usersavedgames}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_SavedGames, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{usersavedgames}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{usersendto}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_SendTo, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{usersendto}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{userstartmenu}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_StartMenu, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{userstartmenu}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commonstartmenu}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_CommonStartMenu, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commonstartmenu}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{userstartup}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Startup, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{userstartup}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commonstartup}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_CommonStartup, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commonstartup}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{usertemplates}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Templates, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{usertemplates}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      if (str.contains(QString::fromUtf8("{commontemplates}"), Qt::CaseInsensitive)) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(
+                  SHGetKnownFolderPath(FOLDERID_CommonTemplates, KF_FLAG_DEFAULT, nullptr, &path))) {
+              str.replace(QString::fromUtf8("{commontemplates}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              CoTaskMemFree(path);
+          } else {
+              // TODO
+          }
+      }
+      str.replace(QString::fromUtf8("{cmd}"),
+                  qEnvironmentVariable("ComSpec", QString::fromUtf8(R"(C:\Windows\System32\cmd.exe)")),
+                  Qt::CaseInsensitive);
+      if (str.contains(QString::fromUtf8("{computername}"), Qt::CaseInsensitive)) {
+          DWORD bufferSize = BUFFER_SIZE;
+          auto path = new WCHAR[bufferSize];
+          if (GetComputerNameW(path, &bufferSize)) {
+              str.replace(QString::fromUtf8("{computername}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              delete[] path;
+          } else {
+              // TODO
+          }
+      }
+      //str.replace(QString::fromUtf8("{groupname}"), QString::fromUtf8(""), Qt::CaseInsensitive);
+      //str.replace(QString::fromUtf8("{hwnd}"), QString::fromUtf8(""), Qt::CaseInsensitive);
+      //str.replace(QString::fromUtf8("{wizardhwnd}"), QString::fromUtf8(""), Qt::CaseInsensitive);
+      //str.replace(QString::fromUtf8("{language}"), QString::fromUtf8(""), Qt::CaseInsensitive);
+      str.replace(QString::fromUtf8("{srcexe}"),
+                  QDir::toNativeSeparators(QCoreApplication::applicationFilePath()),
+                  Qt::CaseInsensitive);
+      //str.replace(QString::fromUtf8("{uninstallexe}"), QString::fromUtf8(""), Qt::CaseInsensitive);
+      if (str.contains(QString::fromUtf8("{username}"), Qt::CaseInsensitive)) {
+          DWORD bufferSize = BUFFER_SIZE;
+          auto path = new WCHAR[bufferSize];
+          if (GetUserNameW(path, &bufferSize)) {
+              str.replace(QString::fromUtf8("{username}"),
+                          QString::fromWCharArray(path),
+                          Qt::CaseInsensitive);
+              delete[] path;
+          } else {
+              // TODO
+          }
+      }
+      return str;
+  }
+  ```
