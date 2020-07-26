@@ -287,8 +287,10 @@
   ```cmake
   # 一定要 PUBLIC
   # ${CMAKE_CURRENT_LIST_DIR} 可以修改成你自己的路径
-  # 如果要包含多个路径，不能写在一起，要多次调用 target_include_directories
   target_include_directories(mytarget PUBLIC
       "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>"
+      "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/aaa>"
+      "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/bbb>"
+      "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>/aa/bb"
   )
   ```
