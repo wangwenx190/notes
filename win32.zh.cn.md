@@ -900,11 +900,11 @@
                   QVersionNumber ver = QVersionNumber::fromString(newValue);
                   auto *pFixedInfo = reinterpret_cast<VS_FIXEDFILEINFO *>(lpFixedBuf);
                   if (valueName.contains("fileversion", Qt::CaseInsensitive)) {
-                      pFixedInfo->dwFileVersionMS = DWORD(ver.majorVersion());
-                      pFixedInfo->dwFileVersionLS = DWORD(ver.minorVersion());
+                      pFixedInfo->dwFileVersionMS = DWORD((ver.majorVersion() << 48) | ((ver.minorVersion() & 0xFFFF) << 32));
+                      pFixedInfo->dwFileVersionLS = DWORD(((ver.microVersion() & 0xFFFF) << 16) | (0 & 0xFFFF));
                   } else {
-                      pFixedInfo->dwProductVersionMS = DWORD(ver.majorVersion());
-                      pFixedInfo->dwProductVersionLS = DWORD(ver.minorVersion());
+                      pFixedInfo->dwProductVersionMS = DWORD((ver.majorVersion() << 48) | ((ver.minorVersion() & 0xFFFF) << 32));
+                      pFixedInfo->dwProductVersionLS = DWORD(((ver.microVersion() & 0xFFFF) << 16) | (0 & 0xFFFF));
                   }
               } else {
                   qWarning() << "Cannot query version info";
