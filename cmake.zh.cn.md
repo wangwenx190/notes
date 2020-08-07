@@ -236,14 +236,16 @@
   ```cmake
   # 第一步，先获取win(mac)deployqt的路径
   find_package(Qt5 COMPONENTS Core REQUIRED)
-  get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
-  get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-  find_program(DEPLOYQT_EXECUTABLE NAMES windeployqt macdeployqt HINTS "${_qt_bin_dir}")
+  if(NOT QT_QMAKE_EXECUTABLE)
+      get_target_property(QT_QMAKE_EXECUTABLE Qt::qmake IMPORTED_LOCATION)
+  endif()
+  get_filename_component(QT_BIN_DIRECTORY "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
+  find_program(QT_DEPLOY_EXECUTABLE NAMES windeployqt macdeployqt HINTS "${QT_BIN_DIRECTORY}")
   # 第二步
   if(WIN32)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${DEPLOYQT_EXECUTABLE} "$<TARGET_FILE:${PROJECT_NAME}>")
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${QT_DEPLOY_EXECUTABLE} "$<TARGET_FILE:${PROJECT_NAME}>")
   elseif(APPLE)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${DEPLOYQT_EXECUTABLE} "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>")
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${QT_DEPLOY_EXECUTABLE} "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>")
   endif()
   ```
 
