@@ -1948,6 +1948,7 @@
   | 10.0.18362 | Windows 10 Version 1903 (May 2019 Update) |
   | 10.0.18363 | Windows 10 Version 1909 (November 2019 Update) |
   | 10.0.19041 | Windows 10 Version 2004 (May 2020 Update) |
+  | 10.0.19042 | Windows 10 Version 20H2 (October 2020 Update) |
 
 - 使用Win32 API获取系统常见文件夹的路径
 
