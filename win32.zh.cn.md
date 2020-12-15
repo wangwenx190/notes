@@ -1929,26 +1929,26 @@
 - 判断系统版本：引入`VersionHelpers.h`（来自Windows SDK）后你会发现惊喜
 - Windows版本号收录
 
-  | 版本号 | 系统 |
-  | --- | --- |
-  | 6.0.6000 | Windows Vista |
-  | 6.0.6001 | Windows Vista with Service Pack 1 or Windows Server 2008 |
-  | 6.1.7600 | Windows 7 or Windows Server 2008 R2 |
-  | 6.1.7601 | Windows 7 with Service Pack 1 or Windows Server 2008 R2 with Service Pack 1 |
-  | 6.2.9200 | Windows 8 or Windows Server 2012 |
-  | 6.3.9200 | Windows 8.1 or Windows Server 2012 R2 |
-  | 6.3.9600 | Windows 8.1 with Update 1 |
-  | 10.0.10240 | Windows 10 Version 1507 |
-  | 10.0.10586 | Windows 10 Version 1511 (November Update) |
-  | 10.0.14393 | Windows 10 Version 1607 (Anniversary Update) or Windows Server 2016 |
-  | 10.0.15063 | Windows 10 Version 1703 (Creators Update) |
-  | 10.0.16299 | Windows 10 Version 1709 (Fall Creators Update) |
-  | 10.0.17134 | Windows 10 Version 1803 (April 2018 Update) |
-  | 10.0.17763 | Windows 10 Version 1809 (October 2018 Update) or Windows Server 2019 |
-  | 10.0.18362 | Windows 10 Version 1903 (May 2019 Update) |
-  | 10.0.18363 | Windows 10 Version 1909 (November 2019 Update) |
-  | 10.0.19041 | Windows 10 Version 2004 (May 2020 Update) |
-  | 10.0.19042 | Windows 10 Version 20H2 (October 2020 Update) |
+  | 版本号 | 公开名称 | 开发代号 |
+  | --- | --- | --- |
+  | 6.0.6000 | Windows Vista | - |
+  | 6.0.6001 | Windows Vista with Service Pack 1 or Windows Server 2008 | - |
+  | 6.1.7600 | Windows 7 or Windows Server 2008 R2 | - |
+  | 6.1.7601 | Windows 7 with Service Pack 1 or Windows Server 2008 R2 with Service Pack 1 | - |
+  | 6.2.9200 | Windows 8 or Windows Server 2012 | - |
+  | 6.3.9200 | Windows 8.1 or Windows Server 2012 R2 | - |
+  | 6.3.9600 | Windows 8.1 with Update 1 | - |
+  | 10.0.10240 | Windows 10 Version 1507 | TH1 |
+  | 10.0.10586 | Windows 10 Version 1511 (November Update) | TH2 |
+  | 10.0.14393 | Windows 10 Version 1607 (Anniversary Update) or Windows Server 2016 | RS1 |
+  | 10.0.15063 | Windows 10 Version 1703 (Creators Update) | RS2 |
+  | 10.0.16299 | Windows 10 Version 1709 (Fall Creators Update) | RS3 |
+  | 10.0.17134 | Windows 10 Version 1803 (April 2018 Update) | RS4 |
+  | 10.0.17763 | Windows 10 Version 1809 (October 2018 Update) or Windows Server 2019 | RS5 |
+  | 10.0.18362 | Windows 10 Version 1903 (May 2019 Update) | 19H1 |
+  | 10.0.18363 | Windows 10 Version 1909 (November 2019 Update) | 19H2 |
+  | 10.0.19041 | Windows 10 Version 2004 (May 2020 Update) | 20H1 |
+  | 10.0.19042 | Windows 10 Version 20H2 (October 2020 Update) | 20H2 |
 
 - 使用Win32 API获取系统常见文件夹的路径
 
