@@ -854,7 +854,7 @@
 
     - Linux：D-Bus。使用`Qt D-Bus`模块实现。用法较简单，请自行查阅Qt手册。
     - Linux：Session Management。暂不了解。
-- 下载文件：由于代码较多，我放到了一个单独的仓库中 <https://github.com/wangwenx190/simpledownloader>
+- 下载文件：由于代码较多，我放到了一个单独的仓库中 <https://github.com/wangwenx190/qdownloader>
 - 计算文件哈希值：`QCryptographicHash`
 
   ```cpp
