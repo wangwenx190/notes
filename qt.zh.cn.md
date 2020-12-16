@@ -43,7 +43,7 @@
   | 开启所有警告 | `/Wall` | `-Weverything` | `-Wall -Wextra` | - | `CONFIG += warn_on` |
   | 将警告视为错误 | `/WX` | `-Werror` | `-Werror` | - | - |
   | 关闭所有警告 | `/w` | `-w` | `-w` | - | `CONFIG += warn_off` |
-  | 关闭C语言编译器扩展 | - | - | - | - | `CONFIG += strict_c` |
+  | 关闭C语言编译器扩展 | `/Za` | - | - | - | `CONFIG += strict_c` |
   | 关闭C++语言编译器扩展 | `/permissive-` | - | - | - | `CONFIG += strict_c++` |
   | 开启UTF-8支持 | `/utf-8` | `-finput-charset=UTF-8 -fexec-charset=UTF-8`（clang-cl：与MSVC相同） | `-finput-charset=UTF-8 -fexec-charset=UTF-8` | `-option,cpp,--unicode_source_kind,UTF-8`（icl：`/Qoption,cpp,--unicode_source_kind,UTF-8`） | `CONFIG += utf8_source` |
   | 设置C语言标准 | `/std:c11` | `-std=c11`（clang-cl：与MSVC相同） | `-std=c11` | `-std=c11`（icl：`/Qstd=c11`） | `CONFIG += c11` |
