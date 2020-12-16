@@ -2,7 +2,16 @@
 
 ## Qt 6
 
-待填充
+### 目标平台变更
+
+Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**和**Windows 8.1**，仅支持**64位**Windows 10 **1809**及后续版本。目前已经移除了**WinRT/UWP**支持。UNIX平台的变化请自行查看对应的JIRA ticket。
+
+如果您的程序需要继续支持Windows 7/WinRT/UWP，请使用Qt 5.15；如果需要继续支持Windows 8.1，请使用Qt 5.12；如果需要32位版本，请继续使用Qt5或者自行编译Qt6。
+
+参考：
+
+- <https://bugreports.qt.io/browse/QTBUG-85851>
+- <https://bugreports.qt.io/browse/QTBUG-85855>
 
 ### Qt 5 迁移指南
 
