@@ -414,42 +414,40 @@
   - 程序层面
 
     ```cpp
+    using ShouldAppsUseDarkModePFN = BOOL(WINAPI *)();
+    static ShouldAppsUseDarkModePFN pfnShouldAppsUseDarkMode = nullptr;
+
+    using ShouldSystemUseDarkModePFN = BOOL(WINAPI *)();
+    static ShouldSystemUseDarkModePFN pfnShouldSystemUseDarkMode = nullptr;
+
+    const HMODULE UxThemeDll = LoadLibraryW(L"UxTheme.dll");
+    if (UxThemeDll) {
+        pfnShouldAppsUseDarkMode = reinterpret_cast<ShouldAppsUseDarkModePFN>(GetProcAddress(UxThemeDll, "ShouldAppsUseDarkMode"));
+        pfnShouldSystemUseDarkMode = reinterpret_cast<ShouldSystemUseDarkModePFN>(GetProcAddress(UxThemeDll, "ShouldSystemUseDarkMode"));
+        FreeLibrary(UxThemeDll);
+    }
+
     enum : WORD {
-        DwmwaUseImmersiveDarkMode = 20,
-        DwmwaUseImmersiveDarkModeBefore20h1 = 19
+        DWMWA_USE_IMMERSIVE_DARK_MODE = 20,
+        DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
     };
 
-    static inline bool shouldApplyDarkFrame(const QWindow *w) {
-        return w->isTopLevel() && !w->flags().testFlag(Qt::FramelessWindowHint);
-    }
-
-    static bool queryDarkBorder(HWND hwnd) {
+    static inline bool isDarkBorderEnabled(const HWND hwnd) {
         BOOL result = FALSE;
-        const bool ok =
-            SUCCEEDED(DwmGetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, &result, sizeof(result)))
-            || SUCCEEDED(DwmGetWindowAttribute(hwnd, DwmwaUseImmersiveDarkModeBefore20h1, &result, sizeof(result)));
-        if (!ok)
-            qWarning("%s: Unable to retrieve dark window border setting.", __FUNCTION__);
-        return result == TRUE;
+        return SUCCEEDED(DwmGetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &result, sizeof(result))) || SUCCEEDED(DwmGetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, &result, sizeof(result)));
     }
 
-    bool QWindowsWindow::setDarkBorderToWindow(HWND hwnd, bool d) {
-        const BOOL darkBorder = d ? TRUE : FALSE;
-        const bool ok =
-            SUCCEEDED(DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, &darkBorder, sizeof(darkBorder)))
-            || SUCCEEDED(DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkModeBefore20h1, &darkBorder, sizeof(darkBorder)));
-        if (!ok)
-            qWarning("%s: Unable to set dark window border.", __FUNCTION__);
-        return ok;
-    }
-
-    void QWindowsWindow::setDarkBorder(bool d) {
-        if (shouldApplyDarkFrame(window()) && queryDarkBorder(m_data.hwnd) != d)
-            setDarkBorderToWindow(m_data.hwnd, d);
+    static inline bool setDarkBorderEnabled(const HWND hwnd, const bool enable = true) {
+        const BOOL darkBorder = enable ? TRUE : FALSE;
+        return SUCCEEDED(DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkBorder, sizeof(darkBorder))) || SUCCEEDED(DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, &darkBorder, sizeof(darkBorder)));
     }
     ```
 
-    注意：调用`DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, &darkBorder, sizeof(darkBorder))`这个API的作用是将系统标题栏和窗口边框（以及部分系统标准控件，例如滚动条等）更改为深色/浅色主题的样式（但自绘的任何控件均不会被影响，例如Qt的各种Widget基本都是自绘的，所以不会被系统主题所影响，只能使用QSS统一修改样式），但窗口内部各个控件/元素的颜色不会被修改，需要这个程序的开发者自行编写一个与之相匹配的主题调色板。因此，无边框程序执行此API无效。
+    注意
+
+    - 调用`DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkBorder, sizeof(darkBorder))`这个API的作用是将系统标题栏和窗口边框（以及部分系统标准控件，例如滚动条等）更改为深色/浅色主题的样式（但自绘的任何控件均不会被影响，例如Qt的各种Widget基本都是自绘的，所以不会被系统主题所影响，只能使用QSS统一修改样式），但窗口内部各个控件/元素的颜色不会被修改，需要这个程序的开发者自行编写一个与之相匹配的主题调色板。因此，无边框程序执行此API无效。
+    - `ShouldAppsUseDarkMode`这个API在最新版的Windows上已经失效，可以使用`ShouldSystemUseDarkMode`这个API代替。
+    - 可以通过监听`WM_SETTINGCHANGE`这个消息来获取系统是否已经切换了深色/浅色主题。
 
 - 获取系统是否开启了“透明效果”
 
