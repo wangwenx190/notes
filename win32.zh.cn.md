@@ -422,8 +422,8 @@
 
     const HMODULE UxThemeDll = LoadLibraryW(L"UxTheme.dll");
     if (UxThemeDll) {
-        pfnShouldAppsUseDarkMode = reinterpret_cast<ShouldAppsUseDarkModePFN>(GetProcAddress(UxThemeDll, "ShouldAppsUseDarkMode"));
-        pfnShouldSystemUseDarkMode = reinterpret_cast<ShouldSystemUseDarkModePFN>(GetProcAddress(UxThemeDll, "ShouldSystemUseDarkMode"));
+        pfnShouldAppsUseDarkMode = reinterpret_cast<ShouldAppsUseDarkModePFN>(GetProcAddress(UxThemeDll, MAKEINTRESOURCEA(132)));
+        pfnShouldSystemUseDarkMode = reinterpret_cast<ShouldSystemUseDarkModePFN>(GetProcAddress(UxThemeDll, MAKEINTRESOURCEA(138)));
         FreeLibrary(UxThemeDll);
     }
 
