@@ -2644,3 +2644,9 @@
     ```
 
   摘自：<https://docs.microsoft.com/en-us/cpp/text/how-to-convert-between-various-string-types>
+
+- 如何监听用户是否按下了键盘上的音量+/-，静音，打印，播放，暂停等功能键？
+
+  在`WndProc`中监听`WM_APPCOMMAND`这个消息，使用`GET_APPCOMMAND_LPARAM(lParam)`获取触发消息的类型，使用`GET_DEVICE_LPARAM(lParam)`获取触发该消息的设备，使用`GET_KEYSTATE_LPARAM(lParam)`获取触发该消息的按键。
+
+  参考：<https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-appcommand>
