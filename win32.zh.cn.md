@@ -2650,3 +2650,10 @@
   在`WndProc`中监听`WM_APPCOMMAND`这个消息，使用`GET_APPCOMMAND_LPARAM(lParam)`获取触发消息的类型，使用`GET_DEVICE_LPARAM(lParam)`获取触发该消息的设备，使用`GET_KEYSTATE_LPARAM(lParam)`获取触发该消息的按键。
 
   参考：<https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-appcommand>
+- Windows 官方支持周期
+  - Windows 7：<https://docs.microsoft.com/en-us/lifecycle/products/windows-7>
+  - Windows 8：<https://docs.microsoft.com/en-us/lifecycle/products/windows-8>
+  - Windows 8.1：<https://docs.microsoft.com/en-us/lifecycle/products/windows-81>
+  - Windows 10 家庭版、专业版、专业教育版、专业工作站版：<https://docs.microsoft.com/en-us/lifecycle/products/windows-10-home-and-pro>
+  - Windows 10 教育版，企业版：<https://docs.microsoft.com/en-us/lifecycle/products/windows-10-enterprise-and-education>
+  - Windows RT：<https://docs.microsoft.com/en-us/lifecycle/products/windows-rt>

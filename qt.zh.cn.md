@@ -138,7 +138,16 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
      QMAKE_TARGET_COPYRIGHT = "My copyright info"
      # 设置公司
      QMAKE_TARGET_COMPANY = "My company name"
-     # 至于备注、原始文件名和商标等条目的设置是不支持的，QMake仅支持以上设置，其他剩余条目的设置只能通过rc文件实现
+     # 设置清单文件。Qt 5.15.1 引入。注意要同时使用“CONFIG -= embed_manifest_exe”来禁用QMake嵌入其他清单文件，否则会相互冲突。
+     QMAKE_MANIFEST = "../res/MyApp.manifest"
+     # 设置原始文件名。Qt 6.0 引入。
+     QMAKE_TARGET_ORIGINAL_FILENAME = "MyApp.exe"
+     # 设置内部名称。Qt 6.0 引入。
+     QMAKE_TARGET_INTERNALNAME = "MyApp"
+     # 设置备注。Qt 6.0 引入。
+     QMAKE_TARGET_COMMENTS = "Some comments"
+     # 设置合法商标。Qt 6.0 引入。
+     QMAKE_TARGET_TRADEMARKS = "my trademark"
      ```
 
      如果你有一个已经编写好的资源脚本（.rc文件），可以用以下语句使用：
@@ -244,29 +253,6 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
 
    摘自：<https://doc.qt.io/qt-5/qmake-environment-reference.html>
 - 在 Windows 平台上使用`MinGW`编译 Qt 时不能开启 LTO，否则会报错，不清楚具体的原因
-- Windows 平台嵌入清单文件（*.manifest）
-  1. 禁止Qt自动嵌入默认的清单文件并添加我们自己的资源文件
-
-     ```text
-     # myapp.pro
-     CONFIG -= embed_manifest_exe
-     RC_FILE = myapp.rc # 清单文件只能通过这种方法间接嵌入
-     ```
-
-  2. 在资源脚本中嵌入清单文件
-
-     ```text
-     // myapp.rc
-     // ...
-     // 放在什么位置都行，为了省事可以直接附加到资源脚本的末尾
-     // #define RT_MANIFEST 24
-     // #define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
-     // 如果资源编译器无法找到“CREATEPROCESS_MANIFEST_RESOURCE_ID”和“RT_MANIFEST”
-     // 的定义，就把上面两行取消注释，一起放入rc文件中，或者直接替换成对应的数值。
-     CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "myapp.manifest"
-     // ...
-     ```
-
 - 编译 Qt 时常用的参数：
 
    | 参数 | 作用 |
@@ -335,8 +321,6 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
 
   参考：<https://stackoverflow.com/questions/46927087/redirecting-stdcout-from-dll-in-a-separate-thread-to-qtextedit>
 - 判断、比较版本号：推荐使用Qt提供的`QVersionNumber`类，直接把版本号的完整字符串传过去，它就能自行识别主版本号、次版本号、修订号和一些其他字符串后缀，也能方便的比较版本号的高低，非常方便好用。
-- Qt 6 因为性能原因计划废弃`QStringList`等`QList`类，尽量使用C语言风格的数组（例如`const QString []`）或`QVector`代替。
-- Qt 6 计划废弃`QScopedPointer`等`STL`的替代品（即`QTL`），以后尽量使用`STL`提供的类（例如`std::unique_ptr`等）。
 - 输出调试信息有两种方式（以`qDebug`为例）：
 
   ```cpp
@@ -464,9 +448,6 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   ```
 
   `qtLibraryTarget`这个qmake函数会自动添加平台对应的调试版后缀（发布版本不会添加后缀），如果是Linux平台，这个函数还会添加lib前缀。不要用`qt5LibraryTarget`，这个函数除了添加后缀，还会添加`Qt5`这个前缀，是Qt自己的库才需要的函数。
-- Qt计划废弃`QStringLiteral`，以后尽量使用`u"..." (→ QStringView)`或者`QLatin1String`代替。其中，`QLatin1String`已经支持`.arg(arg1, ..., argN)`了，已经不存在不使用它的理由了。推荐使用`QLatin1String`的原因是因为它仅仅是对`const char *`的简单封装，性能仅次于直接使用`const char *`。`QString::fromLatin1()`=`QLatin1String`，不推荐使用前者是因为前者打字比较多。`QStringLiteral`性能也不错，但它完整的构建了一个`QString`对象，因此性能也比`QLatin1String`差不少。除非是对性能不敏感的项目，否则一定不要直接用`QString`，这个形式性能最差。如果是对性能不敏感的项目，那么就推荐统一无脑使用`QString`，性能虽然不行，但格式统一，方便管理和理解。
-
-  顾名思义，`QLatin1String`针对的是拉丁字符，如果是非拉丁字符，是不能用这个宏的。
 - 使用*QString*时尽量使用*multiArgs*，即`.arg(arg1, ..., argN)`，以前那种分开的写法已经废弃了，不要再用了。`QLatin1String`和`QStringView`也支持这个特性。
 - 编译Qt时，如果禁用异常处理，会导致*Qt 3D*，*Qt Location*，*Qt Quick 3D*和*Qt XmlPatterns*无法编译，这四个仓库在编译时都需要开启异常处理，请注意。如果必须禁用异常处理，可以在配置Qt时使用`-skip`参数来跳过这四个仓库。已经编译完成的Qt库不受影响，可以随意开启和关闭异常处理。
 - 编译Qt时，如果使用了`Ofast`优化级别（Clang，GCC和ICC都支持，只有MSVC和类MSVC编译器才不支持），会导致Qt的*sqlite*插件无法编译。这个插件不支持高于`O3`的优化级别。然而这个是*QtCore*模块中无法禁用或者跳过的基础插件，如果编译出错就会中断整个Qt的编译，因此只能通过修改这个插件的.pro/.pri文件来规避这个问题（使用自定义的`QMAKE_CFLAGS_RELEASE`和`QMAKE_CXXFLAGS_RELEASE`）。已经编译完成的Qt库不受影响，可以随意调整优化级别。
@@ -1759,8 +1740,6 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
     `QWidget`和`QWindow`都有此函数，返回的是被执行对象的窗口系统标识符（我自己翻译的，不知道正规叫法是什么，Windows平台上是叫窗口句柄）。在Windows平台上就是`HWND`，但要用`reinterpret_cast`转换一下才能用。这个函数的返回值有可能会在运行时发生改变，如果你的程序对此变化敏感，请注意自行处理`QEvent::WinIdChange`这个事件。
 
     `QWindow`用这个函数没什么需要注意的，但`QWidget`不同。`QWidget`很有可能是一个子控件（例如一个很复杂的窗口中的某个小部件），在这种情况下执行这个函数就会导致Qt为其创建一个窗口句柄，使其成为一个原生窗口。
-
-    用这个函数获取`QWidget`的窗口句柄是Qt4时代的做法，现在已经不推荐这样用了。如果您要获取一个`QWidget`的窗口句柄，请根据具体情况，使用下面两种方法中的一种。
   - `effectiveWinId()`函数
 
     此函数为`QWidget`独有，当被执行对象为原生窗口（即一个独立的窗口，不是什么窗口内部的子控件）时，返回窗口句柄，当不是原生窗口时，返回当前对象所在的顶级窗口的句柄。
@@ -1871,7 +1850,7 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
 
 - Qt支持安装多个翻译文件，但如果有重复的翻译条目，后来安装的翻译文件会覆盖之前的。同时还可以用`[static] bool QCoreApplication::removeTranslator(QTranslator *translationFile)`这个API来移除某个特定的已安装的翻译文件。
 
-  注：大多数`QWidget`及其右键菜单（如果有的话）基本都是没有中文翻译的，如果想要完全汉化，则需要自行生成*widgets.ts*并手动翻译。
+  注：Qt安装完成后会自带一个叫`translations`的文件夹，这里面存放着Qt自身的翻译，比如各种Widget。这个翻译是官方的，而且覆盖程度很高，大概八九成的地方都有对应的翻译。Qt Quick程序会自动加载其中的翻译，但Qt Widgets程序需要自行加载。
 - 如何获取*此电脑*（*计算机*、*我的电脑*）、以及*回收站*（*垃圾桶*、*废纸篓*）等系统程序的图标或某个具体的文件的图标
   - 系统程序的图标
 
