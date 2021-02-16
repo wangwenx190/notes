@@ -2657,3 +2657,35 @@
   - Windows 10 家庭版、专业版、专业教育版、专业工作站版：<https://docs.microsoft.com/en-us/lifecycle/products/windows-10-home-and-pro>
   - Windows 10 教育版，企业版：<https://docs.microsoft.com/en-us/lifecycle/products/windows-10-enterprise-and-education>
   - Windows RT：<https://docs.microsoft.com/en-us/lifecycle/products/windows-rt>
+- 判断系统此刻是否联网（这里是指真正的联网，连了一个没网的网络是不行的）：
+
+  ```cpp
+  #include <netlistmgr.h>
+  bool Utilities::isInternetAvailable()
+  {
+      if (FAILED(CoInitialize(nullptr))) {
+          return false;
+      }
+      bool result = false;
+      IUnknown *pUnknown = nullptr;
+      if (SUCCEEDED(CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_ALL, IID_IUnknown, reinterpret_cast<void **>(&pUnknown)))) {
+          INetworkListManager *pNetworkListManager = nullptr;
+          if (SUCCEEDED(pUnknown->QueryInterface(IID_INetworkListManager, reinterpret_cast<void **>(&pNetworkListManager)))) {
+              VARIANT_BOOL isConnected = VARIANT_FALSE;
+              if (SUCCEEDED(pNetworkListManager->get_IsConnectedToInternet(&isConnected))) {
+                  result = isConnected == VARIANT_TRUE;
+  #if 0
+                  NLM_CONNECTIVITY connectivity = NLM_CONNECTIVITY_DISCONNECTED;
+                  if (SUCCEEDED(pNetworkListManager->GetConnectivity(&connectivity))) {
+                      // 此时的“connectivity”指示了此刻互联网连接的状态，具体清查看枚举的定义
+                  }
+  #endif
+              }
+              pNetworkListManager->Release();
+          }
+          pUnknown->Release();
+      }
+      CoUninitialize();
+      return result;
+  }
+  ```
