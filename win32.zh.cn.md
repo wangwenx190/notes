@@ -2651,12 +2651,39 @@
 
   参考：<https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-appcommand>
 - Windows 官方支持周期
-  - Windows 7：<https://docs.microsoft.com/en-us/lifecycle/products/windows-7>
-  - Windows 8：<https://docs.microsoft.com/en-us/lifecycle/products/windows-8>
-  - Windows 8.1：<https://docs.microsoft.com/en-us/lifecycle/products/windows-81>
-  - Windows 10 家庭版、专业版、专业教育版、专业工作站版：<https://docs.microsoft.com/en-us/lifecycle/products/windows-10-home-and-pro>
-  - Windows 10 教育版，企业版：<https://docs.microsoft.com/en-us/lifecycle/products/windows-10-enterprise-and-education>
-  - Windows RT：<https://docs.microsoft.com/en-us/lifecycle/products/windows-rt>
+
+  | 操作系统 | 支持开始日期 | 主流支持结束日期 | 延长支持结束日期 | 是否已经停止支持 |
+  | ------- | ---------- | -------------- | -------------- | ------------- |
+  | Windows 7 | 10/22/2009 | 01/13/2015 | 01/14/2020 | **是** |
+  | Windows 8 | 10/30/2012 | - | 01/12/2016 | **是** |
+  | Windows 8.1 | 11/13/2013 | 01/09/2018 | 01/10/2023 | 否（延长支持阶段） |
+  | Windows 10 **Home and Pro** 1507 | 07/29/2015 | 05/09/2017 | - | - |
+  | Windows 10 Home and Pro 1511 | 11/10/2015 | 10/10/2017 | - | - |
+  | Windows 10 Home and Pro 1607 | 08/02/2016 | 04/10/2018 | - | - |
+  | Windows 10 Home and Pro 1703 | 04/05/2017 | 10/09/2018 | - | - |
+  | Windows 10 Home and Pro 1709 | 10/17/2017 | 04/09/2019 | - | - |
+  | Windows 10 Home and Pro 1803 | 04/30/2018 | 11/12/2019 | - | - |
+  | Windows 10 Home and Pro 1809 | 11/13/2018 | 11/10/2020 | - | - |
+  | Windows 10 Home and Pro 1903 | 05/21/2019 | 12/08/2020 | - | - |
+  | Windows 10 Home and Pro 1909 | 11/12/2019 | 05/11/2021 | - | - |
+  | Windows 10 Home and Pro 2004 | 05/27/2020 | 12/14/2021 | - | - |
+  | Windows 10 Home and Pro 20H2 | 10/20/2020 | 05/10/2022 | - | - |
+  | Windows 10 **Enterprise and Education** 1507 | 07/29/2015 | 05/09/2017 | - | - |
+  | Windows 10 Enterprise and Education 1511 | 11/10/2015 | 10/10/2017 | - | - |
+  | Windows 10 Enterprise and Education 1607 | 08/02/2016 | 04/09/2019 | - | - |
+  | Windows 10 Enterprise and Education 1703 | 04/11/2017 | 10/08/2019 | - | - |
+  | Windows 10 Enterprise and Education 1709 | 10/17/2017 | 10/13/2020 | - | - |
+  | Windows 10 Enterprise and Education 1803 | 04/30/2018 | 05/11/2021 | - | - |
+  | Windows 10 Enterprise and Education 1809 | 11/13/2018 | 05/11/2021 | - | - |
+  | Windows 10 Enterprise and Education 1903 | 05/21/2019 | 12/08/2020 | - | - |
+  | Windows 10 Enterprise and Education 1909 | 11/12/2019 | 05/10/2022 | - | - |
+  | Windows 10 Enterprise and Education 2004 | 05/27/2020 | 12/14/2021 | - | - |
+  | Windows 10 Enterprise and Education 20H2 | 10/20/2020 | 05/09/2023 | - | - |
+
+  注意：
+  - 购买Extended Security Updates (ESU)可以延长三年支持周期，最多可以购买三个ESU，也就是最多延长九年支持。此类支持周期没有在上表中列出。
+  - 参考链接：<https://docs.microsoft.com/en-us/lifecycle/products/windows-7>、<https://docs.microsoft.com/en-us/lifecycle/products/windows-8>、<https://docs.microsoft.com/en-us/lifecycle/products/windows-81>、<https://docs.microsoft.com/en-us/lifecycle/products/windows-10-home-and-pro>、<https://docs.microsoft.com/en-us/lifecycle/products/windows-10-enterprise-and-education>
+
 - 判断系统此刻是否联网（这里是指真正的联网，连了一个没网的网络是不行的）：
 
   ```cpp
