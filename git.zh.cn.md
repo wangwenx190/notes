@@ -20,7 +20,7 @@
    | **submodule** | 查看或修改子模块 | add <repo_url> [path_to_save]：添加子模块；init [path]：初始化子模块；update [--init] [--recursive] [path]：更新子模块 | - |
    | **apply** <patch_file> | 应用补丁。此命令只适用于使用`git diff`命令制作的老式补丁，使用`git format-patch`命令制作的新式补丁应使用`git am`命令。 | - | git apply mypatch.patch |
    | **cherry-pick** [options] <some_commits> | 将某一个或某几个**已经存在**的提交合并到当前分支。可以用*fetch*命令刷新提交历史，获取最新的提交记录 | --continue：（冲突解决后）继续被中断的操作；--abort：中断当前操作并恢复到之前的状态 | - |
-   | **rebase** [options] | 变基 | `git rebase -i <开始commit> <结束commit>`，如果不指定结束commit，则为到最后一次commit | - |
+   | **rebase** [options] | 变基 | `git rebase -i <区间开始commit> <区间结束commit>`，如果不指定结束commit，则为到最后一次commit。区间开始commit为要合并的第一个commit的前一个commit | - |
    | **revert** [options] <commid_id> | 回退某次提交 | --continue；--abort | - |
    | **status** | 查看当前工作树状态 | - | git status |
    | **clean** [options] | 从当前工作树移除未跟踪文件，即将所有未被提交到本地仓库的文件都删除，从仓库根目录开始，递归清理所有子文件夹 | -d：未被跟踪的文件夹也一起删除；-f：强制删除，建议添加此参数，因为Git会在很多情况下不执行此类型的命令；-x：不忽略`.gitignore`里的文件，将忽略文件也一起删除（建议添加此参数） | git clean -fdx |
