@@ -2716,3 +2716,143 @@
       return result;
   }
   ```
+
+- GUI程序如何创建一个命令行窗口，并将输出重定向到那个窗口？
+
+  ```cpp
+  #ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+  #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+  #endif
+
+  bool createConsoleWindow(const bool utf8Enabled, const bool vtEnabled)
+  {
+      // AllocConsole() 执行成功之后，在不需要该命令行窗口后，记得执行 FreeConsole()，否则会有内存泄露。
+      if (!AllocConsole()) {
+          qWarning().noquote() << "Failed to alloc console window.";
+          return false;
+      }
+      // std::cout, std::clog, std::cerr, std::cin
+      freopen("CONOUT$", "w", stdout);
+      freopen("CONOUT$", "w", stderr);
+      freopen("CONIN$", "r", stdin);
+      std::cout.clear();
+      std::clog.clear();
+      std::cerr.clear();
+      std::cin.clear();
+      // std::wcout, std::wclog, std::wcerr, std::wcin
+      const HANDLE hConOut = CreateFileW(L"CONOUT$",
+                                         GENERIC_READ | GENERIC_WRITE,
+                                         FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                         nullptr,
+                                         OPEN_EXISTING,
+                                         FILE_ATTRIBUTE_NORMAL,
+                                         nullptr);
+      const HANDLE hConIn = CreateFileW(L"CONIN$",
+                                        GENERIC_READ | GENERIC_WRITE,
+                                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                        nullptr,
+                                        OPEN_EXISTING,
+                                        FILE_ATTRIBUTE_NORMAL,
+                                        nullptr);
+      SetStdHandle(STD_OUTPUT_HANDLE, hConOut);
+      SetStdHandle(STD_ERROR_HANDLE, hConOut);
+      SetStdHandle(STD_INPUT_HANDLE, hConIn);
+      std::wcout.clear();
+      std::wclog.clear();
+      std::wcerr.clear();
+      std::wcin.clear();
+      if (utf8Enabled) {
+          const UINT utf8CodePageID = 65001;
+          if (!(SetConsoleCP(utf8CodePageID) && SetConsoleOutputCP(utf8CodePageID))) {
+              qWarning().noquote() << "Failed to change console's code page to UTF-8.";
+          }
+      }
+      if (vtEnabled && (QOperatingSystemVersion::current() >= QOperatingSystemVersion::Windows10)) {
+          const auto enableVTMode = [](const HANDLE handle) -> bool {
+              if (!handle) {
+                  return false;
+              }
+              if (handle == INVALID_HANDLE_VALUE) {
+                  return false;
+              }
+              DWORD dwMode = 0;
+              if (!GetConsoleMode(handle, &dwMode)) {
+                  return false;
+              }
+              dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+              if (!SetConsoleMode(handle, dwMode)) {
+                  return false;
+              }
+              return true;
+          };
+          if (!(enableVTMode(GetStdHandle(STD_OUTPUT_HANDLE))
+                && enableVTMode(GetStdHandle(STD_ERROR_HANDLE)))) {
+              qWarning().noquote() << "Failed to enable virtual terminal mode for console.";
+          }
+      }
+      return true;
+  }
+  ```
+
+- Win10如何使普通的Win32窗口也拥有亚克力效果？
+
+  ```cpp
+  using WINDOWCOMPOSITIONATTRIB = enum _WINDOWCOMPOSITIONATTRIB
+  {
+      WCA_ACCENT_POLICY = 19
+  };
+
+  using WINDOWCOMPOSITIONATTRIBDATA = struct _WINDOWCOMPOSITIONATTRIBDATA
+  {
+      WINDOWCOMPOSITIONATTRIB Attrib;
+      PVOID pvData;
+      SIZE_T cbData;
+  };
+
+  using ACCENT_STATE = enum _ACCENT_STATE
+  {
+      ACCENT_DISABLED = 0,
+      ACCENT_ENABLE_GRADIENT = 1,
+      ACCENT_ENABLE_TRANSPARENTGRADIENT = 2,
+      ACCENT_ENABLE_BLURBEHIND = 3,
+      ACCENT_ENABLE_ACRYLICBLURBEHIND = 4, // RS4 1803
+      ACCENT_ENABLE_HOSTBACKDROP = 5, // RS5 1809
+      ACCENT_INVALID_STATE = 6
+  };
+
+  using ACCENT_POLICY = struct _ACCENT_POLICY
+  {
+      ACCENT_STATE AccentState;
+      DWORD AccentFlags;
+      COLORREF GradientColor;
+      DWORD AnimationId;
+  };
+
+  using SetWindowCompositionAttributePtr = BOOL(WINAPI *)(HWND, WINDOWCOMPOSITIONATTRIBDATA *);
+  static SetWindowCompositionAttributePtr SetWindowCompositionAttributePFN = nullptr;
+
+  HMODULE User32Dll = LoadLibraryW(L"User32");
+  if (User32Dll) {
+      // 这个函数从 Win7 就已经存在并且可用了，但只能动态加载
+      SetWindowCompositionAttributePFN = reinterpret_cast<SetWindowCompositionAttributePtr>(GetProcAddress(User32Dll, "SetWindowCompositionAttribute"));
+      if (SetWindowCompositionAttributePFN) {
+          ACCENT_POLICY accentPolicy;
+          SecureZeroMemory(&accentPolicy, sizeof(accentPolicy));
+          // ACCENT_ENABLE_ACRYLICBLURBEHIND 为开启亚克力模糊特效；
+          // ACCENT_ENABLE_BLURBEHIND 为普通的DWM模糊特效，等价于 DwmEnableBlurBehindWindow
+          accentPolicy.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND;
+          // 此为模糊特效的渐变色，不能设置成全透明，否则亚克力失效，设置成半透明效果最好。
+          // 此数值格式为：AABBGGRR
+          accentPolicy.GradientColor = 0x01FFFFFF;
+          WINDOWCOMPOSITIONATTRIBDATA wcaData;
+          wcaData.Attrib = WCA_ACCENT_POLICY;
+          wcaData.pvData = &accentPolicy;
+          wcaData.cbData = sizeof(accentPolicy);
+          // hwnd 为要开启亚克力特效的窗口的句柄
+          SetWindowCompositionAttributePFN(hwnd, &wcaData);
+      }
+      FreeLibrary(User32Dll);
+  }
+  ```
+
+- 如何获取DPI？
