@@ -2704,7 +2704,7 @@
   #if 0
                   NLM_CONNECTIVITY connectivity = NLM_CONNECTIVITY_DISCONNECTED;
                   if (SUCCEEDED(pNetworkListManager->GetConnectivity(&connectivity))) {
-                      // 此时的“connectivity”指示了此刻互联网连接的状态，具体清查看枚举的定义
+                      // 此时的“connectivity”指示了此刻互联网连接的状态，具体请查看枚举的定义
                   }
   #endif
               }
@@ -2833,7 +2833,7 @@
 
   HMODULE User32Dll = LoadLibraryW(L"User32");
   if (User32Dll) {
-      // 这个函数从 Win7 就已经存在并且可用了，但只能动态加载
+      // 这个函数从 Win7 开始就已经存在并且可用了，但只能动态加载
       SetWindowCompositionAttributePFN = reinterpret_cast<SetWindowCompositionAttributePtr>(GetProcAddress(User32Dll, "SetWindowCompositionAttribute"));
       if (SetWindowCompositionAttributePFN) {
           ACCENT_POLICY accentPolicy;
@@ -2856,3 +2856,93 @@
   ```
 
 - 如何获取DPI？
+
+  ```cpp
+  #ifndef USER_DEFAULT_SCREEN_DPI
+  #define USER_DEFAULT_SCREEN_DPI 96
+  #endif
+
+  using MONITOR_DPI_TYPE = enum _MONITOR_DPI_TYPE
+  {
+      MDT_EFFECTIVE_DPI = 0
+  };
+
+  using PROCESS_DPI_AWARENESS = enum _PROCESS_DPI_AWARENESS
+  {
+      PROCESS_DPI_UNAWARE = 0,
+      PROCESS_SYSTEM_DPI_AWARE = 1,
+      PROCESS_PER_MONITOR_DPI_AWARE = 2
+  };
+
+  using GetDpiForMonitorPtr = HRESULT(WINAPI *)(HMONITOR, MONITOR_DPI_TYPE, UINT *, UINT *);
+  using GetProcessDpiAwarenessPtr = HRESULT(WINAPI *)(HANDLE, PROCESS_DPI_AWARENESS *);
+  using GetSystemDpiForProcessPtr = UINT(WINAPI *)(HANDLE);
+  using GetDpiForWindowPtr = UINT(WINAPI *)(HWND);
+  using GetDpiForSystemPtr = UINT(WINAPI *)();
+  using GetSystemMetricsForDpiPtr = int(WINAPI *)(int, UINT);
+  using AdjustWindowRectExForDpiPtr = BOOL(WINAPI *)(LPRECT, DWORD, BOOL, DWORD, UINT);
+
+  static GetDpiForMonitorPtr GetDpiForMonitorPFN = nullptr;
+  static GetProcessDpiAwarenessPtr GetProcessDpiAwarenessPFN = nullptr;
+  static GetSystemDpiForProcessPtr GetSystemDpiForProcessPFN = nullptr;
+  static GetDpiForWindowPtr GetDpiForWindowPFN = nullptr;
+  static GetDpiForSystemPtr GetDpiForSystemPFN = nullptr;
+  static GetSystemMetricsForDpiPtr GetSystemMetricsForDpiPFN = nullptr;
+  static AdjustWindowRectExForDpiPtr AdjustWindowRectExForDpiPFN = nullptr;
+
+  // 我们之所以要动态加载，是因为很多函数是Win8.1甚至Win10才引进的，不得不动态加载以保持最大的兼容性
+  HMODULE User32Dll = LoadLibraryW(L"User32");
+  if (User32Dll) {
+      GetDpiForWindowPFN = reinterpret_cast<GetDpiForWindowPtr>(GetProcAddress(User32Dll, "GetDpiForWindow"));
+      GetDpiForSystemPFN = reinterpret_cast<GetDpiForSystemPtr>(GetProcAddress(User32Dll, "GetDpiForSystem"));
+      GetSystemMetricsForDpiPFN = reinterpret_cast<GetSystemMetricsForDpiPtr>(GetProcAddress(User32Dll, "GetSystemMetricsForDpi"));
+      AdjustWindowRectExForDpiPFN = reinterpret_cast<AdjustWindowRectExForDpiPtr>(GetProcAddress(User32Dll, "AdjustWindowRectExForDpi"));
+      GetSystemDpiForProcessPFN = reinterpret_cast<GetSystemDpiForProcessPtr>(GetProcAddress(User32Dll, "GetSystemDpiForProcess"));
+      FreeLibrary(User32Dll);
+  }
+
+  HMODULE SHCoreDll = LoadLibraryW(L"SHCore");
+  if (SHCoreDll) {
+      GetDpiForMonitorPFN = reinterpret_cast<GetDpiForMonitorPtr>(GetProcAddress(SHCoreDll, "GetDpiForMonitor"));
+      GetProcessDpiAwarenessPFN = reinterpret_cast<GetProcessDpiAwarenessPtr>(GetProcAddress(SHCoreDll, "GetProcessDpiAwareness"));
+      FreeLibrary(SHCoreDll);
+  }
+
+  UINT GetWindowDPI(HWND hwnd) {
+      if (!hwnd) {
+          return USER_DEFAULT_SCREEN_DPI;
+      }
+      if (GetDpiForWindowPFN) {
+          return GetDpiForWindowPFN(hwnd);
+      } else if (GetSystemDpiForProcessPFN) {
+          return GetSystemDpiForProcessPFN(GetCurrentProcess());
+      } else if (GetDpiForSystemPFN) {
+          return GetDpiForSystemPFN();
+      } else if (GetDpiForMonitorPFN) {
+          const HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+          if (monitor) {
+              UINT dpiX = USER_DEFAULT_SCREEN_DPI, dpiY = USER_DEFAULT_SCREEN_DPI;
+              if (SUCCEEDED(GetDpiForMonitorPFN(monitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY))) {
+                  return dpiX;
+              } else {
+                  std::cerr << "GetDpiForMonitor failed";
+              }
+          } else {
+              std::cerr << "MonitorFromWindow failed.";
+          }
+      }
+      // 从 Win7 开始系统支持使用 Direct2D 来获取DPI，但使用此API会产生编译警告，提示此方法已被废弃，
+      // 所以此处就不使用D2D了。这里所有写出来的方法都是没有被废弃的正规方法。
+      const HDC hdc = GetDC(nullptr);
+      if (hdc) {
+          const int dpiX = GetDeviceCaps(hdc, LOGPIXELSX);
+          ReleaseDC(nullptr, hdc);
+          if (dpiX > 0) {
+              return dpiX;
+          } else {
+              std::cerr << "GetDeviceCaps failed.";
+          }
+      }
+      return USER_DEFAULT_SCREEN_DPI;
+  }
+  ```
