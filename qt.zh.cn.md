@@ -720,6 +720,7 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   // 或者 QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL)
   surfaceFormat.setRenderableType(QSurfaceFormat::OpenGL);
   // 此处以 4.6 版本为例，不进行此项设置的话默认是 2.0，版本很老
+  // 使用 OpenGLES 的话，版本最高不能超过 3.2，否则 ANGLE 无法初始化
   surfaceFormat.setVersion(4, 6);
   // 使用 QSurfaceFormat::CoreProfile 来禁用老旧的或废弃的 API
   surfaceFormat.setProfile(QSurfaceFormat::CompatibilityProfile);
