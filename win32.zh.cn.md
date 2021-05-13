@@ -72,15 +72,22 @@
     <!-- Windows 设置，根据项目的具体需求设置，非必需。 -->
     <application xmlns="urn:schemas-microsoft-com:asm.v3">
       <windowsSettings>
-        <!-- 声明我们的程序支持高DPI缩放。如果不进行此项设置，系统会自动强行拉伸程序的界面，导致界面非常模糊 -->
+        <!-- 声明我们的程序支持高DPI缩放，Windows Vista ~ Win8。如果不进行此项设置，系统会自动强行拉伸程序的界面，导致界面非常模糊 -->
         <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">True/PM</dpiAware>
+        <!-- 隔离打印机驱动。开启此选项后会使程序更加稳定，推荐开启 -->
+        <printerDriverIsolation xmlns="http://schemas.microsoft.com/SMI/2011/WindowsSettings">True</printerDriverIsolation>
+        <!-- 不知此选项作用。。。 -->
+        <disableWindowFiltering xmlns="http://schemas.microsoft.com/SMI/2011/WindowsSettings">True</disableWindowFiltering>
+        <!-- 声明我们的程序支持高DPI缩放，Win8.1 ~ Win10 -->
         <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
+        <!-- 声明我们的程序支持长路径（超过260个字符） -->
+        <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">True</longPathAware>
         <!-- 下面这一行会导致程序界面变模糊，待调查 -->
-        <!-- <gdiScaling xmlns="http://schemas.microsoft.com/SMI/2017/WindowsSettings">true</gdiScaling> -->
-        <!-- 声明我们的程序支持长路径 -->
-        <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
+        <!-- <gdiScaling xmlns="http://schemas.microsoft.com/SMI/2017/WindowsSettings">True</gdiScaling> -->
         <!-- 将进程的代码页设置为 UTF-8 -->
         <activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>
+        <!-- 设置进程的堆类型为新型堆类型（现代化类型，微软推荐使用） -->
+        <heapType xmlns="http://schemas.microsoft.com/SMI/2020/WindowsSettings">SegmentHeap</heapType>
       </windowsSettings>
     </application>
   </assembly>
