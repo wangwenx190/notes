@@ -13,9 +13,10 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
 - <https://bugreports.qt.io/browse/QTBUG-85851>
 - <https://bugreports.qt.io/browse/QTBUG-85855>
 
-### Qt 5 迁移指南
+### 从 Qt 5 迁移
 
 - 从QMake迁移到CMake：<https://wiki.qt.io/CMake_Port/Porting_Guide>
+- Qt代码迁移：<https://doc.qt.io/qt-6/portingguide.html>
 
 ## Qt 5
 
