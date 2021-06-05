@@ -2577,3 +2577,12 @@
       return USER_DEFAULT_SCREEN_DPI;
   }
   ```
+
+- 如何通过命令行修复系统？
+
+  ```powershell
+  sfc /scannow
+  DISM.exe /Online /Cleanup-image /Restorehealth
+  ```
+
+  管理员权限PowerShell运行上述任意一个命令即可
