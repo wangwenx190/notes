@@ -2359,3 +2359,19 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   ```
 
   当然了，把裸的样式表字符串传过去也是完全没问题的。
+- `QWidget`调用`winId()`函数后无法接收到`WM_NCHITTEST`消息
+  - 原因：所有`QWidget`默认都不是原生窗口（无窗口句柄），一旦调用`winId()`，Qt会自动给它创建一个原生的父窗口，Windows消息就都被这个父窗口拦截了
+  - 解决方案：
+
+    ```cpp
+    // main 函数
+    QApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
+    QApplication::setAttribute(Qt::AA_NativeWindows, false);
+    // 对应的widget
+    setAttribute(Qt::WA_DontCreateNativeAncestors);
+    setAttribute(Qt::WA_NativeWindow);
+    ```
+
+- `QDockWidget`无法通过`WM_NCCALCSIZE`或`Qt::FramelessWindowHint`实现自定义标题栏
+
+  `QDockWidget`官方就有设置自定义标题栏的函数[`setTitleBarWidget`](https://doc.qt.io/qt-6/qdockwidget.html#setTitleBarWidget)，用这个就可以，不要自己去实现
