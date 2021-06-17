@@ -972,8 +972,7 @@
           IUniformResourceLocatorW *iurl = nullptr;
           if (FAILED(CoCreateInstance(CLSID_InternetShortcut, nullptr,
                                       CLSCTX_INPROC_SERVER,
-                                      IID_IUniformResourceLocatorW,
-                                      reinterpret_cast<LPVOID *>(&iurl)))) {
+                                      IID_PPV_ARGS(&iurl)))) {
               qDebug() << "Failed to initialize the operation.";
               return false;
           }
@@ -1001,8 +1000,7 @@
               workingDir.isEmpty() ? fileInfo.absolutePath() : workingDir;
           IShellLinkW *psl = nullptr;
           if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr,
-                                      CLSCTX_INPROC_SERVER, IID_IShellLinkW,
-                                      reinterpret_cast<LPVOID *>(&psl)))) {
+                                      CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&psl)))) {
               qDebug() << "Failed to initialize the operation.";
               return false;
           }
@@ -1029,8 +1027,7 @@
           iunkn = psl;
       }
       IPersistFile *ppf = nullptr;
-      if (SUCCEEDED(iunkn->QueryInterface(IID_IPersistFile,
-                                          reinterpret_cast<void **>(&ppf)))) {
+      if (SUCCEEDED(iunkn->QueryInterface(IID_PPV_ARGS(&ppf)))) {
           ppf->Save(reinterpret_cast<const wchar_t *>(
                         QDir::toNativeSeparators(_linkName).utf16()),
                     true);
@@ -1466,14 +1463,11 @@
   5. 在Win7及更新的系统上打开系统设置窗口，提示用户设置默认程序
 
       ```cpp
-      // 头文件：shobjidl.h
-      IApplicationAssociationRegistrationUI* pAARUI = nullptr;
-      const HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI));
-      const bool success = (SUCCEEDED(hr) && (pAARUI != nullptr));
-      if (success) {
+      // 头文件：shobjidl.h, atlbase.h
+      CComPtr<IApplicationAssociationRegistrationUI> pAARUI;
+      if (SUCCEEDED(CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI)))) {
           // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
           pAARUI->LaunchAdvancedAssociationUI(L"My Application");
-          pAARUI->Release();
       }
       ```
 
@@ -1482,7 +1476,9 @@
 
       ```cpp
       CComPtr<IApplicationAssociationRegistration> m_pAAR;
-      ASSERT(SUCCEEDED(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&m_pAAR))));
+      if (FAILED(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&m_pAAR)))) {
+          return false;
+      }
       BOOL bIsDefault = FALSE;
       if (m_pAAR) {
           // 下面用到的这个程序名一定要与“HKLM\SOFTWARE\RegisteredApplications”下的名字相对应
@@ -1644,14 +1640,11 @@
                       nullptr, SW_SHOW);
           } else if (isWin7OrNewer()) {
               // Let the user choose the default application.
-              IApplicationAssociationRegistrationUI *pAARUI = nullptr;
-              const HRESULT hr =
-                  CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI,
-                                   nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI));
-              if (SUCCEEDED(hr) && (pAARUI != nullptr)) {
+              CComPtr<IApplicationAssociationRegistrationUI> pAARUI;
+              if (SUCCEEDED(CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI,
+                                      nullptr, CLSCTX_INPROC, IID_PPV_ARGS(&pAARUI)))) {
                   pAARUI->LaunchAdvancedAssociationUI(
                       reinterpret_cast<const wchar_t *>(displayName.utf16()));
-                  pAARUI->Release();
               } else {
                   qDebug() << "Failed to launch advanced association UI.";
                   // No need to return false because we have registered all file
@@ -2319,16 +2312,18 @@
 
   ```cpp
   #include <netlistmgr.h>
+  #include <atlbase.h>
+
   bool Utilities::isInternetAvailable()
   {
       if (FAILED(CoInitialize(nullptr))) {
           return false;
       }
       bool result = false;
-      IUnknown *pUnknown = nullptr;
-      if (SUCCEEDED(CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_ALL, IID_IUnknown, reinterpret_cast<void **>(&pUnknown)))) {
-          INetworkListManager *pNetworkListManager = nullptr;
-          if (SUCCEEDED(pUnknown->QueryInterface(IID_INetworkListManager, reinterpret_cast<void **>(&pNetworkListManager)))) {
+      CComPtr<IUnknown> pUnknown;
+      if (SUCCEEDED(CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&pUnknown)))) {
+          CComPtr<INetworkListManager> pNetworkListManager;
+          if (SUCCEEDED(pUnknown->QueryInterface(IID_PPV_ARGS(&pNetworkListManager)))) {
               VARIANT_BOOL isConnected = VARIANT_FALSE;
               if (SUCCEEDED(pNetworkListManager->get_IsConnectedToInternet(&isConnected))) {
                   result = isConnected == VARIANT_TRUE;
@@ -2339,9 +2334,7 @@
                   }
   #endif
               }
-              pNetworkListManager->Release();
           }
-          pUnknown->Release();
       }
       CoUninitialize();
       return result;
