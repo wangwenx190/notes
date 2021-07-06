@@ -1407,7 +1407,6 @@
 
       注意事项：
       - `ProgID`的命名规则为`公司名.产品名[.子产品名.版本号]`，前两项必填，后两项选填
-      - `wangwenx190.MyApp.MP3.1`这个注册表项要在`HKEY_LOCAL_MACHINE\SOFTWARE\Classes`和`HKEY_CLASSES_ROOT`下都创建一份，两份的内容完全相同
       - 路径一定要用英文半角双引号括起来，不管路径中有没有空格
       - 尽量不要把路径写死，能用相对路径就用相对路径，能用环境变量就用环境变量
       - 路径中尽量用`\`而不是`/`
@@ -1504,7 +1503,7 @@
           QString operation;
           QString command;
       };
-      using FileAssocIdList = QVector<FileAssocId>;
+      using FileAssocIdList = QList<FileAssocId>;
 
       bool QtPlatformUtils::registerFileType(const QString &applicationPath,
                                              const QString &applicationDisplayName,
