@@ -950,7 +950,7 @@
       bool neededCoInit;
   };
 
-  bool QtPlatformUtils::createShortcut(
+  bool createShortcut(
       const QString &fileName, const QString &linkName, const QString &workingDir,
       const QStringList &arguments, const QString &iconPath,
       const QString &iconId, const QString &description) {
@@ -1208,13 +1208,13 @@
     const char *DWM_REGISTRY_KEY =
         R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM)";
 
-    bool QtPlatformUtils::isWin10OrNewer() {
+    bool isWin10OrNewer() {
         return (QOperatingSystemVersion::current() >=
                 QOperatingSystemVersion::Windows10);
     }
 
     // 获取用户设置的主题色显示区域
-    QtPlatformUtils::ColorizationSurfaces QtPlatformUtils::colorizationSurfaces() {
+    ColorizationSurfaces colorizationSurfaces() {
         if (!isWin10OrNewer()) {
             qDebug(
                 "Querying colorization surfaces is meaningless below Windows 10.");
@@ -1252,7 +1252,7 @@
     }
 
     // 设置
-    bool QtPlatformUtils::setColorizationSurfaces(ColorizationSurfaces surfaces) {
+    bool setColorizationSurfaces(ColorizationSurfaces surfaces) {
         if (!isWin10OrNewer()) {
             qDebug(
                 "Setting colorization surfaces is only available on Windows 10.");
@@ -1505,7 +1505,7 @@
       };
       using FileAssocIdList = QList<FileAssocId>;
 
-      bool QtPlatformUtils::registerFileType(const QString &applicationPath,
+      bool registerFileType(const QString &applicationPath,
                                              const QString &applicationDisplayName,
                                              const QString &applicationDescription,
                                              const QString &companyName,
@@ -1740,7 +1740,7 @@
 - 打开文件管理器（explorer.exe），并在其中定位某个文件或文件夹
 
   ```cpp
-  bool QtPlatformUtils::showContainingFolder(const QString &path) {
+  bool showContainingFolder(const QString &path) {
       if (path.isEmpty()) {
           qDebug() << "Cannot locate the given file: empty path.";
           return false;
@@ -1768,7 +1768,7 @@
 - 打开命令提示符窗口并将工作路径切换到指定位置
 
   ```cpp
-  bool QtPlatformUtils::openTerminal(const QString &workingDir) {
+  bool openTerminal(const QString &workingDir) {
       STARTUPINFOW si;
       SecureZeroMemory(&si, sizeof(si));
       si.cb = sizeof(si);
@@ -1803,7 +1803,7 @@
   - 获取
 
     ```cpp
-    QString QtPlatformUtils::wallpaper() {
+    QString wallpaper() {
         wchar_t *path = nullptr;
         if (!SystemParametersInfoW(SPI_GETDESKWALLPAPER, 0, (LPWSTR)&path, 0)) {
             qDebug() << "Failed to query wallpaper path.";
@@ -1822,7 +1822,7 @@
   - 设置
 
     ```cpp
-    bool QtPlatformUtils::setWallpaper(const QString &path) {
+    bool setWallpaper(const QString &path) {
         if (path.isEmpty()) {
             qDebug() << "Failed to set wallpaper: empty path.";
             return false;
@@ -1852,7 +1852,7 @@
   - 获取
 
     ```cpp
-    bool QtPlatformUtils::isHighContrastModeEnabled() {
+    bool isHighContrastModeEnabled() {
         HIGHCONTRASTW hc;
         SecureZeroMemory(&hc, sizeof(hc));
         hc.cbSize = sizeof(hc);
@@ -1867,7 +1867,7 @@
   - 设置
 
     ```cpp
-    bool QtPlatformUtils::setHighContrastModeEnabled(bool enable) {
+    bool setHighContrastModeEnabled(bool enable) {
         HIGHCONTRASTW hc;
         SecureZeroMemory(&hc, sizeof(hc));
         hc.cbSize = sizeof(hc);
@@ -1889,7 +1889,7 @@
   - 方法1：Win32 API `DwmGetColorizationColor()`
 
     ```cpp
-    QColor QtPlatformUtils::colorizationColor() {
+    QColor colorizationColor() {
         DWORD color = 0;
         BOOL dummy = FALSE;
         if (FAILED(DwmGetColorizationColor(&color, &dummy))) {
