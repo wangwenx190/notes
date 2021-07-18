@@ -2578,3 +2578,102 @@
   ```
 
   管理员权限PowerShell运行上述任意一个命令即可
+
+- 如何设置和获取程序的DPI感知级别？
+
+  ```cpp
+  typedef enum _PROCESS_DPI_AWARENESS {
+      PROCESS_DPI_UNAWARE = 0,
+      PROCESS_SYSTEM_DPI_AWARE = 1,
+      PROCESS_PER_MONITOR_DPI_AWARE = 2,
+      PROCESS_PER_MONITOR_DPI_AWARE_V2 = 3 // 这个值原版SDK里没有，是我自己扩充进去的
+  } PROCESS_DPI_AWARENESS;
+
+  using SetProcessDpiAwarenessContextPrototype = BOOL(WINAPI *)(DPI_AWARENESS_CONTEXT);
+  using GetWindowDpiAwarenessContextPrototype = DPI_AWARENESS_CONTEXT(WINAPI *)(HWND);
+  using GetAwarenessFromDpiAwarenessContextPrototype = DPI_AWARENESS(WINAPI *)(DPI_AWARENESS_CONTEXT);
+  using SetProcessDpiAwarenessPrototype = HRESULT(WINAPI *)(PROCESS_DPI_AWARENESS);
+  using GetProcessDpiAwarenessPrototype = HRESULT(WINAPI *)(HANDLE, PROCESS_DPI_AWARENESS *);
+
+  static SetProcessDpiAwarenessContextPrototype SetProcessDpiAwarenessContextPFN = nullptr;
+  static GetWindowDpiAwarenessContextPrototype GetWindowDpiAwarenessContextPFN = nullptr;
+  static GetAwarenessFromDpiAwarenessContextPrototype GetAwarenessFromDpiAwarenessContextPFN = nullptr;
+  static SetProcessDpiAwarenessPrototype SetProcessDpiAwarenessPFN = nullptr;
+  static GetProcessDpiAwarenessPrototype GetProcessDpiAwarenessPFN = nullptr;
+
+  const HMODULE User32Dll = LoadLibraryExW(L"User32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+  SetProcessDpiAwarenessContextPFN = reinterpret_cast<SetProcessDpiAwarenessContextPrototype>(GetProcAddress(User32Dll, "SetProcessDpiAwarenessContext"));
+  GetWindowDpiAwarenessContextPFN = reinterpret_cast<GetWindowDpiAwarenessContextPrototype>(GetProcAddress(User32Dll, "GetWindowDpiAwarenessContext"));
+  GetAwarenessFromDpiAwarenessContextPFN = reinterpret_cast<GetAwarenessFromDpiAwarenessContextPrototype>(GetProcAddress(User32Dll, "GetAwarenessFromDpiAwarenessContext"));
+  FreeLibrary(User32Dll);
+
+  const HMODULE SHCoreDll = LoadLibraryExW(L"SHCore.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+  SetProcessDpiAwarenessPFN = reinterpret_cast<SetProcessDpiAwarenessPrototype>(GetProcAddress(SHCoreDll, "SetProcessDpiAwareness"));
+  GetProcessDpiAwarenessPFN = reinterpret_cast<GetProcessDpiAwarenessPrototype>(GetProcAddress(SHCoreDll, "GetProcessDpiAwareness"));
+  FreeLibrary(SHCoreDll);
+
+  bool isWindowDPIAware(const HWND hWnd)
+  {
+      if (GetWindowDpiAwarenessContextPFN && GetAwarenessFromDpiAwarenessContextPFN) {
+          const DPI_AWARENESS windowDpiAwareness = GetAwarenessFromDpiAwarenessContextPFN(GetWindowDpiAwarenessContextPFN(hWnd));
+          if (windowDpiAwareness != DPI_AWARENESS_INVALID) {
+              // FIXME: turn into enum
+              const int DPI_AWARENESS_PER_MONITOR_AWARE_V2 = 3;
+              return ((windowDpiAwareness == DPI_AWARENESS_SYSTEM_AWARE)
+                      || (windowDpiAwareness == DPI_AWARENESS_PER_MONITOR_AWARE)
+                      || (windowDpiAwareness == DPI_AWARENESS_PER_MONITOR_AWARE_V2));
+          }
+      }
+      if (GetProcessDpiAwarenessPFN) {
+          PROCESS_DPI_AWARENESS processDpiAwareness = PROCESS_DPI_UNAWARE;
+          if (SUCCEEDED(GetProcessDpiAwarenessPFN(nullptr, &processDpiAwareness))) {
+              return ((processDpiAwareness == PROCESS_SYSTEM_DPI_AWARE)
+                      || (processDpiAwareness == PROCESS_PER_MONITOR_DPI_AWARE)
+                      || (processDpiAwareness == PROCESS_PER_MONITOR_DPI_AWARE_V2));
+          }
+      }
+      return (IsProcessDPIAware() != FALSE);
+  }
+
+  bool setProcessDPIAwareEnabled(const bool enable)
+  {
+      if (enable) {
+          if (SetProcessDpiAwarenessContextPFN) {
+              if (SetProcessDpiAwarenessContextPFN(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) != FALSE) {
+                  return true;
+              }
+              if (SetProcessDpiAwarenessContextPFN(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE) != FALSE) {
+                  return true;
+              }
+              if (SetProcessDpiAwarenessContextPFN(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE) != FALSE) {
+                  return true;
+              }
+          }
+          if (SetProcessDpiAwarenessPFN) {
+              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_PER_MONITOR_DPI_AWARE_V2))) {
+                  return true;
+              }
+              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_PER_MONITOR_DPI_AWARE))) {
+                  return true;
+              }
+              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_SYSTEM_DPI_AWARE))) {
+                  return true;
+              }
+          }
+          return (SetProcessDPIAware() != FALSE);
+      } else {
+          if (SetProcessDpiAwarenessContextPFN) {
+              if (SetProcessDpiAwarenessContextPFN(DPI_AWARENESS_CONTEXT_UNAWARE) != FALSE) {
+                  return true;
+              }
+          }
+          if (SetProcessDpiAwarenessPFN) {
+              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_DPI_UNAWARE))) {
+                  return true;
+              }
+          }
+          // TODO: Is there a way to disable DPI aware on Windows 7?
+          return false;
+      }
+  }
+  ```
