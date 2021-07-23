@@ -2582,18 +2582,27 @@
 - 如何设置和获取程序的DPI感知级别？
 
   ```cpp
-  typedef enum _PROCESS_DPI_AWARENESS {
-      PROCESS_DPI_UNAWARE = 0,
-      PROCESS_SYSTEM_DPI_AWARE = 1,
-      PROCESS_PER_MONITOR_DPI_AWARE = 2,
-      PROCESS_PER_MONITOR_DPI_AWARE_V2 = 3 // 这个值原版SDK里没有，是我自己扩充进去的
-  } PROCESS_DPI_AWARENESS;
+  typedef enum _PROCESS_DPI_AWARENESS_EX {
+      PROCESS_DPI_INVALID              = -1,
+      PROCESS_DPI_UNAWARE              =  0,
+      PROCESS_SYSTEM_DPI_AWARE         =  1,
+      PROCESS_PER_MONITOR_DPI_AWARE    =  2,
+      PROCESS_PER_MONITOR_DPI_AWARE_V2 =  3
+  } PROCESS_DPI_AWARENESS_EX;
+
+  typedef enum _DPI_AWARENESS_EX {
+      DPI_AWARENESS_INVALID              = -1,
+      DPI_AWARENESS_UNAWARE              =  0,
+      DPI_AWARENESS_SYSTEM_AWARE         =  1,
+      DPI_AWARENESS_PER_MONITOR_AWARE    =  2,
+      DPI_AWARENESS_PER_MONITOR_AWARE_V2 =  3
+  } DPI_AWARENESS_EX;
 
   using SetProcessDpiAwarenessContextPrototype = BOOL(WINAPI *)(DPI_AWARENESS_CONTEXT);
   using GetWindowDpiAwarenessContextPrototype = DPI_AWARENESS_CONTEXT(WINAPI *)(HWND);
-  using GetAwarenessFromDpiAwarenessContextPrototype = DPI_AWARENESS(WINAPI *)(DPI_AWARENESS_CONTEXT);
-  using SetProcessDpiAwarenessPrototype = HRESULT(WINAPI *)(PROCESS_DPI_AWARENESS);
-  using GetProcessDpiAwarenessPrototype = HRESULT(WINAPI *)(HANDLE, PROCESS_DPI_AWARENESS *);
+  using GetAwarenessFromDpiAwarenessContextPrototype = DPI_AWARENESS_EX(WINAPI *)(DPI_AWARENESS_CONTEXT);
+  using SetProcessDpiAwarenessPrototype = HRESULT(WINAPI *)(PROCESS_DPI_AWARENESS_EX);
+  using GetProcessDpiAwarenessPrototype = HRESULT(WINAPI *)(HANDLE, PROCESS_DPI_AWARENESS_EX *);
 
   static SetProcessDpiAwarenessContextPrototype SetProcessDpiAwarenessContextPFN = nullptr;
   static GetWindowDpiAwarenessContextPrototype GetWindowDpiAwarenessContextPFN = nullptr;
@@ -2615,17 +2624,15 @@
   bool isWindowDPIAware(const HWND hWnd)
   {
       if (GetWindowDpiAwarenessContextPFN && GetAwarenessFromDpiAwarenessContextPFN) {
-          const DPI_AWARENESS windowDpiAwareness = GetAwarenessFromDpiAwarenessContextPFN(GetWindowDpiAwarenessContextPFN(hWnd));
+          const DPI_AWARENESS_EX windowDpiAwareness = GetAwarenessFromDpiAwarenessContextPFN(GetWindowDpiAwarenessContextPFN(hWnd));
           if (windowDpiAwareness != DPI_AWARENESS_INVALID) {
-              // FIXME: turn into enum
-              const int DPI_AWARENESS_PER_MONITOR_AWARE_V2 = 3;
               return ((windowDpiAwareness == DPI_AWARENESS_SYSTEM_AWARE)
                       || (windowDpiAwareness == DPI_AWARENESS_PER_MONITOR_AWARE)
                       || (windowDpiAwareness == DPI_AWARENESS_PER_MONITOR_AWARE_V2));
           }
       }
       if (GetProcessDpiAwarenessPFN) {
-          PROCESS_DPI_AWARENESS processDpiAwareness = PROCESS_DPI_UNAWARE;
+          PROCESS_DPI_AWARENESS_EX processDpiAwareness = PROCESS_DPI_INVALID;
           if (SUCCEEDED(GetProcessDpiAwarenessPFN(nullptr, &processDpiAwareness))) {
               return ((processDpiAwareness == PROCESS_SYSTEM_DPI_AWARE)
                       || (processDpiAwareness == PROCESS_PER_MONITOR_DPI_AWARE)
