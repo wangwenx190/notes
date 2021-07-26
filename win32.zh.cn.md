@@ -2493,8 +2493,8 @@
   using PROCESS_DPI_AWARENESS = enum _PROCESS_DPI_AWARENESS
   {
       PROCESS_DPI_UNAWARE = 0,
-      PROCESS_SYSTEM_DPI_AWARE = 1,
-      PROCESS_PER_MONITOR_DPI_AWARE = 2
+      PROCESS_DPI_SYSTEM_AWARE = 1,
+      PROCESS_DPI_PER_MONITOR_AWARE = 2
   };
 
   using GetDpiForMonitorPtr = HRESULT(WINAPI *)(HMONITOR, MONITOR_DPI_TYPE, UINT *, UINT *);
@@ -2585,9 +2585,9 @@
   typedef enum _PROCESS_DPI_AWARENESS_EX {
       PROCESS_DPI_INVALID              = -1,
       PROCESS_DPI_UNAWARE              =  0,
-      PROCESS_SYSTEM_DPI_AWARE         =  1,
-      PROCESS_PER_MONITOR_DPI_AWARE    =  2,
-      PROCESS_PER_MONITOR_DPI_AWARE_V2 =  3
+      PROCESS_DPI_SYSTEM_AWARE         =  1,
+      PROCESS_DPI_PER_MONITOR_AWARE    =  2,
+      PROCESS_DPI_PER_MONITOR_V2_AWARE =  3
   } PROCESS_DPI_AWARENESS_EX;
 
   typedef enum _DPI_AWARENESS_EX {
@@ -2595,7 +2595,7 @@
       DPI_AWARENESS_UNAWARE              =  0,
       DPI_AWARENESS_SYSTEM_AWARE         =  1,
       DPI_AWARENESS_PER_MONITOR_AWARE    =  2,
-      DPI_AWARENESS_PER_MONITOR_AWARE_V2 =  3
+      DPI_AWARENESS_PER_MONITOR_V2_AWARE =  3
   } DPI_AWARENESS_EX;
 
   using SetProcessDpiAwarenessContextPrototype = BOOL(WINAPI *)(DPI_AWARENESS_CONTEXT);
@@ -2623,20 +2623,20 @@
 
   bool isWindowDPIAware(const HWND hWnd)
   {
-      if (GetWindowDpiAwarenessContextPFN && GetAwarenessFromDpiAwarenessContextPFN) {
+      if (hWnd && GetWindowDpiAwarenessContextPFN && GetAwarenessFromDpiAwarenessContextPFN) {
           const DPI_AWARENESS_EX windowDpiAwareness = GetAwarenessFromDpiAwarenessContextPFN(GetWindowDpiAwarenessContextPFN(hWnd));
           if (windowDpiAwareness != DPI_AWARENESS_INVALID) {
               return ((windowDpiAwareness == DPI_AWARENESS_SYSTEM_AWARE)
                       || (windowDpiAwareness == DPI_AWARENESS_PER_MONITOR_AWARE)
-                      || (windowDpiAwareness == DPI_AWARENESS_PER_MONITOR_AWARE_V2));
+                      || (windowDpiAwareness == DPI_AWARENESS_PER_MONITOR_V2_AWARE));
           }
       }
       if (GetProcessDpiAwarenessPFN) {
           PROCESS_DPI_AWARENESS_EX processDpiAwareness = PROCESS_DPI_INVALID;
           if (SUCCEEDED(GetProcessDpiAwarenessPFN(nullptr, &processDpiAwareness))) {
-              return ((processDpiAwareness == PROCESS_SYSTEM_DPI_AWARE)
-                      || (processDpiAwareness == PROCESS_PER_MONITOR_DPI_AWARE)
-                      || (processDpiAwareness == PROCESS_PER_MONITOR_DPI_AWARE_V2));
+              return ((processDpiAwareness == PROCESS_DPI_SYSTEM_AWARE)
+                      || (processDpiAwareness == PROCESS_DPI_PER_MONITOR_AWARE)
+                      || (processDpiAwareness == PROCESS_DPI_PER_MONITOR_V2_AWARE));
           }
       }
       return (IsProcessDPIAware() != FALSE);
@@ -2657,13 +2657,13 @@
               }
           }
           if (SetProcessDpiAwarenessPFN) {
-              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_PER_MONITOR_DPI_AWARE_V2))) {
+              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_DPI_PER_MONITOR_V2_AWARE))) {
                   return true;
               }
-              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_PER_MONITOR_DPI_AWARE))) {
+              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_DPI_PER_MONITOR_AWARE))) {
                   return true;
               }
-              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_SYSTEM_DPI_AWARE))) {
+              if (SUCCEEDED(SetProcessDpiAwarenessPFN(PROCESS_DPI_SYSTEM_AWARE))) {
                   return true;
               }
           }
