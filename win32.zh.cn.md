@@ -56,6 +56,8 @@
     <!-- 兼容性设置，根据项目的具体需求设置，非必需。 -->
     <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
       <application>
+        <!-- 此项对于使用了 XAML Island 技术的程序而言是必需的，否则程序无法运行。对于 Win32 程序而言是可选的。 -->
+        <maxversiontested Id="10.0.19043.0"/>
         <!-- 把不支持的系统从下面移除即可。注意下面的Id值都是固定的，不要乱改。 -->
         <!-- Windows Vista and Windows Server 2008 -->
         <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/>
