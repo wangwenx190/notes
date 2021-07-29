@@ -1979,30 +1979,68 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   总结：在执行耗时操作时，推荐使用`Qt Concurrent`模块实现多线程，不仅完全不会使界面卡住，还能以较少的代码实现较多较高级的功能，用起来十分方便舒心。
 - 监视文件（夹）的变化：请自行查阅`QFileSystemWatcher`的用法。
 - 向Qt提交补丁
+  - 注册 Gerrit 账号：<https://wiki.qt.io/Setting_up_Gerrit>。注意，用户名（Username）一定要是全小写英文，全名（Full name）一定要以大写字母开头，否则提交代码时机器人的检查无法通过。
+  - 生成SSH密钥并关联到 Gerrit 账号：
 
-  ```bash
-  # 【非常重要】根据 https://wiki.qt.io/Setting_up_Gerrit 设置好 Gerrit（一次性）
-  # 到 https://code.qt.io/cgit/ 克隆只读仓库（一次性）
-  # 此处以 qtbase 模块为例
-  git clone https://code.qt.io/qt/qtbase.git
-  # 设置 git hook（一次性）
-  gitdir=$(git rev-parse --git-dir); scp -P 29418 codereview.qt-project.org:hooks/commit-msg ${gitdir}/hooks/
-  # 添加 Gerrit 远端（一次性）
-  # 此处以 qtbase 模块为例
-  git remote add gerrit ssh://codereview.qt-project.org/qt/qtbase
-  # 切换到需要的分支。此处以 5.14 分支为例。
-  git checkout 5.14
-  # 新建分支用于制作补丁
-  git checkout -b my-fix
-  # 修改文件
-  # 提交到本地仓库
-  git commit -a
-  # 推送到 Gerrit 远端。此处以 5.14 分支为例。
-  git push gerrit HEAD:refs/for/5.14
-  # 到 https://codereview.qt-project.org/ 查看并找人 review
-  ```
+    ```bash
+    ssh-keygen -t rsa -b 4096 -C "my comment" -f ~/.ssh/id_rsa_qt
+    ```
 
-  注：如果需要修改已经提交的内容（例如代码审阅人提出了修改意见），可以在本地分支直接修改（切换到补丁所在的分支之后就不要再动*Git*了，直接在上次提交的基础上进行修改），然后使用`git commit -a --amend`修改上一次的提交（所有内容都改完了，再执行这一条命令即可，这条命令的意思是，当前所做的所有的改动，都是对上一次提交的改动，而不是创建一个新的提交），再重新推送到远端即可。这样会在*JIRA*上形成多个*patch set*。注意在执行`git commit`命令时一定不要忘了`-a`和`--amend`这两个参数，`-a`这个参数的作用是把所有未跟踪的文件添加到跟踪列表，`--amend`参数的作用是指示*Git*此次操作是修改而不是创建提交。
+    `ssh-keygen`这个程序只要装了`Git`就有，可以直接在任意路径打开`Git Bash`输入此命令。`-C`后面那个是这个密钥的注释（可以看作是标题），关联Gerrit后会显示在设置选项里，防止你添加多个密钥后区分不开，所以这个注释要让自己能明显区分不同的密钥。`-f`后面那个是生成的密钥文件的路径，对于Windows系统而言，`~/.ssh`就是`我的文档`下的`.ssh`文件夹，没有的话可以自己新建一个，无所谓的，`id_rsa_qt`是密钥文件的文件名，没有后缀名，名字随意，如果你有多个SSH密钥的话，注意不要和其他密钥文件重名，否则会被覆盖掉。这个路径要用UNIX风格的路径，所以`我的文档`的路径是`~`，而且要使用斜杠`/`而不是反斜杠`\`，而且不要加双引号。
+
+    生成完毕后进入`我的文档`下的`.ssh`文件夹，会发现多了两个文件，一个是`id_rsa_qt`，一个是`id_rsa_qt.pub`，前者是私钥文件，后者是公钥文件。私钥不可泄漏，应仅自己知道，公钥可以公开，并且需要将公钥上传至Gerrit。直接当作普通文本文档打开即可，将文件里的所有内容复制粘贴到Gerrit设置栏里的`SSH Keys`区域。
+
+    查看`.ssh`文件夹下是否有`config`文件（无后缀名），有则当作普通文本文档打开，没有就直接新建一个，在文件末尾追加以下内容：
+
+    ```text
+    # Host 字段为固定值，不要修改
+    Host codereview.qt-project.org
+        # Port 字段为固定值，不要修改
+        Port 29418
+        # User 为你在Gerrit里设置的用户名（Username），不是全名（Full name）或者昵称或者邮箱之类的，一定不要填错
+        User wangwenx190
+        # PreferredAuthentications 字段为固定值，不要修改
+        PreferredAuthentications publickey
+        # IdentityFile 填写刚才生成的SSH私钥文件的路径，不要加双引号，我的文档的路径以“~”代替，不要用反斜杠“\”
+        IdentityFile ~/.ssh/id_rsa_qt
+        # StrictHostKeyChecking 字段为固定值，不要修改
+        StrictHostKeyChecking no
+        # UserKnownHostsFile 字段为固定值，不要修改
+        UserKnownHostsFile /dev/null
+    ```
+
+    前面都设置完成后，在`Git Bash`中输入以下命令，检查是否能正常连接Gerrit：
+
+    ```bash
+    ssh codereview.qt-project.org
+    ```
+
+    如果显示了一段欢迎信息，则证明设置成功，可以进行下一步操作，按下`CTRL + C`结束当前命令的执行。如果没有显示欢迎信息，则要检查前面的设置是否正确，网络环境是否良好，命令是否打错等等。
+
+  - 克隆仓库，修改代码，提交代码：
+
+    ```bash
+    # 到 https://code.qt.io/cgit/ 克隆只读仓库
+    # 此处以 qtbase 模块为例
+    git clone --recursive https://code.qt.io/qt/qtbase.git
+    # 设置 git hook（一次性）
+    gitdir=$(git rev-parse --git-dir); scp -P 29418 codereview.qt-project.org:hooks/commit-msg ${gitdir}/hooks/
+    # 添加 Gerrit 远端（一次性）
+    # 此处以 qtbase 模块为例
+    git remote add gerrit ssh://codereview.qt-project.org/qt/qtbase
+    # 切换到需要的分支。此处以 5.15 分支为例。
+    git checkout 5.15
+    # 新建分支用于制作补丁
+    git checkout -b my-fix
+    # 修改文件
+    # 提交到本地仓库
+    git commit -a
+    # 推送到 Gerrit 远端。此处以 5.15 分支为例。
+    git push gerrit HEAD:refs/for/5.15
+    # 到 https://codereview.qt-project.org/ 查看并找人 review
+    ```
+
+    如果需要修改已经提交的内容（例如代码审阅人提出了修改意见），可以在本地分支直接修改（切换到补丁所在的分支之后就不要再动*Git*了，直接在上次提交的基础上进行修改），然后使用`git commit -a --amend`修改上一次的提交（所有内容都改完了，再执行这一条命令即可，这条命令的意思是，当前所做的所有的改动，都是对上一次提交的改动，而不是创建一个新的提交），再重新推送到远端即可。这样会在*JIRA*上形成多个*patch set*。注意在执行`git commit`命令时一定不要忘了`-a`和`--amend`这两个参数，`-a`这个参数的作用是把所有未跟踪的文件添加到跟踪列表，`--amend`参数的作用是指示*Git*此次操作是修改而不是创建提交。
 
 - 在Qt 5.10以后，表格控件`QTableWidget`或`QTableView`默认的最小列宽改成了15，以前的版本是0。所以在新版的Qt中，如果设置表格列宽时数值过小，小于15（即默认的最小列宽），将不会生效。所以如果要设置比默认的最小列宽更小的列宽需要修改最小列宽：`ui->tableView->horizontalHeader()->setMinimumSectionSize(0);`
 - 不要直接在构造函数里获取控件的尺寸和位置等信息，因为Qt的各种控件在被显示出来之前是不具备这些信息的，虽然能获取到具体的数字，但不一定准确。如果一定要获取类似的信息，一定要等它们显出出来再进行。
