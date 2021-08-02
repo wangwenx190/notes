@@ -2413,3 +2413,30 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
 - `QDockWidget`无法通过`WM_NCCALCSIZE`或`Qt::FramelessWindowHint`实现自定义标题栏
 
   `QDockWidget`官方就有设置自定义标题栏的函数[`setTitleBarWidget`](https://doc.qt.io/qt-6/qdockwidget.html#setTitleBarWidget)，用这个就可以，不要自己去实现
+- 如果你的项目是一个库，在使用`RCC`内嵌到二进制文件中的资源（用`:/`或者`qrc:/`这种前缀访问的资源）前，一定要使用`Q_INIT_RESOURCE(qrc_file_name)`这个宏初始化资源，对于静态库而言这个操作是必需的，如果缺少这一步操作，会导致程序找不到资源，而且无任何报错信息，很难排查原因。这个宏对于动态库和可执行程序而言不是必须的，但加上这个宏也不会有坏处。简而言之，对于库项目而言，必须有这个宏，虽然对于动态库而言不是必要的，但由于一般的库都可在静态库和动态库之间切换，建议还是统一加上，以防万一。这个宏只有一个参数，那就是要访问的资源所在的`qrc`文件的文件名，不包括后缀名。这个宏虽然可以在程序/函数一开始就调用，但建议还是尽量在真正的使用位置前再调用。而且这个宏还有一个限制一定要注意，那就是这个宏一定不能在命名空间内使用，否则编译不会报错，但程序运行总会崩溃。如果一定要在命名空间内使用，要在命名空间外部定义一个函数，在那个函数里使用这个宏，然后在命名空间内调用那个函数，这样间接使用。具体请查看以下示例代码：
+
+  ```cpp
+  // 假设qrc文件的文件名为“myappres.qrc”
+  static inline void initResource() { Q_INIT_RESOURCE(myappres); }
+
+  namespace MyApp
+  {
+  void MyClass::draw()
+  {
+      if () ...
+      if () ...
+      if () ...
+      if (needRedraw) {
+          initResource();
+          QImage image(":/images/background.jpg");
+          painter.drawImage();
+          ...
+          ...
+          ...
+      }
+      ...
+      ...
+      ...
+  }
+  }
+  ```
