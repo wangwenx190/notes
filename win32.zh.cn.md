@@ -515,10 +515,10 @@
   // 下面这一段代码要在较早的地方执行，例如在程序的 main 函数里。
   // 这一段代码是为了确保 SetForegroundWindow 能执行成功而设置的，在前置窗口前执行过一次就足够了（如果需要的话），不是每次前置窗口都要执行的。
   DWORD dwTimeout = -1;
-  SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
+  SystemParametersInfoW(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
   if (dwTimeout >= 100) {
     // 下面这一行语句因为要读写INI文件，因此可能会导致执行此语句时卡顿两三秒
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
   }
   // 上面的代码结束，下面的代码与上面的没有关系了
   // 下面这一段代码每次前置窗口时都要执行一次，与上面那一段不一样。
@@ -1806,17 +1806,19 @@
 
     ```cpp
     QString wallpaper() {
-        wchar_t *path = nullptr;
-        if (!SystemParametersInfoW(SPI_GETDESKWALLPAPER, 0, (LPWSTR)&path, 0)) {
+        const auto path = new wchar_t[MAX_PATH];
+        if (!SystemParametersInfoW(SPI_GETDESKWALLPAPER, MAX_PATH, (LPWSTR)&path, 0)) {
             qDebug() << "Failed to query wallpaper path.";
-            return QString();
+            delete [] path;
+            return {};
         }
         if (!path) {
             qDebug() << "Failed to query wallpaper path.";
-            return QString();
+            delete [] path;
+            return {};
         }
         const QString result = QString::fromWCharArray(path);
-        LocalFree(path);
+        delete [] path;
         return result;
     }
     ```
@@ -1840,7 +1842,7 @@
         }
         const auto *_path = reinterpret_cast<const wchar_t *>(
             QDir::toNativeSeparators(path).utf16());
-        if (!SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0,
+        if (!SystemParametersInfoW(SPI_SETDESKWALLPAPER, path.length(),
                                    const_cast<wchar_t *>(_path),
                                    SPIF_UPDATEINIFILE | SPIF_SENDCHANGE)) {
             qDebug() << "Failed to set wallpaper.";
@@ -1858,7 +1860,7 @@
         HIGHCONTRASTW hc;
         SecureZeroMemory(&hc, sizeof(hc));
         hc.cbSize = sizeof(hc);
-        if (!SystemParametersInfoW(SPI_GETHIGHCONTRAST, 0, &hc, 0)) {
+        if (!SystemParametersInfoW(SPI_GETHIGHCONTRAST, sizeof(hc), &hc, 0)) {
             qDebug() << "Failed to query high contrast mode state.";
             return false;
         }
@@ -1878,7 +1880,7 @@
         }
         // FIXME: What is the default scheme?
         // hc.lpszDefaultScheme = L"aaa";
-        if (!SystemParametersInfoW(SPI_SETHIGHCONTRAST, 0, &hc,
+        if (!SystemParametersInfoW(SPI_SETHIGHCONTRAST, sizeof(hc), &hc,
                                    SPIF_UPDATEINIFILE | SPIF_SENDCHANGE)) {
             qDebug() << "Failed to change High Contrast Mode's state.";
             return false;
