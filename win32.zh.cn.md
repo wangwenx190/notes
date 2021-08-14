@@ -1767,6 +1767,8 @@
   }
   ```
 
+  或使用官方API`SHOpenFolderAndSelectItems`。
+
 - 打开命令提示符窗口并将工作路径切换到指定位置
 
   ```cpp
