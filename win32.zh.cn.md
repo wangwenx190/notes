@@ -1934,8 +1934,12 @@
 
   | 版本号 | 公开名称 | 开发代号 |
   | --- | --- | --- |
+  | 5.0.2195 | Windows 2000 | - |
+  | 5.1.2600 | Windows XP | - |
+  | 5.2.3790 | Windows XP x64 Edition or Windows Server 2003 | - |
   | 6.0.6000 | Windows Vista | - |
   | 6.0.6001 | Windows Vista with Service Pack 1 or Windows Server 2008 | - |
+  | 6.0.6002 | Windows Vista with Service Pack 2 | - |
   | 6.1.7600 | Windows 7 or Windows Server 2008 R2 | - |
   | 6.1.7601 | Windows 7 with Service Pack 1 or Windows Server 2008 R2 with Service Pack 1 | - |
   | 6.2.9200 | Windows 8 or Windows Server 2012 | - |
