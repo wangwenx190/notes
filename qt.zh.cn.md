@@ -2001,6 +2001,8 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
         User wangwenx190
         # PreferredAuthentications 字段为固定值，不要修改
         PreferredAuthentications publickey
+        # PubkeyAcceptedKeyTypes 字段为固定值，不要修改
+        PubkeyAcceptedKeyTypes +ssh-rsa
         # IdentityFile 填写刚才生成的SSH私钥文件的路径，不要加双引号，我的文档的路径以“~”代替，不要用反斜杠“\”
         IdentityFile ~/.ssh/id_rsa_qt
         # StrictHostKeyChecking 字段为固定值，不要修改
