@@ -1957,7 +1957,8 @@
   | 10.0.19041 | Windows 10 Version 2004 (May 2020 Update) | 20H1 |
   | 10.0.19042 | Windows 10 Version 20H2 (October 2020 Update) | 20H2 |
   | 10.0.19043 | Windows 10 Version 21H1 (May 2021 Update) | 21H1 |
-  | 10.0.22000 | Windows 11 Version 21H2 (N/A) | 21H2 |
+  | 10.0.19044 | Windows 10 Version 21H2 (November 2021 Update) | 21H2 |
+  | 10.0.22000 | Windows 11 | - |
 
 - 使用Win32 API获取系统常见文件夹的路径
 
