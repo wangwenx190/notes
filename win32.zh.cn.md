@@ -2585,11 +2585,11 @@
 - 如何通过命令行修复系统？
 
   ```powershell
-  sfc /scannow
-  DISM.exe /Online /Cleanup-image /Restorehealth
+  DISM.exe /Online /Cleanup-Image /ScanHealth
+  DISM.exe /Online /Cleanup-Image /RestoreHealth
   ```
 
-  管理员权限PowerShell运行上述任意一个命令即可
+  管理员权限PowerShell按顺序运行上述命令
 
 - 如何设置和获取程序的DPI感知级别？
 
