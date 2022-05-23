@@ -37,7 +37,7 @@
     <assemblyIdentity type="win32" name="com.mycompany.myapplication" version="1.0.0.0"/>
     <!-- 应用程序描述，根据项目的实际信息填写，非必需。 -->
     <description>My application</description>
-    <!-- 下面这个设置依赖项的区段是固定的，不要改动。必需。 -->
+    <!-- 下面这个设置依赖项的区段是固定的，不要改动。这一段的作用是开启现代风格（Aero）的控件外观，没有这一段会导致默认Win32控件为经典外观。必需。 -->
     <dependency>
       <dependentAssembly>
         <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*"/>
@@ -47,7 +47,7 @@
     <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
       <security>
         <requestedPrivileges>
-          <!-- 声明我们的程序不需要管理员权限 -->
+          <!-- 声明我们的程序不需要管理员权限。asInvoker意为与调用者权限相同。requireAdministrator意为需要管理员权限。 -->
           <!-- asInvoker/highestAvailable/requireAdministrator -->
           <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
         </requestedPrivileges>
@@ -56,9 +56,25 @@
     <!-- 兼容性设置，根据项目的具体需求设置，非必需。 -->
     <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
       <application>
-        <!-- 此项对于使用了 XAML Island 技术的程序而言是必需的，否则程序无法运行。对于 Win32 程序而言是可选的。 -->
+        <!-- “maxversiontested”对于使用了 XAML Island 技术的程序而言是必需的，否则程序无法运行。对于 Win32 程序而言是可选的。 -->
+        <!-- 由于Windows系统的bug，每一个经过测试的版本都要在此列举出来，而不是仅仅声明“最高”测试的版本。此特性于1903引入，所以最低只能填1903。 -->
+        <!-- Windows 10 Version 1903 (May 2019 Update) -->
+        <maxversiontested Id="10.0.18362.0"/>
+        <!-- Windows 10 Version 1909 (November 2019 Update) -->
+        <maxversiontested Id="10.0.18363.0"/>
+        <!-- Windows 10 Version 2004 (May 2020 Update) -->
+        <maxversiontested Id="10.0.19041.0"/>
+        <!-- Windows 10 Version 20H2 (October 2020 Update) -->
+        <maxversiontested Id="10.0.19042.0"/>
+        <!-- Windows 10 Version 21H1 (May 2021 Update) -->
         <maxversiontested Id="10.0.19043.0"/>
-        <!-- 把不支持的系统从下面移除即可。注意下面的Id值都是固定的，不要乱改。 -->
+        <!-- Windows 10 Version 21H2 (November 2021 Update) -->
+        <maxversiontested Id="10.0.19044.0"/>
+        <!-- Windows 11 Version 21H2 -->
+        <maxversiontested Id="10.0.22000.0"/>
+        <!-- 把不支持的系统从下面移除即可。注意下面的Id值都是固定的，不要改动。 -->
+        <!-- 对于没有列举在此的系统，Windows会对你的程序使用的API进行特定的fallback，而不是让你的程序无法运行。 -->
+        <!-- 这里最低只能填Vista，是不能填XP及以下的。 -->
         <!-- Windows Vista and Windows Server 2008 -->
         <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/>
         <!-- Windows 7 and Windows Server 2008 R2 -->
@@ -74,21 +90,21 @@
     <!-- Windows 设置，根据项目的具体需求设置，非必需。 -->
     <application xmlns="urn:schemas-microsoft-com:asm.v3">
       <windowsSettings>
-        <!-- 声明我们的程序支持高DPI缩放，Windows Vista ~ Win8。如果不进行此项设置，系统会自动强行拉伸程序的界面，导致界面非常模糊 -->
+        <!-- 声明我们的程序支持高DPI缩放，Windows Vista ~ Win8。如果不进行此项设置，系统会自动强行拉伸程序的界面，导致界面非常模糊。此选项不可填多个值。推荐开启。 -->
         <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">True/PM</dpiAware>
-        <!-- 隔离打印机驱动。开启此选项后会使程序更加稳定，推荐开启 -->
+        <!-- 隔离打印机驱动。开启此选项后会使程序更加稳定，推荐开启。 -->
         <printerDriverIsolation xmlns="http://schemas.microsoft.com/SMI/2011/WindowsSettings">True</printerDriverIsolation>
-        <!-- 不知此选项作用。。。 -->
+        <!-- 开启此选项后会导致外部程序无法用普通方法查找到本程序的窗口句柄。例如Spy++就无法获取本程序的窗口句柄。 -->
         <disableWindowFiltering xmlns="http://schemas.microsoft.com/SMI/2011/WindowsSettings">True</disableWindowFiltering>
-        <!-- 声明我们的程序支持高DPI缩放，Win8.1 ~ Win10 -->
-        <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
-        <!-- 声明我们的程序支持长路径（超过260个字符） -->
+        <!-- 声明我们的程序支持高DPI缩放，Win8.1 ~ Win11。此选项可填多个值，越靠前的值越优先。推荐开启。 -->
+        <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor, System</dpiAwareness>
+        <!-- 声明我们的程序支持长路径（超过260个字符）。 -->
         <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">True</longPathAware>
-        <!-- 下面这一行会导致程序界面变模糊，待调查 -->
+        <!-- 如果你的程序完全是用GDI绘制的界面，建议开启此选项，此选项的原理为系统会将你要绘制的内容自动放大，然后根据当前分辨率缩小渲染，从而尽量保证锐利度。注意此选项无法与dpiAware以及dpiAwareness兼容。 -->
         <!-- <gdiScaling xmlns="http://schemas.microsoft.com/SMI/2017/WindowsSettings">True</gdiScaling> -->
-        <!-- 将进程的代码页设置为 UTF-8 -->
+        <!-- 将进程的代码页设置为 UTF-8。Win10系统仅支持设置为UTF-8，设置为其他内容均会被系统忽略，从Win11开始还支持设置为传统的代码页，例如en-US。 -->
         <activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>
-        <!-- 设置进程的堆类型为新型堆类型（现代化类型，微软推荐使用） -->
+        <!-- 设置进程的堆类型为新型堆类型（现代化类型，微软推荐使用）。此选项仅支持SegmentHeap这一个值，其他值均会被忽略。 -->
         <heapType xmlns="http://schemas.microsoft.com/SMI/2020/WindowsSettings">SegmentHeap</heapType>
       </windowsSettings>
     </application>
