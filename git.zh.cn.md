@@ -79,18 +79,9 @@
    git config --global core.pager "less -FRSX"
    ```
 
-- 如果在克隆仓库时无法下载或更新某一个或某几个子模块，或在克隆完成后的某一时间想自行更新子模块，可以用下面的命令：
-
-   ```bash
-   git submodule foreach --recursive git fetch --tags
-   git submodule update --init --recursive
-   ```
-
-- 如何拉取并合并子模块上游的更新：
-  1. 分别进入每个子模块的根目录，均执行`git pull`（或fetch+merge）
-  2. 在仓库根目录执行`git submodule update --remote`，Git会尝试更新所有子模块（不确定会不会自动merge，如果没有就手动合并）
-
-  注：更新完子模块以后记得commit后push到远端
+- 如何更新子模块：
+  1. 在仓库根目录执行`git submodule update --init --recursive --remote`，Git会尝试更新所有子模块
+  2. 更新完子模块以后记得commit后push到远端
 - 如何修改子模块的设置：
   - 修改子模块远端仓库网址：`git config submodule.子模块名.url 新URL`
   - 修改子模块默认分支：`git config -f .gitmodules submodule.子模块名.branch 分支名`
