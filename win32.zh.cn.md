@@ -72,6 +72,8 @@
         <maxversiontested Id="10.0.19044.0"/>
         <!-- Windows 11 Version 21H2 -->
         <maxversiontested Id="10.0.22000.0"/>
+        <!-- Windows 11 Version 22H2 -->
+        <maxversiontested Id="10.0.22621.0"/>
         <!-- 把不支持的系统从下面移除即可。注意下面的Id值都是固定的，不要改动。 -->
         <!-- 对于没有列举在此的系统，Windows会对你的程序使用的API进行特定的fallback，而不是让你的程序无法运行。 -->
         <!-- 这里最低只能填Vista，是不能填XP及以下的。 -->
@@ -83,7 +85,7 @@
         <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/>
         <!-- Windows 8.1 and Windows Server 2012 R2 -->
         <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
-        <!-- Windows 10 -->
+        <!-- Windows 10 and Windows 11 -->
         <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
       </application>
     </compatibility>
@@ -1975,6 +1977,7 @@
   | 10.0.19043 | Windows 10 Version 21H1 (May 2021 Update) | 21H1 |
   | 10.0.19044 | Windows 10 Version 21H2 (November 2021 Update) | 21H2 |
   | 10.0.22000 | Windows 11 Version 21H2 | 21H2 |
+  | 10.0.22621 | Windows 11 Version 22H2 | 22H2 |
 
 - 使用Win32 API获取系统常见文件夹的路径
 
