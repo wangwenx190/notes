@@ -2442,3 +2442,70 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   }
   }
   ```
+
+- 使用Qt获取当前程序所在目录有时会不准？
+
+  原因：无论是使用`QCoreApplication::applicationDirPath()`还是`QDir::currentPath()`，都会受到程序当前工作目录的影响，而且前者无法在实例化`QCoreApplication`之前调用，有一定的限制。
+
+  解决方案：使用平台原生API获取程序绝对路径，然后截掉程序文件名。经过验证，此方法安全可靠，在Windows、Linux以及macOS平台均能完美避免上面提到的问题。
+
+  ```cpp
+  #ifdef Q_OS_WINDOWS
+  #  include <QtCore/qt_windows.h>
+  #elif defined(Q_OS_LINUX)
+  #  include <unistd.h>
+  #  define MIN(x, y) (((x) < (y)) ? (x) : (y))
+  #elif defined(Q_OS_MACOS)
+  #  include <mach-o/dyld.h>
+  #endif
+
+  [[nodiscard]] static inline QString getExecutableDir()
+  {
+  #ifdef Q_OS_MACOS
+      unsigned int bufferSize = 512;
+      std::vector<char> buffer(bufferSize + 1);
+      // "_NSGetExecutablePath" will return "-1" if the buffer is not large enough
+      // and "*bufferSize" will be set to the size required.
+      if (_NSGetExecutablePath(&buffer[0], &bufferSize) != 0) {
+          buffer.resize(bufferSize);
+          _NSGetExecutablePath(&buffer[0], &bufferSize);
+      }
+      char *lastForwardSlash = std::strrchr(&buffer[0], '/');
+      if (lastForwardSlash == nullptr) {
+          return {};
+      }
+      *lastForwardSlash = '\0';
+      return QString::fromUtf8(&buffer[0]);
+  #elif defined(Q_OS_WINDOWS)
+      const HMODULE hModule = GetModuleHandleW(nullptr);
+      if (!hModule) {
+          return {};
+      }
+      wchar_t buffer[MAX_PATH] = {};
+      if (GetModuleFileNameW(hModule, buffer, MAX_PATH) == 0) {
+          return {};
+      }
+      wchar_t *lastBackslash = std::wcsrchr(buffer, L'\\');
+      if (lastBackslash == nullptr) {
+          return {};
+      }
+      *lastBackslash = L'\0';
+      return QString::fromWCharArray(buffer);
+  #elif defined(Q_OS_LINUX)
+      char buffer[FILENAME_MAX] = {};
+      const int bufferSize = sizeof(buffer);
+      const int bytes = MIN(readlink("/proc/self/exe", buffer, bufferSize), (bufferSize - 1));
+      if (bytes >= 0) {
+          buffer[bytes] = '\0';
+      }
+      char *lastForwardSlash = std::strrchr(&buffer[0], '/');
+      if (lastForwardSlash == nullptr) {
+          return {};
+      }
+      *lastForwardSlash = '\0';
+      return QString::fromUtf8(&buffer[0]);
+  #else
+      return {};
+  #endif
+  }
+  ```
