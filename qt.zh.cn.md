@@ -2026,7 +2026,7 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
     # 此处以 qtbase 模块为例
     git clone --recursive https://code.qt.io/qt/qtbase.git
     # 设置 git hook（一次性）
-    gitdir=$(git rev-parse --git-dir); scp -P 29418 codereview.qt-project.org:hooks/commit-msg ${gitdir}/hooks/
+    gitdir=$(git rev-parse --git-dir); scp -O -P 29418 codereview.qt-project.org:hooks/commit-msg ${gitdir}/hooks/
     # 添加 Gerrit 远端（一次性）
     # 此处以 qtbase 模块为例
     git remote add gerrit ssh://codereview.qt-project.org/qt/qtbase
