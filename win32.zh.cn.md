@@ -57,7 +57,9 @@
     <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
       <application>
         <!-- “maxversiontested”对于使用了 XAML Island 技术的程序而言是必需的，否则程序无法运行。对于 Win32 程序而言是可选的。 -->
-        <!-- 由于Windows系统的bug，每一个经过测试的版本都要在此列举出来，而不是仅仅声明“最高”测试的版本。此特性于1903引入，所以最低只能填1903。 -->
+        <!-- 由于Windows系统的bug，每一个经过测试的版本都要在此列举出来，而不是仅仅声明“最高”测试的版本。此特性虽于1903引入，但最低可填1809。 -->
+        <!-- Windows 10 Version 1809 (October 2018 Update) -->
+        <maxversiontested Id="10.0.17763.0"/>
         <!-- Windows 10 Version 1903 (May 2019 Update) -->
         <maxversiontested Id="10.0.18362.0"/>
         <!-- Windows 10 Version 1909 (November 2019 Update) -->
@@ -74,7 +76,7 @@
         <maxversiontested Id="10.0.19045.0"/>
         <!-- Windows 11 Version 21H2 -->
         <maxversiontested Id="10.0.22000.0"/>
-        <!-- Windows 11 Version 22H2 -->
+        <!-- Windows 11 Version 22H2 (October 2022 Update) -->
         <maxversiontested Id="10.0.22621.0"/>
         <!-- 把不支持的系统从下面移除即可。注意下面的Id值都是固定的，不要改动。 -->
         <!-- 对于没有列举在此的系统，Windows会对你的程序使用的API进行特定的fallback，而不是让你的程序无法运行。 -->
@@ -1978,8 +1980,9 @@
   | 10.0.19042 | Windows 10 Version 20H2 (October 2020 Update) | 20H2 |
   | 10.0.19043 | Windows 10 Version 21H1 (May 2021 Update) | 21H1 |
   | 10.0.19044 | Windows 10 Version 21H2 (November 2021 Update) | 21H2 |
+  | 10.0.19045 | Windows 10 Version 22H2 (October 2022 Update) | 22H2 |
   | 10.0.22000 | Windows 11 Version 21H2 | 21H2 |
-  | 10.0.22621 | Windows 11 Version 22H2 | 22H2 |
+  | 10.0.22621 | Windows 11 Version 22H2 (October 2022 Update) | 22H2 |
 
 - 使用Win32 API获取系统常见文件夹的路径
 
