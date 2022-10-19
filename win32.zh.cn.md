@@ -70,6 +70,8 @@
         <maxversiontested Id="10.0.19043.0"/>
         <!-- Windows 10 Version 21H2 (November 2021 Update) -->
         <maxversiontested Id="10.0.19044.0"/>
+        <!-- Windows 10 Version 22H2 (October 2022 Update) -->
+        <maxversiontested Id="10.0.19045.0"/>
         <!-- Windows 11 Version 21H2 -->
         <maxversiontested Id="10.0.22000.0"/>
         <!-- Windows 11 Version 22H2 -->
