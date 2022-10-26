@@ -34,18 +34,18 @@
     bool enableVTMode() {
         // Set output mode to handle virtual terminal sequences
         const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (hOut == INVALID_HANDLE_VALUE) {
+        if (!hOut || (hOut == INVALID_HANDLE_VALUE)) {
             return false;
         }
         DWORD dwMode = 0;
         if (!GetConsoleMode(hOut, &dwMode)) {
             return false;
         }
-        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        if (!SetConsoleMode(hOut, dwMode)) {
-            return false;
+        if (dwMode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) {
+            return true;
         }
-        return true;
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        return SetConsoleMode(hOut, dwMode);
     }
     ```
 
@@ -90,28 +90,18 @@
   ```cpp
   BOOL CreateConsole() {
       // 成功调用AllocConsole()后，一定要在程序结束运行前调用FreeConsole()。这两者是成对使用的。
+      // 或者使用 AttachConsole()，可以附加到父进程的控制台（例如从控制台运行GUI程序）。使用该函数不需要
+      // 调用 FreeConsole()，而且下面的代码也仍然是通用的。
       if (!AllocConsole()) {
           // 创建失败，在此处处理错误。使用GetLastError()获取错误码。
           return FALSE;
       }
-      // std::cout, std::clog, std::cerr, std::cin
-      freopen("CONOUT$", "w", stdout);
-      freopen("CONOUT$", "w", stderr);
-      freopen("CONIN$", "r", stdin);
-      std::cout.clear();
-      std::clog.clear();
-      std::cerr.clear();
-      std::cin.clear();
-      // std::wcout, std::wclog, std::wcerr, std::wcin
-      const HANDLE hConOut = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-      const HANDLE hConIn = CreateFileW(L"CONIN$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-      SetStdHandle(STD_OUTPUT_HANDLE, hConOut);
-      SetStdHandle(STD_ERROR_HANDLE, hConOut);
-      SetStdHandle(STD_INPUT_HANDLE, hConIn);
-      std::wcout.clear();
-      std::wclog.clear();
-      std::wcerr.clear();
-      std::wcin.clear();
+      FILE *in = nullptr;
+      FILE *out = nullptr;
+      FILE *err = nullptr;
+      freopen_s(&in, "CONIN$", "r", stdin);
+      freopen_s(&out, "CONOUT$", "w", stdout);
+      freopen_s(&err, "CONOUT$", "w", stderr);
       return TRUE;
   }
   ```

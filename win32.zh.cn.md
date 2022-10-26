@@ -1073,131 +1073,6 @@
   }
   ```
 
-- 如何确保GUI程序输出的调试信息能被控制台窗口接收到？
-
-  ```cpp
-  // console.h
-  #pragma once
-
-  #include <fstream>
-  #include <iostream>
-
-  class Console {
-  public:
-      Console();
-      ~Console();
-
-  private:
-      bool parentConsole;
-      bool newConsoleCreated;
-
-      std::ofstream m_newCout;
-      std::ofstream m_newCerr;
-
-      std::streambuf* m_oldCout;
-      std::streambuf* m_oldCerr;
-  };
-
-  // console.cpp
-  #include "console.h"
-
-  #include <wincon.h>
-
-  static bool isRedirected(HANDLE stdHandle) {
-      if (stdHandle == nullptr) // launched from GUI
-          return false;
-      DWORD fileType = GetFileType(stdHandle);
-      if (fileType == FILE_TYPE_UNKNOWN) {
-          // launched from console, but no redirection
-          return false;
-      }
-      // redirected into file, pipe ...
-      return true;
-  }
-
-  /**
-   * Redirects stdout, stderr output to console
-   *
-   * Console is a RAII class that ensures stdout, stderr output is visible
-   * for GUI applications on Windows.
-   *
-   * If the application is launched from the explorer, startup menu etc
-   * a new console window is created.
-   *
-   * If the application is launched from the console (cmd.exe), output is
-   * printed there.
-   *
-   * If the application is launched from the console, but stdout is redirected
-   * (e.g. into a file), Console does not interfere.
-   */
-  Console::Console() :
-      m_oldCout(nullptr),
-      m_oldCerr(nullptr),
-      parentConsole(false),
-      newConsoleCreated(false)
-  {
-      bool isCoutRedirected = isRedirected(GetStdHandle(STD_OUTPUT_HANDLE));
-      bool isCerrRedirected = isRedirected(GetStdHandle(STD_ERROR_HANDLE));
-
-      if (!isCoutRedirected) { // verbose output only ends up in cout
-          // try to use parent console. else launch & set up new console
-          parentConsole = AttachConsole(ATTACH_PARENT_PROCESS);
-          if (!parentConsole) {
-              newConsoleCreated = true;
-              AllocConsole();
-              HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-              if (handle != INVALID_HANDLE_VALUE) {
-                  COORD largestConsoleWindowSize = GetLargestConsoleWindowSize(handle);
-                  largestConsoleWindowSize.X -= 3;
-                  largestConsoleWindowSize.Y = 5000;
-                  SetConsoleScreenBufferSize(handle, largestConsoleWindowSize);
-              }
-              handle = GetStdHandle(STD_INPUT_HANDLE);
-              if (handle != INVALID_HANDLE_VALUE)
-                  SetConsoleMode(handle, ENABLE_INSERT_MODE | ENABLE_QUICK_EDIT_MODE
-                                 | ENABLE_EXTENDED_FLAGS);
-  #ifndef Q_CC_MINGW
-              HMENU systemMenu = GetSystemMenu(GetConsoleWindow(), FALSE);
-              if (systemMenu != nullptr)
-                  RemoveMenu(systemMenu, SC_CLOSE, MF_BYCOMMAND);
-              DrawMenuBar(GetConsoleWindow());
-  #endif
-          }
-      }
-
-      if (!isCoutRedirected) {
-          m_oldCout = std::cout.rdbuf();
-          m_newCout.open("CONOUT$");
-          std::cout.rdbuf(m_newCout.rdbuf());
-      }
-
-      if (!isCerrRedirected) {
-          m_oldCerr = std::cerr.rdbuf();
-          m_newCerr.open("CONOUT$");
-          std::cerr.rdbuf(m_newCerr.rdbuf());
-      }
-  }
-
-  Console::~Console()
-  {
-      if (parentConsole) {
-          // simulate enter key to switch to boot prompt
-          PostMessage(GetConsoleWindow(), WM_KEYDOWN, 0x0D, 0);
-      } else if (newConsoleCreated) {
-          system("PAUSE");
-      }
-
-      if (m_oldCerr)
-          std::cerr.rdbuf(m_oldCerr);
-      if (m_oldCout)
-          std::cout.rdbuf(m_oldCout);
-
-      if (m_oldCout)
-          FreeConsole();
-  }
-  ```
-
-  使用方法：在第一次输出调试信息前，实例化一个`Console`类的对象即可。
 - 同一个应用程序如何开启多个选项卡（Win7开始添加的任务栏选项卡，Aero Peek）：请参考<https://github.com/microsoft/Windows-classic-samples/tree/master/Samples/Win7Samples/winui/shell/appshellintegration/TabThumbnails>
 - 对于Win10系统，如何获取/修改显示主题色的区域
 
@@ -2380,69 +2255,44 @@
 
   ```cpp
   #ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
-  #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+  #  define ENABLE_VIRTUAL_TERMINAL_PROCESSING (0x0004)
   #endif
 
   bool createConsoleWindow(const bool utf8Enabled, const bool vtEnabled)
   {
       // AllocConsole() 执行成功之后，在不需要该命令行窗口后，记得执行 FreeConsole()，否则会有内存泄露。
+      // 或者使用 AttachConsole()，可以附加到父进程的控制台（例如从控制台运行GUI程序）。使用该函数不需要
+      // 调用 FreeConsole()，而且下面的代码也仍然是通用的。
       if (!AllocConsole()) {
           qWarning().noquote() << "Failed to alloc console window.";
           return false;
       }
-      // std::cout, std::clog, std::cerr, std::cin
-      freopen("CONOUT$", "w", stdout);
-      freopen("CONOUT$", "w", stderr);
-      freopen("CONIN$", "r", stdin);
-      std::cout.clear();
-      std::clog.clear();
-      std::cerr.clear();
-      std::cin.clear();
-      // std::wcout, std::wclog, std::wcerr, std::wcin
-      const HANDLE hConOut = CreateFileW(L"CONOUT$",
-                                         GENERIC_READ | GENERIC_WRITE,
-                                         FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                         nullptr,
-                                         OPEN_EXISTING,
-                                         FILE_ATTRIBUTE_NORMAL,
-                                         nullptr);
-      const HANDLE hConIn = CreateFileW(L"CONIN$",
-                                        GENERIC_READ | GENERIC_WRITE,
-                                        FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                        nullptr,
-                                        OPEN_EXISTING,
-                                        FILE_ATTRIBUTE_NORMAL,
-                                        nullptr);
-      SetStdHandle(STD_OUTPUT_HANDLE, hConOut);
-      SetStdHandle(STD_ERROR_HANDLE, hConOut);
-      SetStdHandle(STD_INPUT_HANDLE, hConIn);
-      std::wcout.clear();
-      std::wclog.clear();
-      std::wcerr.clear();
-      std::wcin.clear();
+      FILE *in = nullptr;
+      FILE *out = nullptr;
+      FILE *err = nullptr;
+      freopen_s(&in, "CONIN$", "r", stdin);
+      freopen_s(&out, "CONOUT$", "w", stdout);
+      freopen_s(&err, "CONOUT$", "w", stderr);
       if (utf8Enabled) {
-          const UINT utf8CodePageID = 65001;
+          static constexpr const UINT utf8CodePageID = 65001;
           if (!(SetConsoleCP(utf8CodePageID) && SetConsoleOutputCP(utf8CodePageID))) {
               qWarning().noquote() << "Failed to change console's code page to UTF-8.";
           }
       }
       if (vtEnabled && (QOperatingSystemVersion::current() >= QOperatingSystemVersion::Windows10)) {
           const auto enableVTMode = [](const HANDLE handle) -> bool {
-              if (!handle) {
-                  return false;
-              }
-              if (handle == INVALID_HANDLE_VALUE) {
+              if (!handle || (handle == INVALID_HANDLE_VALUE)) {
                   return false;
               }
               DWORD dwMode = 0;
               if (!GetConsoleMode(handle, &dwMode)) {
                   return false;
               }
-              dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-              if (!SetConsoleMode(handle, dwMode)) {
-                  return false;
+              if (dwMode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) {
+                  return true;
               }
-              return true;
+              dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+              return SetConsoleMode(handle, dwMode);
           };
           if (!(enableVTMode(GetStdHandle(STD_OUTPUT_HANDLE))
                 && enableVTMode(GetStdHandle(STD_ERROR_HANDLE)))) {
