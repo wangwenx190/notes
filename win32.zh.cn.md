@@ -455,10 +455,9 @@
     if (UxThemeDll) {
         pfnShouldAppsUseDarkMode = reinterpret_cast<ShouldAppsUseDarkModePFN>(GetProcAddress(UxThemeDll, MAKEINTRESOURCEA(132)));
         pfnShouldSystemUseDarkMode = reinterpret_cast<ShouldSystemUseDarkModePFN>(GetProcAddress(UxThemeDll, MAKEINTRESOURCEA(138)));
-        FreeLibrary(UxThemeDll);
     }
 
-    enum : WORD {
+    enum : DWORD {
         DWMWA_USE_IMMERSIVE_DARK_MODE = 20,
         DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19
     };
@@ -2329,11 +2328,22 @@
       ACCENT_INVALID_STATE = 6
   };
 
+  using ACCENT_FLAG = enum _ACCENT_FLAG
+  {
+      ACCENT_NONE = 0,
+      ACCENT_ENABLE_BORDER_LEFT = 1 << 5,
+      ACCENT_ENABLE_BORDER_TOP = 1 << 6,
+      ACCENT_ENABLE_BORDER_RIGHT = 1 << 7,
+      ACCENT_ENABLE_BORDER_BOTTOM = 1 << 8,
+      ACCENT_ENABLE_BORDER = ACCENT_ENABLE_BORDER_LEFT | ACCENT_ENABLE_BORDER_TOP | ACCENT_ENABLE_BORDER_RIGHT | ACCENT_ENABLE_BORDER_BOTTOM,
+      ACCENT_ENABLE_ALL = ACCENT_ENABLE_BORDER
+  };
+
   using ACCENT_POLICY = struct _ACCENT_POLICY
   {
       ACCENT_STATE AccentState;
       DWORD AccentFlags;
-      COLORREF GradientColor;
+      DWORD GradientColor;
       DWORD AnimationId;
   };
 
@@ -2360,7 +2370,6 @@
           // hwnd 为要开启亚克力特效的窗口的句柄
           SetWindowCompositionAttributePFN(hwnd, &wcaData);
       }
-      FreeLibrary(User32Dll);
   }
   ```
 
@@ -2407,14 +2416,12 @@
       GetSystemMetricsForDpiPFN = reinterpret_cast<GetSystemMetricsForDpiPtr>(GetProcAddress(User32Dll, "GetSystemMetricsForDpi"));
       AdjustWindowRectExForDpiPFN = reinterpret_cast<AdjustWindowRectExForDpiPtr>(GetProcAddress(User32Dll, "AdjustWindowRectExForDpi"));
       GetSystemDpiForProcessPFN = reinterpret_cast<GetSystemDpiForProcessPtr>(GetProcAddress(User32Dll, "GetSystemDpiForProcess"));
-      FreeLibrary(User32Dll);
   }
 
   HMODULE SHCoreDll = LoadLibraryW(L"SHCore");
   if (SHCoreDll) {
       GetDpiForMonitorPFN = reinterpret_cast<GetDpiForMonitorPtr>(GetProcAddress(SHCoreDll, "GetDpiForMonitor"));
       GetProcessDpiAwarenessPFN = reinterpret_cast<GetProcessDpiAwarenessPtr>(GetProcAddress(SHCoreDll, "GetProcessDpiAwareness"));
-      FreeLibrary(SHCoreDll);
   }
 
   UINT GetWindowDPI(HWND hwnd) {
@@ -2500,16 +2507,16 @@
   SetProcessDpiAwarenessContextPFN = reinterpret_cast<SetProcessDpiAwarenessContextPrototype>(GetProcAddress(User32Dll, "SetProcessDpiAwarenessContext"));
   GetWindowDpiAwarenessContextPFN = reinterpret_cast<GetWindowDpiAwarenessContextPrototype>(GetProcAddress(User32Dll, "GetWindowDpiAwarenessContext"));
   GetAwarenessFromDpiAwarenessContextPFN = reinterpret_cast<GetAwarenessFromDpiAwarenessContextPrototype>(GetProcAddress(User32Dll, "GetAwarenessFromDpiAwarenessContext"));
-  FreeLibrary(User32Dll);
 
   const HMODULE SHCoreDll = LoadLibraryExW(L"SHCore.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
   SetProcessDpiAwarenessPFN = reinterpret_cast<SetProcessDpiAwarenessPrototype>(GetProcAddress(SHCoreDll, "SetProcessDpiAwareness"));
   GetProcessDpiAwarenessPFN = reinterpret_cast<GetProcessDpiAwarenessPrototype>(GetProcAddress(SHCoreDll, "GetProcessDpiAwareness"));
-  FreeLibrary(SHCoreDll);
 
   bool isWindowDPIAware(const HWND hWnd)
   {
       if (hWnd && GetWindowDpiAwarenessContextPFN && GetAwarenessFromDpiAwarenessContextPFN) {
+          // 注意！GetAwarenessFromDpiAwarenessContext 这个函数无法返回 PMv2，如果需要判断是否为 PMv2，请使用
+          // AreDpiAwarenessContextsEqual 这个函数直接比较 DPI_AWARENESS_CONTEXT。
           const DPI_AWARENESS_EX windowDpiAwareness = GetAwarenessFromDpiAwarenessContextPFN(GetWindowDpiAwarenessContextPFN(hWnd));
           if (windowDpiAwareness != DPI_AWARENESS_INVALID) {
               return ((windowDpiAwareness == DPI_AWARENESS_SYSTEM_AWARE)
