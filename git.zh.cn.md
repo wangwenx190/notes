@@ -85,6 +85,10 @@
 - 如何修改子模块的设置：
   - 修改子模块远端仓库网址：`git config submodule.子模块名.url 新URL`
   - 修改子模块默认分支：`git config -f .gitmodules submodule.子模块名.branch 分支名`
+- 移动子模块所在的位置：`git mv dir1/sub1 dir2/sub2`
+- 删除子模块：
+  1. 仓库根目录执行`git submodule deinit sub/module`
+  2. 仓库根目录执行`git rm sub/module`
 - 如何删除已经被跟踪的文件：
   1. 本地已经不再需要该文件：`git rm 路径`
   2. 本地仍然需要该文件，仅从版本控制系统中移除：`git rm --cached 路径`
