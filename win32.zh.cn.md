@@ -103,7 +103,7 @@
         <!-- 开启此选项后会导致外部程序无法用普通方法查找到本程序的窗口句柄。例如Spy++就无法获取本程序的窗口句柄。 -->
         <disableWindowFiltering xmlns="http://schemas.microsoft.com/SMI/2011/WindowsSettings">True</disableWindowFiltering>
         <!-- 声明我们的程序支持高DPI缩放，Win8.1 ~ Win11。此选项可填多个值，越靠前的值越优先。推荐开启。 -->
-        <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor, System</dpiAwareness>
+        <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
         <!-- 声明我们的程序支持长路径（超过260个字符）。 -->
         <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">True</longPathAware>
         <!-- 如果你的程序完全是用GDI绘制的界面，建议开启此选项，此选项的原理为系统会将你要绘制的内容自动放大，然后根据当前分辨率缩小渲染，从而尽量保证锐利度。注意此选项无法与dpiAware以及dpiAwareness兼容。 -->
@@ -184,33 +184,39 @@
 - 判断当前程序是否正在以管理员权限运行
 
   ```cpp
-  // 头文件：securitybaseapi.h (include Windows.h)
+  // 头文件：processthreadsapi.h (include Windows.h), securitybaseapi.h (include Windows.h)
   // 库文件：Advapi32.lib（Advapi32.dll）
-  /*
-  Routine Description: This routine returns TRUE if the caller's
-  process is a member of the Administrators local group. Caller is NOT
-  expected to be impersonating anyone and is expected to be able to
-  open its own process and process token.
-  Arguments: None.
-  Return Value:
-     TRUE - Caller has Administrators local group.
-     FALSE - Caller does not have Administrators local group. --
-  */
-  BOOL IsUserAdmin() {
-      SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
-      PSID AdministratorsGroup;
-      BOOL b = AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &AdministratorsGroup);
-      if (b) {
-          if (!CheckTokenMembership(nullptr, AdministratorsGroup, &b)) {
-              b = FALSE;
+
+  bool IsCurrentProcessElevated()
+  {
+      bool Result = false;
+
+      HANDLE CurrentProcessAccessToken = nullptr;
+      if (::OpenProcessToken(
+          ::GetCurrentProcess(),
+          TOKEN_ALL_ACCESS,
+          &CurrentProcessAccessToken))
+      {
+          TOKEN_ELEVATION Information = { 0 };
+          DWORD Length = sizeof(Information);
+          if (::GetTokenInformation(
+              CurrentProcessAccessToken,
+              TOKEN_INFORMATION_CLASS::TokenElevation,
+              &Information,
+              Length,
+              &Length))
+          {
+              Result = Information.TokenIsElevated;
           }
-          FreeSid(AdministratorsGroup);
+
+          ::CloseHandle(CurrentProcessAccessToken);
       }
-      return b;
+
+      return Result;
   }
   ```
 
-  摘自：<https://docs.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-checktokenmembership>
+  摘自：<https://github.com/M2Team/NanaRun/blob/4fefc0151fa877d32ba8921c5863df163ee327c8/MinSudo/MinSudo.cpp#L287>
 - 以管理员权限启动程序：
 
   ```cpp
@@ -248,7 +254,7 @@
       SHELLEXECUTEINFOW sei;
       SecureZeroMemory(&sei, sizeof(sei));
       // 这一行是关键，有了这一行才能以管理员权限执行
-      sei.lpVerb = L"RunAs";
+      sei.lpVerb = L"runas";
       sei.lpFile = reinterpret_cast<LPCWSTR>(path.utf16());
       // 想隐藏程序窗口的话要加上这一句，否则不需要这一行
       sei.nShow = SW_HIDE;
@@ -531,39 +537,141 @@
 - 将最小化或被其他窗口挡住的窗口移到最前
 
   ```cpp
-  // 头文件：winuser.h (include Windows.h)
-  // 库文件：User32.lib（User32.dll）
-  // 下面这一段代码要在较早的地方执行，例如在程序的 main 函数里。
-  // 这一段代码是为了确保 SetForegroundWindow 能执行成功而设置的，在前置窗口前执行过一次就足够了（如果需要的话），不是每次前置窗口都要执行的。
-  DWORD dwTimeout = -1;
-  SystemParametersInfoW(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
-  if (dwTimeout >= 100) {
-    // 下面这一行语句因为要读写INI文件，因此可能会导致执行此语句时卡顿两三秒
-    SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+  [[nodiscard]] static inline bool operator==(const RECT &lhs, const RECT &rhs) noexcept
+  {
+      return ((lhs.left == rhs.left) && (lhs.top == rhs.top)
+              && (lhs.right == rhs.right) && (lhs.bottom == rhs.bottom));
   }
-  // 上面的代码结束，下面的代码与上面的没有关系了
-  // 下面这一段代码每次前置窗口时都要执行一次，与上面那一段不一样。
-  HWND hWnd = ... // 获取程序当前活动窗口的句柄
-  HWND hForeWnd = GetForegroundWindow(); // 获取当前前置窗口的句柄
-  DWORD dwForeID = GetWindowThreadProcessId(hForeWnd, nullptr); // 获取当前前置窗口的进程ID
-  DWORD dwCurID = GetCurrentThreadId(); // 获取程序自身的进程ID
-  // 如果窗口被隐藏了，先显示出来
-  if (IsWindowVisible(hWnd) != TRUE) {
-    // 此处一定要用 SW_SHOW，用其他的值会意外改变窗口的状态
-    ShowWindow(hWnd, SW_SHOW);
+
+  [[nodiscard]] static inline std::optional<MONITORINFOEXW> getMonitorForWindow(const HWND hwnd)
+  {
+      Q_ASSERT(hwnd);
+      if (!hwnd) {
+          return std::nullopt;
+      }
+      const HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+      if (!monitor) {
+          WARNING << Utils::getSystemErrorMessage(kMonitorFromWindow);
+          return std::nullopt;
+      }
+      MONITORINFOEXW monitorInfo;
+      SecureZeroMemory(&monitorInfo, sizeof(monitorInfo));
+      monitorInfo.cbSize = sizeof(monitorInfo);
+      if (GetMonitorInfoW(monitor, &monitorInfo) == FALSE) {
+          WARNING << Utils::getSystemErrorMessage(kGetMonitorInfoW);
+          return std::nullopt;
+      }
+      return monitorInfo;
+  };
+
+  static inline void moveWindowToMonitor(const HWND hwnd, const MONITORINFOEXW &activeMonitor)
+  {
+      Q_ASSERT(hwnd);
+      if (!hwnd) {
+          return;
+      }
+      const std::optional<MONITORINFOEXW> currentMonitor = getMonitorForWindow(hwnd);
+      if (!currentMonitor.has_value()) {
+          WARNING << "Failed to retrieve the window's monitor.";
+          return;
+      }
+      const RECT currentMonitorRect = currentMonitor.value().rcMonitor;
+      const RECT activeMonitorRect = activeMonitor.rcMonitor;
+      // We are in the same monitor, nothing to adjust here.
+      if (currentMonitorRect == activeMonitorRect) {
+          return;
+      }
+      RECT currentWindowRect = {};
+      if (GetWindowRect(hwnd, &currentWindowRect) == FALSE) {
+          WARNING << Utils::getSystemErrorMessage(kGetWindowRect);
+          return;
+      }
+      const int currentWindowWidth = (currentWindowRect.right - currentWindowRect.left);
+      const int currentWindowHeight = (currentWindowRect.bottom - currentWindowRect.top);
+      const int currentWindowOffsetX = (currentWindowRect.left - currentMonitorRect.left);
+      const int currentWindowOffsetY = (currentWindowRect.top - currentMonitorRect.top);
+      const int newWindowX = (activeMonitorRect.left + currentWindowOffsetX);
+      const int newWindowY = (activeMonitorRect.top + currentWindowOffsetY);
+      static constexpr const UINT flags =
+          (SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
+      if (SetWindowPos(hwnd, nullptr, newWindowX, newWindowY,
+             currentWindowWidth, currentWindowHeight, flags) == FALSE) {
+          WARNING << Utils::getSystemErrorMessage(kSetWindowPos);
+      }
   }
-  WINDOWPLACEMENT wndpmt;
-  SecureZeroMemory(&wndpmt, sizeof(wndpmt));
-  if (GetWindowPlacement(hWnd, &wndpmt) != FALSE) {
-    // 如果窗口被最小化了，还原回去
-    if ((wndpmt.showCmd == SW_SHOWMINIMIZED) || (wndpmt.showCmd == SW_MINIMIZE) || (wndpmt.showCmd == SW_FORCEMINIMIZE)) {
-      // 此处一定要用 SW_RESTORE，用 SW_SHOW 不能恢复被最小化的窗口，用 SW_SHOWNORMAL 会导致窗口被无条件的还原为原始大小，即使在最小化之前处于最大化的状态
-      ShowWindow(hWnd, SW_RESTORE);
-    }
+
+  void Utils::bringWindowToFront(const WId windowId)
+  {
+      Q_ASSERT(windowId);
+      if (!windowId) {
+          return;
+      }
+      const auto hwnd = reinterpret_cast<HWND>(windowId);
+      const HWND oldForegroundWindow = GetForegroundWindow();
+      if (!oldForegroundWindow) {
+          // The foreground window can be NULL, it's not an API error.
+          return;
+      }
+      const std::optional<MONITORINFOEXW> activeMonitor = getMonitorForWindow(oldForegroundWindow);
+      if (!activeMonitor.has_value()) {
+          WARNING << "Failed to retrieve the window's monitor.";
+          return;
+      }
+      // We need to show the window first, otherwise we won't be able to bring it to front.
+      if (IsWindowVisible(hwnd) == FALSE) {
+          ShowWindow(hwnd, SW_SHOW);
+      }
+      if (IsMinimized(hwnd)) {
+          // Restore the window if it is minimized.
+          ShowWindow(hwnd, SW_RESTORE);
+          // Once we've been restored, throw us on the active monitor.
+          moveWindowToMonitor(hwnd, activeMonitor.value());
+          // When the window is restored, it will always become the foreground window.
+          // So return early here, we don't need the following code to bring it to front.
+          return;
+      }
+      // OK, our window is not minimized, so now we will try to bring it to front manually.
+      // First try to send a message to the current foreground window to check whether
+      // it is currently hanging or not.
+      static constexpr const UINT kTimeout = 1000;
+      if (SendMessageTimeoutW(oldForegroundWindow, WM_NULL, 0, 0,
+              SMTO_BLOCK | SMTO_ABORTIFHUNG | SMTO_NOTIMEOUTIFNOTHUNG, kTimeout, nullptr) == 0) {
+          if (GetLastError() == ERROR_TIMEOUT) {
+              WARNING << "The foreground window hangs, can't activate current window.";
+          } else {
+              WARNING << getSystemErrorMessage(kSendMessageTimeoutW);
+          }
+          return;
+      }
+      const DWORD windowThreadProcessId = GetWindowThreadProcessId(oldForegroundWindow, nullptr);
+      const DWORD currentThreadId = GetCurrentThreadId();
+      // We won't be able to change a window's Z order if it's not our own window,
+      // so we use this small technique to pretend the foreground window is ours.
+      if (AttachThreadInput(windowThreadProcessId, currentThreadId, TRUE) == FALSE) {
+          WARNING << getSystemErrorMessage(kAttachThreadInput);
+          return;
+      }
+      // And also don't forget to disconnect from it.
+      volatile const auto cleanup = qScopeGuard([windowThreadProcessId, currentThreadId]() -> void {
+          if (AttachThreadInput(windowThreadProcessId, currentThreadId, FALSE) == FALSE) {
+              WARNING << getSystemErrorMessage(kAttachThreadInput);
+          }
+      });
+      Q_UNUSED(cleanup);
+      // Make our window be the first one in the Z order.
+      if (BringWindowToTop(hwnd) == FALSE) {
+          WARNING << getSystemErrorMessage(kBringWindowToTop);
+          return;
+      }
+      // Activate the window too. This will force us to the virtual desktop this
+      // window is on, if it's on another virtual desktop.
+      if (SetActiveWindow(hwnd) == nullptr) {
+          WARNING << getSystemErrorMessage(kSetActiveWindow);
+          return;
+      }
+      // Throw us on the active monitor.
+      moveWindowToMonitor(hwnd, activeMonitor.value());
   }
-  AttachThreadInput(dwCurID, dwForeID, TRUE); // 连接两个进程的输入焦点
-  SetForegroundWindow(hWnd); // 设置为前置的窗口
-  AttachThreadInput(dwCurID, dwForeID, FALSE); // 断开两个进程的输入焦点
   ```
 
 - 将窗口嵌入桌面（类似于动态壁纸那种效果）
@@ -989,9 +1097,9 @@
       DeCoInitializer deCoInitializer;
       IUnknown *iunkn = nullptr;
       QString _linkName = linkName;
-      if (fileName.startsWith(QString::fromUtf8("https:"), Qt::CaseInsensitive) ||
-          fileName.startsWith(QString::fromUtf8("http:"), Qt::CaseInsensitive) ||
-          fileName.startsWith(QString::fromUtf8("ftp:"), Qt::CaseInsensitive)) {
+      if (fileName.startsWith(QStringLiteral("https:"), Qt::CaseInsensitive) ||
+          fileName.startsWith(QStringLiteral("http:"), Qt::CaseInsensitive) ||
+          fileName.startsWith(QStringLiteral("ftp:"), Qt::CaseInsensitive)) {
           IUniformResourceLocatorW *iurl = nullptr;
           if (FAILED(CoCreateInstance(CLSID_InternetShortcut, nullptr,
                                       CLSCTX_INPROC_SERVER,
@@ -1010,7 +1118,7 @@
       } else {
           // The shortcut file name must ends with ".lnk" to let QFile::link()
           // work.
-          const char *postfix = ".lnk";
+          static constexpr const char postfix[] = ".lnk";
           if (!_linkName.endsWith(QString::fromUtf8(postfix),
                                   Qt::CaseInsensitive)) {
               _linkName.append(QString::fromUtf8(postfix));
@@ -1035,7 +1143,7 @@
               QDir::toNativeSeparators(_workingDir).utf16()));
           if (!arguments.isEmpty()) {
               psl->SetArguments(reinterpret_cast<const wchar_t *>(
-                  arguments.join(QChar::fromLatin1(' ')).utf16()));
+                  arguments.join(QChar(u' ')).utf16()));
           }
           if (!iconPath.isEmpty()) {
               psl->SetIconLocation(
@@ -1101,9 +1209,9 @@
         All
     };
 
-    const char *PERSONALIZATION_REGISTRY_KEY =
+    static constexpr const char PERSONALIZATION_REGISTRY_KEY[] =
         R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)";
-    const char *DWM_REGISTRY_KEY =
+    static constexpr const char DWM_REGISTRY_KEY[] =
         R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM)";
 
     bool isWin10OrNewer() {
@@ -1123,7 +1231,7 @@
             QString::fromUtf8(PERSONALIZATION_REGISTRY_KEY),
             QSettings::NativeFormat);
         const bool themeSurfaces =
-            themeRegistry.value(QString::fromUtf8("ColorPrevalence"), 0)
+            themeRegistry.value(QStringLiteral("ColorPrevalence"), 0)
                 .toULongLong(&ok) != 0;
         if (ok) {
             ok = false;
@@ -1133,7 +1241,7 @@
         const QSettings dwmRegistry(QString::fromUtf8(DWM_REGISTRY_KEY),
                                     QSettings::NativeFormat);
         const bool dwmSurfaces =
-            dwmRegistry.value(QString::fromUtf8("ColorPrevalence"), 0)
+            dwmRegistry.value(QStringLiteral("ColorPrevalence"), 0)
                 .toULongLong(&ok) != 0;
         if (!ok) {
             qDebug("Failed to query colorization surfaces from DWM settings.");
@@ -1169,20 +1277,20 @@
                               QSettings::NativeFormat);
         switch (surfaces) {
         case ColorizationSurfaces::None:
-            themeRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 0);
-            dwmRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 0);
+            themeRegistry.setValue(QStringLiteral("ColorPrevalence"), 0);
+            dwmRegistry.setValue(QStringLiteral("ColorPrevalence"), 0);
             break;
         case ColorizationSurfaces::StartTaskbarAndActionCenter:
-            themeRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 1);
-            dwmRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 0);
+            themeRegistry.setValue(QStringLiteral("ColorPrevalence"), 1);
+            dwmRegistry.setValue(QStringLiteral("ColorPrevalence"), 0);
             break;
         case ColorizationSurfaces::TitleBarsAndWindowBorders:
-            themeRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 0);
-            dwmRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 1);
+            themeRegistry.setValue(QStringLiteral("ColorPrevalence"), 0);
+            dwmRegistry.setValue(QStringLiteral("ColorPrevalence"), 1);
             break;
         case ColorizationSurfaces::All:
-            themeRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 1);
-            dwmRegistry.setValue(QString::fromUtf8("ColorPrevalence"), 1);
+            themeRegistry.setValue(QStringLiteral("ColorPrevalence"), 1);
+            dwmRegistry.setValue(QStringLiteral("ColorPrevalence"), 1);
             break;
         }
         return true;
@@ -1432,20 +1540,34 @@
               return false;
           }
           QString exePath = QDir::toNativeSeparators(fileInfo.canonicalFilePath());
-          if (!exePath.startsWith(QChar::fromLatin1('"'))) {
-              exePath.prepend(QChar::fromLatin1('"'));
+          if (!exePath.startsWith(QChar(u'"'))) {
+              exePath.prepend(QChar(u'"'));
           }
-          if (!exePath.endsWith(QChar::fromLatin1('"'))) {
-              exePath.append(QChar::fromLatin1('"'));
+          if (!exePath.endsWith(QChar(u'"'))) {
+              exePath.append(QChar(u'"'));
           }
           const QString displayName = applicationDisplayName.isEmpty()
               ? fileInfo.completeBaseName()
               : applicationDisplayName;
           QString progid_com = companyName;
-          progid_com.remove(QChar::fromLatin1(' '));
+          progid_com.remove(QChar(u' '));
           QString progid_app = displayName;
-          progid_app.remove(QChar::fromLatin1(' '));
-          bool reg = false;
+          progid_app.remove(QChar(u' '));
+          const QString regKey3 =
+                  QStringLiteral(
+                      R"(HKEY_LOCAL_MACHINE\SOFTWARE\%1\%2\Capabilities)")
+                      .arg(progid_com, progid_app);
+          QSettings settings3(regKey3, QSettings::NativeFormat);
+          // ApplicationDescription MUST NOT BE EMPTY!!!
+          settings3.setValue(QStringLiteral("ApplicationDescription"),
+                             applicationDescription);
+          settings3.setValue(QStringLiteral("ApplicationName"), displayName);
+          const QString regKey4 = QStringLiteral(
+                  R"(HKEY_LOCAL_MACHINE\SOFTWARE\RegisteredApplications)");
+          QSettings settings4(regKey4, QSettings::NativeFormat);
+          settings4.setValue(displayName,
+                             QStringLiteral(R"(SOFTWARE\%1\%2\Capabilities)")
+                                 .arg(progid_com, progid_app));
           for (auto &&assocId : std::as_const(assocIdList)) {
               if (assocId.extensionName.isEmpty()) {
                   qDebug() << "Empty extension name. Skipping.";
@@ -1453,81 +1575,61 @@
               }
               QString ext = assocId.extensionName.toLower();
               QString progid_ext = ext.toUpper();
-              if (ext.startsWith(QChar::fromLatin1('.'))) {
+              if (ext.startsWith(QChar(u'.'))) {
                   progid_ext.remove(0, 1);
               } else {
-                  ext.prepend(QChar::fromLatin1('.'));
+                  ext.prepend(QChar(u'.'));
               }
-              const QString ProgID = QString::fromUtf8("%1.%2.%3.1000")
+              const QString ProgID = QStringLiteral("%1.%2.%3.1000")
                                          .arg(progid_com, progid_app, progid_ext);
               const QString regKey1 =
-                  QString::fromUtf8(R"(HKEY_LOCAL_MACHINE\SOFTWARE\Classes\%1)")
+                  QStringLiteral(R"(HKEY_LOCAL_MACHINE\SOFTWARE\Classes\%1)")
                       .arg(ProgID);
               QSettings settings1(regKey1, QSettings::NativeFormat);
               if (!assocId.description.isEmpty()) {
-                  settings1.setValue(QString::fromUtf8("Default"), assocId.description);
+                  settings1.setValue(QStringLiteral(""), assocId.description);
               }
               if (!assocId.friendlyTypeName.isEmpty()) {
-                  settings1.setValue(QString::fromUtf8("FriendlyTypeName"),
+                  settings1.setValue(QStringLiteral("FriendlyTypeName"),
                                      assocId.friendlyTypeName);
               }
               if (!assocId.CLSID.isEmpty()) {
                   QSettings settings1_clsid(
-                      QString::fromUtf8(R"(%1\CLSID)").arg(regKey1),
+                      QStringLiteral(R"(%1\CLSID)").arg(regKey1),
                       QSettings::NativeFormat);
-                  settings1_clsid.setValue(QString::fromUtf8("Default"),
+                  settings1_clsid.setValue(QStringLiteral(""),
                                            assocId.CLSID.toUpper());
               }
               if (!assocId.defaultIcon.isEmpty()) {
-                  settings1.setValue(QString::fromUtf8("DefaultIcon"),
+                  settings1.setValue(QStringLiteral("DefaultIcon"),
                                      QDir::toNativeSeparators(assocId.defaultIcon));
               }
               if (!assocId.operation.isEmpty()) {
                   QSettings settings1_command(
-                      QString::fromUtf8(R"(%1\Shell\%2\Command)")
+                      QStringLiteral(R"(%1\Shell\%2\Command)")
                           .arg(regKey1, assocId.operation),
                       QSettings::NativeFormat);
                   const QString cmd = assocId.command.isEmpty()
-                      ? (exePath + QString::fromUtf8(R"( "%1")"))
+                      ? (exePath + QStringLiteral(R"( "%1")"))
                       : QDir::toNativeSeparators(assocId.command);
-                  settings1_command.setValue(QString::fromUtf8("Default"), cmd);
+                  settings1_command.setValue(QStringLiteral(""), cmd);
               }
               const QString regKey2 =
-                  QString::fromUtf8(R"(HKEY_CLASSES_ROOT\%1\OpenWithProgIDs)")
+                  QStringLiteral(R"(HKEY_CLASSES_ROOT\%1\OpenWithProgIDs)")
                       .arg(ext);
               QSettings settings2(regKey2, QSettings::NativeFormat);
-              settings2.setValue(ProgID, QString::fromUtf8(""));
-              const QString regKey3 =
-                  QString::fromUtf8(
-                      R"(HKEY_LOCAL_MACHINE\SOFTWARE\%1\%2\Capabilities)")
-                      .arg(progid_com, progid_app);
-              QSettings settings3(regKey3, QSettings::NativeFormat);
-              // ApplicationDescription MUST NOT BE EMPTY!!!
-              settings3.setValue(QString::fromUtf8("ApplicationDescription"),
-                                 applicationDescription);
-              settings3.setValue(QString::fromUtf8("ApplicationName"), displayName);
+              settings2.setValue(ProgID, QStringLiteral(""));
               QSettings settings3_fileAssociations(
-                  QString::fromUtf8(R"(%1\FileAssociations)").arg(regKey3),
+                  QStringLiteral(R"(%1\FileAssociations)").arg(regKey3),
                   QSettings::NativeFormat);
               settings3_fileAssociations.setValue(ext, ProgID);
               if (!assocId.mimeType.isEmpty()) {
                   QSettings settings3_mimeAssociations(
-                      QString::fromUtf8(R"(%1\MimeAssociations)").arg(regKey3),
+                      QStringLiteral(R"(%1\MimeAssociations)").arg(regKey3),
                       QSettings::NativeFormat);
                   settings3_mimeAssociations.setValue(assocId.mimeType.toLower(),
                                                       ProgID);
               }
-              const QString regKey4 = QString::fromUtf8(
-                  R"(HKEY_LOCAL_MACHINE\SOFTWARE\RegisteredApplications)");
-              QSettings settings4(regKey4, QSettings::NativeFormat);
-              settings4.setValue(displayName,
-                                 QString::fromUtf8(R"(SOFTWARE\%1\%2\Capabilities)")
-                                     .arg(progid_com, progid_app));
-              reg = true;
-          }
-          if (!reg) {
-              qDebug() << "No file types have been registered.";
-              return false;
           }
           // Tell the system to flush itself immediately.
           SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSH, nullptr,
@@ -1655,11 +1757,9 @@
       QStringList params = {
           QDir::toNativeSeparators(fileInfo.absoluteFilePath())};
       if (!fileInfo.isDir()) {
-          params.prepend(QString::fromUtf8("/select,"));
+          params.prepend(QStringLiteral("/select,"));
       }
-      // In case there is another "explorer.exe" ...
-      return QProcess::startDetached(
-          QString::fromUtf8(R"(%SystemRoot%\explorer.exe)"), params);
+      return QProcess::startDetached(QStringLiteral("explorer.exe"), params);
   }
   ```
 
@@ -1675,7 +1775,7 @@
       PROCESS_INFORMATION pinfo;
       SecureZeroMemory(&pinfo, sizeof(pinfo));
       const QString ComSpec = qEnvironmentVariable(
-          "ComSpec", QString::fromUtf8(R"(%SystemRoot%\System32\cmd.exe)"));
+          "ComSpec", QStringLiteral(R"(%SystemRoot%\System32\cmd.exe)"));
       // lpCommandLine is assumed to be detached. See:
       // https://devblogs.microsoft.com/oldnewthing/?p=18083
       BOOL result =
@@ -1704,20 +1804,12 @@
 
     ```cpp
     QString wallpaper() {
-        const auto path = new wchar_t[MAX_PATH];
-        if (!SystemParametersInfoW(SPI_GETDESKWALLPAPER, MAX_PATH, (LPWSTR)&path, 0)) {
+        wchar_t path[MAX_PATH] = {};
+        if (!SystemParametersInfoW(SPI_GETDESKWALLPAPER, MAX_PATH, path, 0)) {
             qDebug() << "Failed to query wallpaper path.";
-            delete [] path;
             return {};
         }
-        if (!path) {
-            qDebug() << "Failed to query wallpaper path.";
-            delete [] path;
-            return {};
-        }
-        const QString result = QString::fromWCharArray(path);
-        delete [] path;
-        return result;
+        return QString::fromWCharArray(path);
     }
     ```
 
@@ -1864,7 +1956,7 @@
 
   ```cpp
   LPWSTR path = nullptr;
-  if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Windows, KF_FLAG_DEFAULT, nullptr, &path)) && path) {
+  if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Windows, KF_FLAG_DEFAULT, nullptr, &path))) {
       std::wcout << path << std::endl;
       CoTaskMemFree(path); // 记得释放内存！
   } else {
@@ -2273,8 +2365,7 @@
       freopen_s(&out, "CONOUT$", "w", stdout);
       freopen_s(&err, "CONOUT$", "w", stderr);
       if (utf8Enabled) {
-          static constexpr const UINT utf8CodePageID = 65001;
-          if (!(SetConsoleCP(utf8CodePageID) && SetConsoleOutputCP(utf8CodePageID))) {
+          if (!(SetConsoleCP(CP_UTF8) && SetConsoleOutputCP(CP_UTF8))) {
               qWarning().noquote() << "Failed to change console's code page to UTF-8.";
           }
       }
@@ -2331,6 +2422,7 @@
   using ACCENT_FLAG = enum _ACCENT_FLAG
   {
       ACCENT_NONE = 0,
+      ACCENT_ENABLE_LUMINOSITY = 1 << 1,
       ACCENT_ENABLE_BORDER_LEFT = 1 << 5,
       ACCENT_ENABLE_BORDER_TOP = 1 << 6,
       ACCENT_ENABLE_BORDER_RIGHT = 1 << 7,
@@ -2363,6 +2455,8 @@
           // 此为模糊特效的渐变色，不能设置成全透明，否则亚克力失效，设置成半透明效果最好。
           // 此数值格式为：AABBGGRR
           accentPolicy.GradientColor = 0x01FFFFFF;
+          // 必须设置这个，否则Win11上效果不好
+          accentPolicy.AccentFlags = ACCENT_ENABLE_LUMINOSITY;
           WINDOWCOMPOSITIONATTRIBDATA wcaData;
           wcaData.Attrib = WCA_ACCENT_POLICY;
           wcaData.pvData = &accentPolicy;
@@ -2470,7 +2564,7 @@
   DISM.exe /Online /Cleanup-Image /RestoreHealth
   ```
 
-  管理员权限PowerShell按顺序运行上述命令
+  管理员权限PowerShell按顺序运行上述命令。若不放心，可以再运行`sfc /scannow`（管理员权限）。
 
 - 如何设置和获取程序的DPI感知级别？
 
@@ -2577,3 +2671,208 @@
       }
   }
   ```
+
+- 如何获取当前桌面会话ID：
+
+  ```cpp
+  DWORD GetActiveSessionID()
+  {
+      DWORD Count = 0;
+      PWTS_SESSION_INFOW pSessionInfo = nullptr;
+      if (::WTSEnumerateSessionsW(
+          WTS_CURRENT_SERVER_HANDLE,
+          0,
+          1,
+          &pSessionInfo,
+          &Count))
+      {
+          for (DWORD i = 0; i < Count; ++i)
+          {
+              if (pSessionInfo[i].State == WTS_CONNECTSTATE_CLASS::WTSActive)
+              {
+                  return pSessionInfo[i].SessionId;
+              }
+          }
+
+          ::WTSFreeMemory(pSessionInfo);
+      }
+
+      return static_cast<DWORD>(-1);
+  }
+  ```
+
+  摘自：<https://github.com/M2Team/NanaRun/blob/4fefc0151fa877d32ba8921c5863df163ee327c8/MinSudo/MinSudo.cpp#L594>
+
+- 如何手动启动一个Windows服务？
+
+  ```cpp
+  BOOL StartWindowsService(
+      _In_ LPCWSTR ServiceName,
+      _Out_ LPSERVICE_STATUS_PROCESS ServiceStatus)
+  {
+      BOOL Result = FALSE;
+
+      if (ServiceStatus && ServiceName)
+      {
+          ::memset(ServiceStatus, 0, sizeof(LPSERVICE_STATUS_PROCESS));
+
+          SC_HANDLE ServiceControlManagerHandle = ::OpenSCManagerW(
+              nullptr,
+              nullptr,
+              SC_MANAGER_CONNECT);
+          if (ServiceControlManagerHandle)
+          {
+              SC_HANDLE ServiceHandle = ::OpenServiceW(
+                  ServiceControlManagerHandle,
+                  ServiceName,
+                  SERVICE_QUERY_STATUS | SERVICE_START);
+              if (ServiceHandle)
+              {
+                  DWORD nBytesNeeded = 0;
+                  DWORD nOldCheckPoint = 0;
+                  ULONGLONG nLastTick = 0;
+                  bool bStartServiceWCalled = false;
+
+                  while (::QueryServiceStatusEx(
+                      ServiceHandle,
+                      SC_STATUS_PROCESS_INFO,
+                      reinterpret_cast<LPBYTE>(ServiceStatus),
+                      sizeof(SERVICE_STATUS_PROCESS),
+                      &nBytesNeeded))
+                  {
+                      if (SERVICE_RUNNING == ServiceStatus->dwCurrentState)
+                      {
+                          Result = TRUE;
+                          break;
+                      }
+                      else if (SERVICE_STOPPED == ServiceStatus->dwCurrentState)
+                      {
+                          // Failed if the service had stopped again.
+                          if (bStartServiceWCalled)
+                          {
+                              Result = FALSE;
+                              ::SetLastError(ERROR_FUNCTION_FAILED);
+                              break;
+                          }
+
+                          Result = ::StartServiceW(
+                              ServiceHandle,
+                              0,
+                              nullptr);
+                          if (!Result)
+                          {
+                              break;
+                          }
+
+                          bStartServiceWCalled = true;
+                      }
+                      else if (
+                          SERVICE_STOP_PENDING
+                          == ServiceStatus->dwCurrentState ||
+                          SERVICE_START_PENDING
+                          == ServiceStatus->dwCurrentState)
+                      {
+                          ULONGLONG nCurrentTick = ::GetTickCount();
+
+                          if (!nLastTick)
+                          {
+                              nLastTick = nCurrentTick;
+                              nOldCheckPoint = ServiceStatus->dwCheckPoint;
+
+                              // Same as the .Net System.ServiceProcess, wait
+                              // 250ms.
+                              ::SleepEx(250, FALSE);
+                          }
+                          else
+                          {
+                              // Check the timeout if the checkpoint is not
+                              // increased.
+                              if (ServiceStatus->dwCheckPoint
+                                  <= nOldCheckPoint)
+                              {
+                                  ULONGLONG nDiff = nCurrentTick - nLastTick;
+                                  if (nDiff > ServiceStatus->dwWaitHint)
+                                  {
+                                      Result = FALSE;
+                                      ::SetLastError(ERROR_TIMEOUT);
+                                      break;
+                                  }
+                              }
+
+                              // Continue looping.
+                              nLastTick = 0;
+                          }
+                      }
+                      else
+                      {
+                          break;
+                      }
+                  }
+
+                  ::CloseServiceHandle(ServiceHandle);
+              }
+
+              ::CloseServiceHandle(ServiceControlManagerHandle);
+          }
+      }
+      else
+      {
+          ::SetLastError(ERROR_INVALID_PARAMETER);
+      }
+
+      return Result;
+  }
+  ```
+
+  摘自：<https://github.com/M2Team/NanaRun/blob/4fefc0151fa877d32ba8921c5863df163ee327c8/MinSudo/MinSudo.cpp#L723>
+
+- 高精度TickCount实现：
+
+  ```cpp
+  EXTERN_C ULONGLONG WINAPI MileGetTickCount()
+  {
+      LARGE_INTEGER Frequency;
+      if (::QueryPerformanceFrequency(&Frequency))
+      {
+          LARGE_INTEGER PerformanceCount;
+          if (::QueryPerformanceCounter(&PerformanceCount))
+          {
+              return (PerformanceCount.QuadPart * 1000 / Frequency.QuadPart);
+          }
+      }
+
+      return ::GetTickCount64();
+  }
+  ```
+
+  摘自：<https://github.com/ProjectMile/Mile.Windows.Helpers/blob/a3ff3823cf866db88c61f19e358c99cf5249bcfd/Mile.Helpers/Mile.Helpers.Base.cpp#L100>
+
+- CreateThread 的 VCRT 用 Wrapper (当你用老版本 VCRT 的时候为了创建新线程的时候能正确初始化 VCRT 这个 wrapper 会很有用)
+
+  ```cpp
+  EXTERN_C HANDLE WINAPI MileCreateThread(
+      _In_opt_ LPSECURITY_ATTRIBUTES lpThreadAttributes,
+      _In_ SIZE_T dwStackSize,
+      _In_ LPTHREAD_START_ROUTINE lpStartAddress,
+      _In_opt_ LPVOID lpParameter,
+      _In_ DWORD dwCreationFlags,
+      _Out_opt_ LPDWORD lpThreadId)
+  {
+      // sanity check for lpThreadId
+      assert(sizeof(DWORD) == sizeof(unsigned));
+
+      typedef unsigned(__stdcall* routine_type)(void*);
+
+      // _beginthreadex calls CreateThread which will set the last error
+      // value before it returns.
+      return reinterpret_cast<HANDLE>(::_beginthreadex(
+          lpThreadAttributes,
+          static_cast<unsigned>(dwStackSize),
+          reinterpret_cast<routine_type>(lpStartAddress),
+          lpParameter,
+          dwCreationFlags,
+          reinterpret_cast<unsigned*>(lpThreadId)));
+  }
+  ```
+
+  摘自：<https://github.com/ProjectMile/Mile.Windows.Helpers/blob/a3ff3823cf866db88c61f19e358c99cf5249bcfd/Mile.Helpers/Mile.Helpers.Base.cpp#L115>
