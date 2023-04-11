@@ -2876,3 +2876,12 @@
   ```
 
   摘自：<https://github.com/ProjectMile/Mile.Windows.Helpers/blob/a3ff3823cf866db88c61f19e358c99cf5249bcfd/Mile.Helpers/Mile.Helpers.Base.cpp#L115>
+
+- PowerShell 设置代理
+
+  ```powershell
+  $env:HTTP_PROXY="http://127.0.0.1:8080"
+  $env:HTTPS_PROXY="http://127.0.0.1:8080"
+  ```
+
+  注意事项：大小写敏感、双引号不能丢，且设置后仅对当前控制台实例有效，若想全局生效，需添加全局环境变量。
