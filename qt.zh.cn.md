@@ -2477,20 +2477,20 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
       *lastForwardSlash = '\0';
       return QString::fromUtf8(&buffer[0]);
   #elif defined(Q_OS_WINDOWS)
+      UINT bufferSize = MAX_PATH;
+      std::vector<wchar_t> buffer(bufferSize + 1);
       const HMODULE hModule = GetModuleHandleW(nullptr);
-      if (!hModule) {
-          return {};
+      bufferSize = GetModuleFileNameW(hModule, &buffer[0], bufferSize);
+      if (bufferSize > MAX_PATH) {
+          buffer.resize(bufferSize);
+          GetModuleFileNameW(hModule, &buffer[0], bufferSize);
       }
-      wchar_t buffer[MAX_PATH] = {};
-      if (GetModuleFileNameW(hModule, buffer, MAX_PATH) == 0) {
-          return {};
-      }
-      wchar_t *lastBackslash = std::wcsrchr(buffer, L'\\');
+      wchar_t *lastBackslash = std::wcsrchr(&buffer[0], L'\\');
       if (lastBackslash == nullptr) {
           return {};
       }
       *lastBackslash = L'\0';
-      return QString::fromWCharArray(buffer);
+      return QString::fromWCharArray(&buffer[0]);
   #elif defined(Q_OS_LINUX)
       char buffer[FILENAME_MAX] = {};
       const int bufferSize = sizeof(buffer);
@@ -2509,3 +2509,39 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   #endif
   }
   ```
+
+- 当QWidget中存在使用OpenGL渲染的子widget时（例如VTK），无法将其他widget置于该子widget的上层，或者难以修改该子widget的尺寸和位置？
+
+  可以尝试将顶层窗口换为`QMainWindow`或其派生类，然后将所有需要独立显示的widget（例如子窗口）都包装为`QDockWidget`，并一定记得调用`QMainWindow::addDockWidget()`这个接口把所有的DockWidget都添加到某个停靠区域中。即使你不想让某个窗口确实停靠到停靠区域中，这一步也不可缺少，因为这一步正是解决问题的关键，没有这一步问题就无法解决。对于不想开启停靠功能的DockWidget，只需要调用`QDockWidget::setAllowedAreas(Qt::NoDockWidgetArea)`这个接口就可以禁用停靠功能，而且这个设置与上一步也不冲突，可以同时进行。对于OpenGL子widget，有两个做法，一个是和上面一样，包装成DockWidget，另一个是设置成MainWindow的CentralWidget。做完这些，OpenGL子widget应该就不会遮挡其他widget了，但你用Qt自带的接口去获取它的尺寸和位置，可能会产生明显误差，这个只能通过用整体窗口的尺寸和位置减去其他widget所占据的尺寸和位置来间接获取，没有什么好的方法。
+
+- 为何我自己用QWidget写的闪屏（SplashScreen）组件无法正常显示？
+
+  要作为闪屏使用，这个widget的window flags中必须包含`Qt::SplashScreen`这个flag
+
+- 为何我使用`Qt::FramelessWindowHint`去掉窗口边框后，无法响应系统的DPI改变消息？
+
+  Qt内部是通过去掉`WS_THICKFRAME`等正常窗口的样式并添加`WS_POPUP`样式来隐藏窗口边框的，然而Windows不会向此类窗口发送DPI改变消息。Workaround有两个，一个是在应用`Qt::FramelessWindowHint`后手动修复窗口样式，并通过拦截并修改`WM_NCCALCSIZE`消息的方式隐藏边框；另一个是单独搞一个隐藏的窗口来监听DPI改变消息，当收到消息时手动调整无边框窗口的尺寸、字体等必要设置。注意：早期的Win10版本只会向顶层窗口发送DPI改变消息，但此行为在后续的版本中发生改变，现在子窗口也会收到DPI改变消息。
+
+- `QPushButton`如何只显示图片而不显示文字，但仍保留按钮的点击动画、选中效果？
+
+  ```cpp
+  button->setIcon(QIcon(QStringLiteral(":/Icons/open.svg")));
+  button->setIconSize(QSize(32, 32)); // 这个尺寸必须要设置，否则图片显示出来会很小。请替换成你自己的尺寸。
+  button->setFixedSize(button->iconSize()); // 这一步也必须有，否则按钮大小和图片大小会不匹配。
+  ```
+
+  此时按钮虽只显示图片，但仍然会显示一个有些许立体效果的背景面板，如果想隐藏这个东西，请参考：
+
+  ```cpp
+  button->setFlat(true); // 设置这个属性后，默认不会显示按钮的背景元素，但鼠标点击时和按钮被选中时，还是会显示出来。
+  ```
+
+  按钮在点击时和选中后，会显示一个背景元素（大多数时候是强调色之类的），如果你想完全隐藏掉背景，只使用图片作为按钮，可以进行额外设置：
+
+  ```cpp
+  button->setStyleSheet(QStringLiteral("background-color: transparent;")); // 这个设置不会与自定义的QStyle冲突，可以同时使用。
+  ```
+
+- 如何使QWidget能根据其所有子widget的尺寸自适应大小？
+
+  把所有子widget都放到父widget的布局里，并对父widget的布局调用`QLayout::setSizeConstraint(QLayout::SetFixedSize)`。但这样设置后，用户就不能手动调整外层widget的尺寸了（如果外层widget是一个窗口之类的）。此时父widget尺寸是由子widget的尺寸决定的，所以如果你想修改父widget的尺寸，就只能去调整子widget。例如，如果你想设置一个最小尺寸，那么不能对父widget调用setMinimumWidth/Height/Size或者setFixedWidth/Height/Size，这样做是没有效果的或者效果达不到你的预期，正确做法是修改子widget的minimumWidth/Height/Size或者fixedWidth/Height/Size。

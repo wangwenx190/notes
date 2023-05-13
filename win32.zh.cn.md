@@ -2885,3 +2885,45 @@
   ```
 
   注意事项：大小写敏感、双引号不能丢，且设置后仅对当前控制台实例有效，若想全局生效，需添加全局环境变量。
+
+- 高效且可靠的char(std::string)与wchar_t(std::wstring)相互转换
+
+  ```cpp
+  std::wstring UTF8ToUTF16(const std::string_view utf8Str)
+  {
+      if (utf8Str.empty()) {
+          return {};
+      }
+      const auto utf8Length = static_cast<int>(utf8Str.length());
+      if (utf8Length >= std::numeric_limits<int>::max()) {
+          return {};
+      }
+      const int utf16Length = ::MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8Str.data(), utf8Length, nullptr, 0);
+      if (utf16Length <= 0) {
+          return {};
+      }
+      std::wstring utf16Str;
+      utf16Str.resize(utf16Length);
+      ::MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8Str.data(), utf8Length, &utf16Str[0], utf16Length);
+      return utf16Str;
+  }
+
+  std::string UTF16ToUTF8(const std::wstring_view utf16Str)
+  {
+      if (utf16Str.empty()) {
+          return {};
+      }
+      const auto utf16Length = static_cast<int>(utf16Str.length());
+      if (utf16Length >= std::numeric_limits<int>::max()) {
+          return {};
+      }
+      const int utf8Length = ::WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, utf16Str.data(), utf16Length, nullptr, 0, nullptr, nullptr);
+      if (utf8Length <= 0) {
+          return {};
+      }
+      std::string utf8Str;
+      utf8Str.resize(utf8Length);
+      ::WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, utf16Str.data(), utf16Length, &utf8Str[0], utf8Length, nullptr, nullptr);
+      return utf8Str;
+  }
+  ```
