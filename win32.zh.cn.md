@@ -2927,3 +2927,12 @@
       return utf8Str;
   }
   ```
+
+- 使用系统自带功能安全清理C盘WinSxS文件夹
+
+  管理员权限运行PowerShell：
+  
+  ```powershell
+  Dism.exe /Online /Cleanup-Image /AnalyzeComponentStore
+  Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
+  ```
