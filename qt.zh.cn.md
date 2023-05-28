@@ -2571,7 +2571,7 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
 
   值 | 说明
   - | -
-  `QSizePolicy::Fixed` | 控件尺寸是固定的（取自`QSize QWidget::sizeHint() const`），既不能被缩小，也不能被放大
+  `QSizePolicy::Fixed` | 控件的默认尺寸（取自`QSize QWidget::sizeHint() const`）是固定的，既不能被缩小，也不能被放大
   `QSizePolicy::Minimum` | 控件的默认尺寸是最小尺寸，控件只能被放大，不能被缩小
   `QSizePolicy::Maximum` | 控件的默认尺寸是最大尺寸，控件只能被缩小，不能被放大
   `QSizePolicy::Preferred` | 控件的默认尺寸是最合适的尺寸，但可以被放大，也可以被缩小（大多数`QWidget`的默认大小策略）
