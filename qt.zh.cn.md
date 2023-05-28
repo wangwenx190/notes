@@ -2551,3 +2551,38 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   不要使用`QWidget::setContentsMargins()`这个接口，要对其布局使用`QLayout::setContentsMargins()`。
 
 - 外层布局的设置会递归传递到所有内层布局，例如你对外层布局调用了`setContentsMargins`，那么所有内层的布局也都会应用此设置。
+
+- `QComboBox`默认会根据其item的长度调整下拉框本身的宽度，比如其中某个item文本很长，则下拉框会变的很宽，甚至把整个界面撑大看起来变形的感觉，有时候我们不希望是这样，有多个方法可以去掉，最佳方法就是设置 `comboBox->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon)`，当item宽度过长的时候中间部分会自动以省略号显示。
+
+- 基于`QWidget`开发的软件在打包时记得把平台主题插件`platformthemes`一起打包，如果缺少这个插件，运行时不会报错，但软件外观可能非常古怪，例如变成Windows 2000般的古老风格
+
+- Qt5的`QSettings`保存浮点数（qreal/float/double）时记得显式转化一下，否则保存的数据会变成`QVariant`。此问题Qt6不存在。
+
+  ```cpp
+  const double value = 1;
+  settings.setValue(QStringLiteral("test"), double(value));
+  ```
+
+- 如果你的程序设置了开机启动，程序的工作目录会变成系统文件夹，如果你在代码里读写文件，很可能路径是错误的，可以通过`QDir::setCurrent(QCoreApplication::applicationDirPath())`来解决此问题。这个语句一定要尽早执行，别放太靠后了。
+
+- `QWidget`各种控件的默认大小/默认最小大小是如何确定的？重写`QSize QWidget::sizeHint() const`函数以及`QSize QWidget::minimumSizeHint() const`函数。
+
+- `QSizePolicy`的各个大小策略都是什么意思？
+
+  值 | 说明
+  - | -
+  `QSizePolicy::Fixed` | 控件尺寸是固定的（取自`QSize QWidget::sizeHint() const`），既不能被缩小，也不能被放大
+  `QSizePolicy::Minimum` | 控件的默认尺寸是最小尺寸，控件只能被放大，不能被缩小
+  `QSizePolicy::Maximum` | 控件的默认尺寸是最大尺寸，控件只能被缩小，不能被放大
+  `QSizePolicy::Preferred` | 控件的默认尺寸是最合适的尺寸，但可以被放大，也可以被缩小（大多数`QWidget`的默认大小策略）
+  `QSizePolicy::Expanding` | 控件的默认尺寸是合适的，但允许被放大或缩小，如果可能，会占据布局中所有剩余的空间
+  `QSizePolicy::MinimumExpanding` | 控件的默认尺寸是最小尺寸，只能被放大，不能被缩小，如果可能，会占据布局中所有剩余的空间
+  `QSizePolicy::Ignored` | 控件的默认尺寸会被忽略，默认填充布局中所有剩余的空间
+
+- 如何使某个`QWidget`固定在某个尺寸
+
+  使用`setFixedSize`/`setFixedWidth`/`setFixedHeight`。这几个接口的原理其实很简单，就是把`QWidget`的最小尺寸和最大尺寸都设置为同一个尺寸，这样这个控件就不能被改变大小了，但请注意，如果你对窗口执行了这个函数，虽然窗口尺寸确实固定了，但你鼠标移动到窗口边框上，光标还是会变成resize时的样子，只是无法拖动边框了而已。如果要使鼠标也不发生改变，就要重写`bool QWidget::nativeEvent(const QByteArray &, void *, qintptr *)`，拦截Windows消息，在`WM_NCHITTEST`里进行处理，处理方法很简单，请自行查阅微软官方文档。
+
+  设置固定尺寸后，如何还原？很简单，只要先调用`setMinimumSize(QSize(0, 0))`，再调用`setMaximumSize(QSize(65535, 65535))`，将最小尺寸和最大尺寸再还原为默认就可以了。
+
+  注：Windows平台，如果要固定窗口的大小，可以设置`Qt::MSWindowsFixedSizeDialogHint`这个flag，可以在固定窗口大小的同时，也做到鼠标光标不会变成resize状态。
