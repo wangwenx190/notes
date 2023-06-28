@@ -2596,3 +2596,29 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
 - 如何使当前控件不接受任何鼠标事件，并将所有鼠标事件都传递给其底层的控件？开启`Qt::WA_TransparentForMouseEvents`，此时该控件就相当于完全“透明”了（不是视觉上）。
 
 - `QDir::canonicalPath()`这个函数会检查文件夹是否存在，如果不存在会直接返回空字符串，所以可能会不符合开发者的预期，建议使用`QDir::cleanPath()`这个函数替换，此函数不会检查文件夹是否存在，只会对文件夹的路径字符串进行解析。两者作用大体类似，都是尽可能解析路径（移除多余的路径分隔符、将`.`以及`..`解析为真实路径等），唯一区别是前者会将符号链接也一并解析，而后者不会。
+
+- 如何使QML文件成为单例？
+
+  1. QML文件开头加上相关指令
+
+     ```qml
+     pragma Singleton
+     ```
+
+     注意：这一步不可缺少，否则无法成为单例；大小写敏感；如果存在多个`pragma`，需要分行写。
+  
+  2. [Qt6] CMake设置单例标记
+
+     ```cmake
+     set_source_files_properties(Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+     ```
+
+     注意：Qt6才引入这个标记，对于Qt5而言这一步不需要，因为设置了也没东西去读取这个值。
+  
+  3. [Qt5] 使用QML API注册单例
+
+     ```cpp
+     qmlRegisterSingletonType(QUrl(QStringLiteral("qrc:///qml/Constants.qml")), "Demo", 1, 0, "Constants");
+     ```
+
+     注意：这一步对于Qt5而言不可缺少，但对于Qt6，如果设置了第二步的CMake标记，就不需要这一步了，但就算额外做了这一步，也不会导致错误。
