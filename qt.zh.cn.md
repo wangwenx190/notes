@@ -2662,3 +2662,16 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
     }
   }
   ```
+
+  使用：
+
+  ```qml
+  RoundedRectangle{
+      width: 160
+      height: 160
+      color: "cyan"
+      cornersRadius: [20,0,20,0] // 顺序：左上，右上，右下，左下
+      borderWidth: 1
+      borderColor: "gray" // 默认全透明
+  }
+  ```
