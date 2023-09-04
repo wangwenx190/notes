@@ -2622,3 +2622,43 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
      ```
 
      注意：这一步对于Qt5而言不可缺少，但对于Qt6，如果设置了第二步的CMake标记，就不需要这一步了，但就算额外做了这一步，也不会导致错误。
+
+- QML任意圆角的矩形
+
+  ```qml
+  import QtQuick
+  import QtQuick.Controls
+  import QtQuick.Shapes
+
+  Shape {
+    id: shape
+
+    required property var cornersRadius
+    required property color color
+    property color borderColor: "transparent"
+    property real borderWidth: 1
+
+    layer {
+      enabled: true
+      samples: 4
+      smooth: true
+      mipmap: true
+    }
+
+    ShapePath {
+      startX: 0
+      startY: shape.cornersRadius[0]
+      fillColor: shape.color
+      strokeColor: shape.borderColor
+      strokeWidth: shape.borderWidth
+      PathQuad { x: shape.cornersRadius[0]; y: 0; controlX: 0; controlY: 0 }
+      PathLine { x: shape.width - shape.cornersRadius[1]; y: 0 }
+      PathQuad { x: shape.width; y: shape.cornersRadius[1]; controlX: shape.width; controlY: 0 }
+      PathLine { x: shape.width; y: shape.height - shape.cornersRadius[2] }
+      PathQuad { x: shape.width - shape.cornersRadius[2]; y: shape.height; controlX: shape.width; controlY: shape.height }
+      PathLine { x: shape.cornersRadius[3]; y: shape.height }
+      PathQuad { x: 0; y: shape.height - shape.cornersRadius[3]; controlX: 0; controlY: shape.height }
+      PathLine { x: 0; y: shape.cornersRadius[0] }
+    }
+  }
+  ```
