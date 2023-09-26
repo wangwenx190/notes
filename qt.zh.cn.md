@@ -2360,7 +2360,7 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   ```cpp
   #ifndef QT_NO_DEBUG_STREAM
   QDebug operator<<(QDebug d, const MdkObject::Chapters &chapters) {
-      QDebugStateSaver saver(d);
+      const QDebugStateSaver saver(d);
       d.nospace();
       d.noquote();
       QString chaptersStr = QString();
@@ -2675,3 +2675,152 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
       borderColor: "gray" // 默认全透明
   }
   ```
+
+- 我把我自己的类型传给了`QList`/`QVector`，编译时遇到错误？
+
+  你自己的类型需要声明`==`和`!=`等操作符，最好能支持的操作符都声明了：
+
+  ```cpp
+  struct MyType
+  {
+      int m_data = 0;
+
+      [[nodiscard]] friend inline constexpr bool operator==(const MyType &lhs, const MyType &rhs) noexcept
+      {
+        return lhs.m_data == rhs.m_data;
+      }
+
+      [[nodiscard]] friend inline constexpr bool operator!=(const MyType &lhs, const MyType &rhs) noexcept
+      {
+        return !operator==(lhs, rhs);
+      }
+
+      [[nodiscard]] friend inline constexpr bool operator>(const MyType &lhs, const MyType &rhs) noexcept
+      {
+        return lhs.m_data > rhs.m_data;
+      }
+
+      [[nodiscard]] friend inline constexpr bool operator>=(const MyType &lhs, const MyType &rhs) noexcept
+      {
+        return operator>(lhs, rhs) || operator==(lhs, rhs);
+      }
+
+      [[nodiscard]] friend inline constexpr bool operator<(const MyType &lhs, const MyType &rhs) noexcept
+      {
+        return operator!=(lhs, rhs) && !operator>(lhs, rhs);
+      }
+
+      [[nodiscard]] friend inline constexpr bool operator<=(const MyType &lhs, const MyType &rhs) noexcept
+      {
+        return operator<(lhs, rhs) || operator==(lhs, rhs);
+      }
+  }
+  using MyTypeList = QList<MyType>;
+  ```
+
+- 我把我自己的类型给了`QHash`，编译时遇到错误？
+
+  除了声明`==`以及`!=`等操作符以外，还需要额外声明一个名字固定为`qHash`的函数（下面的例子声明为友元函数只是为了方便获取私有成员，声明成普通的成员函数也是完全没问题的）：
+
+  ```cpp
+  struct MyType
+  {
+      int m_int = 0;
+      bool m_bool = false;
+      const char *m_str = nullptr;
+      // 这里就省略==，!=等操作符的声明实现了，请按照自己的需求自行实现。
+      [[nodiscard]] friend inline std::size_t qHash(const MyType &type, const std::size_t seed = 0)
+      {
+          return qHashMulti(seed, type.m_int, type.m_bool, type.m_str);
+      }
+  }
+  using MyTypeHash = QHash<MyType, xxx>;
+  ```
+
+  或者借助`std::hash`（这个方法的好处是可以使Qt和std共享哈希函数的声明；如果同时存在`qHash`以及`std::hash`的定义，Qt会优先采用`qHash`）：
+
+  ```cpp
+  struct MyType {}
+
+  namespace std {
+  template<>
+  struct hash<MyType>
+  {
+      [[nodiscard]] inline size_t operator()(const MyType &type, const size_t seed = 0) const noexcept
+      {
+          const size_t h1 = hash<int>{}(type.m_int);
+          const size_t h2 = hash<bool>{}(type.m_bool);
+          return h1 ^ (h2 << 1); // 或者使用 boost::hash_combine
+      }
+  };
+  } // namespace std
+  ```
+
+- 我想用`QVariant`包装我自己的类型，编译时遇到错误？
+
+  在你声明你自己类型的地方，后面加上一行`Q_DECLARE_METATYPE(xxx)`，注意要放在命名空间/类的外边：
+
+  ```cpp
+  namespace A::B::C
+  {
+      struct MyType {}
+  }
+  Q_DECLARE_METATYPE(A::B::C::MyType)
+  ```
+
+  所有要用`QVariant`包装你自己类型的源码文件里都要存在这个宏，所以最好就是放在头文件里。
+  然后在合适的地方调用一次`qRegisterMetaType<MyType>()`，注意不要调用多次，且最好尽早调用。
+
+- 为什么我自己声明的`QFlag`，不支持位运算符？
+
+  在你自己的`QFlag`声明后边，加上一行`Q_DECLARE_OPERATORS_FOR_FLAGS(xxx)`，注意要放在命名空间/类的外边：
+
+  ```cpp
+  class MyClass : public QObject
+  {
+      Q_OBJECT
+  public:
+      enum class MyFlag : quint32
+      {
+          NoFlag = 0,
+          Flag1 = 1 << 0,
+          Flag2 = 1 << 1,
+          Flag3 = 1 << 2,
+      };
+      Q_ENUM(MyFlag)
+      Q_DECLARE_FLAGS(MyFlags, MyFlag)
+      Q_FLAG(MyFlags)
+  }
+  Q_DECLARE_OPERATORS_FOR_FLAGS(MyClass::MyFlag)
+  ```
+
+- 如何使`QDataStream`支持我自己的数据类型？
+
+  声明`<<`和`>>`操作符：
+
+  ```cpp
+  struct MyType
+  {
+      int m_int = 0;
+      bool m_bool = false;
+      const char *m_str = nullptr;
+  }
+  #ifndef QT_NO_DATASTREAM
+  QDataStream &operator<<(QDataStream &ds, const MyType &type)
+  {
+      ds << type.m_int;
+      ds << type.m_bool;
+      ds << type.m_str;
+      return ds;
+  }
+  QDataStream &operator>>(QDataStream &ds, MyType &type)
+  {
+      ds >> type.m_int;
+      ds >> type.m_bool;
+      ds >> type.m_str;
+      return ds;
+  }
+  #endif
+  ```
+
+  注意一定要用`QT_NO_DATASTREAM`包裹一下，否则在禁用`QDataStream`的Qt上会无法编译。
