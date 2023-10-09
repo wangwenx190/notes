@@ -189,30 +189,20 @@
 
   bool IsCurrentProcessElevated()
   {
-      bool Result = false;
-
-      HANDLE CurrentProcessAccessToken = nullptr;
-      if (::OpenProcessToken(
-          ::GetCurrentProcess(),
-          TOKEN_ALL_ACCESS,
-          &CurrentProcessAccessToken))
-      {
-          TOKEN_ELEVATION Information = { 0 };
-          DWORD Length = sizeof(Information);
-          if (::GetTokenInformation(
-              CurrentProcessAccessToken,
-              TOKEN_INFORMATION_CLASS::TokenElevation,
-              &Information,
-              Length,
-              &Length))
-          {
-              Result = Information.TokenIsElevated;
+      static const auto result = []() -> bool {
+          bool elevated = false;
+          HANDLE hToken = nullptr;
+          if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_ALL_ACCESS, &hToken)) {
+              TOKEN_ELEVATION info = {};
+              DWORD dwSize = sizeof(TOKEN_ELEVATION);
+              if (::GetTokenInformation(hToken, TOKEN_INFORMATION_CLASS::TokenElevation, &info, dwSize, &dwSize)) {
+                  elevated = info.TokenIsElevated;
+              }
+              ::CloseHandle(hToken);
           }
-
-          ::CloseHandle(CurrentProcessAccessToken);
-      }
-
-      return Result;
+          return elevated;
+      }();
+      return result;
   }
   ```
 
@@ -1587,7 +1577,7 @@
                       .arg(ProgID);
               QSettings settings1(regKey1, QSettings::NativeFormat);
               if (!assocId.description.isEmpty()) {
-                  settings1.setValue(QStringLiteral(""), assocId.description);
+                  settings1.setValue(QStringLiteral("Default"), assocId.description);
               }
               if (!assocId.friendlyTypeName.isEmpty()) {
                   settings1.setValue(QStringLiteral("FriendlyTypeName"),
@@ -1597,7 +1587,7 @@
                   QSettings settings1_clsid(
                       QStringLiteral(R"(%1\CLSID)").arg(regKey1),
                       QSettings::NativeFormat);
-                  settings1_clsid.setValue(QStringLiteral(""),
+                  settings1_clsid.setValue(QStringLiteral("Default"),
                                            assocId.CLSID.toUpper());
               }
               if (!assocId.defaultIcon.isEmpty()) {
@@ -1612,7 +1602,7 @@
                   const QString cmd = assocId.command.isEmpty()
                       ? (exePath + QStringLiteral(R"( "%1")"))
                       : QDir::toNativeSeparators(assocId.command);
-                  settings1_command.setValue(QStringLiteral(""), cmd);
+                  settings1_command.setValue(QStringLiteral("Default"), cmd);
               }
               const QString regKey2 =
                   QStringLiteral(R"(HKEY_CLASSES_ROOT\%1\OpenWithProgIDs)")
@@ -1736,34 +1726,6 @@
   - 链接器添加`/NOENTRY`参数（属性->链接器->高级->无入口点->是），编译DLL
 
   参考资料：<https://docs.microsoft.com/en-us/windows/win32/menurc/stringtable-resource>
-
-- 打开文件管理器（explorer.exe），并在其中定位某个文件或文件夹
-
-  ```cpp
-  bool showContainingFolder(const QString &path) {
-      if (path.isEmpty()) {
-          qDebug() << "Cannot locate the given file: empty path.";
-          return false;
-      }
-      const QFileInfo fileInfo(path);
-      if (!fileInfo.exists()) {
-          qDebug() << "Cannot locate a file which do not exist.";
-          return false;
-      }
-      // It's OK if we are locating a shortcut file, no need to check whether it's
-      // a broken shortcut or not.
-      // Don't use canonicalFilePath() here because we want to locate the file
-      // itself, not the target file of the shortcut.
-      QStringList params = {
-          QDir::toNativeSeparators(fileInfo.absoluteFilePath())};
-      if (!fileInfo.isDir()) {
-          params.prepend(QStringLiteral("/select,"));
-      }
-      return QProcess::startDetached(QStringLiteral("explorer.exe"), params);
-  }
-  ```
-
-  或使用官方API`SHOpenFolderAndSelectItems`。
 
 - 打开命令提示符窗口并将工作路径切换到指定位置
 
@@ -2935,4 +2897,34 @@
   ```powershell
   Dism.exe /Online /Cleanup-Image /AnalyzeComponentStore
   Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
+  ```
+
+- 通过代码方式调出系统的“使用xxx程序打开此文件”对话框
+
+  ```cpp
+  #include <shlobj_core.h> // shell32.lib
+  // 必须先初始化COM，此处省略具体代码。
+  OPENASINFO openAsInfo = {};
+  openAsInfo.pcszFile = L"C:\\test.txt"; // 这个参数是要打开文件的路径
+  openAsInfo.pcszClass = L"My document file"; // 这个参数是文件类型的描述，如果为空，系统会使用文件的后缀名代替。
+  openAsInfo.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC;
+  // OAIF_ALLOW_REGISTRATION：启用“总是使用这个程序打开”复选框，没有这个flag的话这个复选框会被禁用（Win10开始忽略此flag）
+  // OAIF_REGISTER_EXT：用户点击“确定”按钮后注册后缀名
+  // OAIF_EXEC：后缀名注册完成后打开文件，没有这个flag的话系统会跳出提示说用户可以在“设置”里修改默认程序
+  // OAIF_FORCE_REGISTRATION：强制选中“总是使用这个程序打开”复选框，有这个flag就不要有 OAIF_ALLOW_REGISTRATION （Win10开始忽略此flag）
+  // OAIF_HIDE_REGISTRATION：隐藏“总是使用这个程序打开”复选框（Win10开始忽略此flag）
+  // OAIF_URL_PROTOCOL：pcszFile 里是一个 URL，要求系统在对话框里显示能处理这个 URL 的程序
+  // OAIF_FILE_IS_URI：自Win8支持，pcszFile 里是一个 URI
+  SHOpenWithDialog(hWnd, &openAsInfo); // 第一个参数是对话框的父窗口，可以为空
+  ```
+
+- 通过代码方式调用文件管理器，使其打开某个文件夹并选中其中一个或几个项目
+
+  ```cpp
+  #include <shlobj_core.h> // shell32.lib
+  // 必须先初始化COM，此处省略具体代码。
+  PIDLIST_ABSOLUTE pidl = nullptr;
+  SHParseDisplayName(L"C:\\test", nullptr, &pidl, 0, nullptr);
+  // TODO: 传入第二个和第三个参数以选中其中的item
+  SHOpenFolderAndSelectItems(pidl, 0, nullptr, 0);
   ```
