@@ -2462,7 +2462,7 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   [[nodiscard]] static inline QString getExecutableDir()
   {
   #ifdef Q_OS_MACOS
-      unsigned int bufferSize = 512;
+      unsigned int bufferSize = PATH_MAX;
       std::vector<char> buffer(bufferSize + 1);
       // "_NSGetExecutablePath" will return "-1" if the buffer is not large enough
       // and "*bufferSize" will be set to the size required.
@@ -2492,7 +2492,7 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
       *lastBackslash = L'\0';
       return QString::fromWCharArray(&buffer[0]);
   #elif defined(Q_OS_LINUX)
-      char buffer[FILENAME_MAX] = {};
+      char buffer[PATH_MAX] = {};
       const int bufferSize = sizeof(buffer);
       const int bytes = MIN(readlink("/proc/self/exe", buffer, bufferSize), (bufferSize - 1));
       if (bytes >= 0) {
