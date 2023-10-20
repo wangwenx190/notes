@@ -2482,7 +2482,7 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
       bufferSize = GetModuleFileNameW(nullptr, buffer.data(), bufferSize);
       if (bufferSize > MAX_PATH) {
           buffer.resize(bufferSize);
-          GetModuleFileNameW(hModule, buffer.data(), bufferSize);
+          GetModuleFileNameW(nullptr, buffer.data(), bufferSize);
       }
       wchar_t *lastBackslash = std::wcsrchr(buffer.data(), L'\\');
       if (lastBackslash == nullptr) {
