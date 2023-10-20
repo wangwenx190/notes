@@ -2462,35 +2462,34 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   [[nodiscard]] static inline QString getExecutableDir()
   {
   #ifdef Q_OS_MACOS
-      unsigned int bufferSize = PATH_MAX;
+      uint32_t bufferSize = PATH_MAX;
       std::vector<char> buffer(bufferSize + 1);
       // "_NSGetExecutablePath" will return "-1" if the buffer is not large enough
       // and "*bufferSize" will be set to the size required.
-      if (_NSGetExecutablePath(&buffer[0], &bufferSize) != 0) {
+      if (_NSGetExecutablePath(buffer.data(), &bufferSize) != 0) {
           buffer.resize(bufferSize);
-          _NSGetExecutablePath(&buffer[0], &bufferSize);
+          _NSGetExecutablePath(buffer.data(), &bufferSize);
       }
-      char *lastForwardSlash = std::strrchr(&buffer[0], '/');
+      char *lastForwardSlash = std::strrchr(buffer.data(), '/');
       if (lastForwardSlash == nullptr) {
           return {};
       }
       *lastForwardSlash = '\0';
-      return QString::fromUtf8(&buffer[0]);
+      return QString::fromUtf8(buffer.data());
   #elif defined(Q_OS_WINDOWS)
       UINT bufferSize = MAX_PATH;
       std::vector<wchar_t> buffer(bufferSize + 1);
-      const HMODULE hModule = GetModuleHandleW(nullptr);
-      bufferSize = GetModuleFileNameW(hModule, &buffer[0], bufferSize);
+      bufferSize = GetModuleFileNameW(nullptr, buffer.data(), bufferSize);
       if (bufferSize > MAX_PATH) {
           buffer.resize(bufferSize);
-          GetModuleFileNameW(hModule, &buffer[0], bufferSize);
+          GetModuleFileNameW(hModule, buffer.data(), bufferSize);
       }
-      wchar_t *lastBackslash = std::wcsrchr(&buffer[0], L'\\');
+      wchar_t *lastBackslash = std::wcsrchr(buffer.data(), L'\\');
       if (lastBackslash == nullptr) {
           return {};
       }
       *lastBackslash = L'\0';
-      return QString::fromWCharArray(&buffer[0]);
+      return QString::fromWCharArray(buffer.data());
   #elif defined(Q_OS_LINUX)
       char buffer[PATH_MAX] = {};
       const int bufferSize = sizeof(buffer);
@@ -2498,12 +2497,12 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
       if (bytes >= 0) {
           buffer[bytes] = '\0';
       }
-      char *lastForwardSlash = std::strrchr(&buffer[0], '/');
+      char *lastForwardSlash = std::strrchr(buffer.data(), '/');
       if (lastForwardSlash == nullptr) {
           return {};
       }
       *lastForwardSlash = '\0';
-      return QString::fromUtf8(&buffer[0]);
+      return QString::fromUtf8(buffer.data());
   #else
       return {};
   #endif
