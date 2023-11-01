@@ -2823,3 +2823,35 @@ Qt6 不再支持**32位**Windows系统，不再支持**Windows 7，Windows 8**�
   ```
 
   注意一定要用`QT_NO_DATASTREAM`包裹一下，否则在禁用`QDataStream`的Qt上会无法编译。
+
+- 在Linux系统上运行Qt程序需要一些额外的准备：
+
+  - 在软件的bin目录里面放一个*qt.conf*：
+
+    ```text
+    [Paths]
+    Prefix=..
+    Libraries=lib
+    Plugins=plugins
+    Imports=qml
+    Translations=translations
+    Qml2Imports=qml
+    ```
+
+  - 在bin目录的同级目录（就是上面那个*qt.conf*文件的上一级目录）放一个启动脚本，叫什么名字随意：
+
+    ```bash
+    #!/bin/bash
+    BASE_DIR=$(dirname "$(readlink -f "$0")")
+    export PATH="$BASE_DIR"/bin/:$PATH
+    export LD_LIBRARY_PATH="$BASE_DIR"/lib/:"$BASE_DIR":$LD_LIBRARY_PATH
+    export QML_IMPORT_PATH="$BASE_DIR"/qml/:$QML_IMPORT_PATH
+    export QML2_IMPORT_PATH="$BASE_DIR"/qml/:$QML2_IMPORT_PATH
+    export QT_PLUGIN_PATH="$BASE_DIR"/plugins/:$QT_PLUGIN_PATH
+    export QTWEBENGINEPROCESS_PATH="$BASE_DIR"/bin/QtWebEngineProcess
+    export QTDIR="$BASE_DIR"
+    export QT_QPA_PLATFORM_PLUGIN_PATH="$BASE_DIR"/plugins/platforms:$QT_QPA_PLATFORM_PLUGIN_PATH
+    "$BASE_DIR/bin/myapp" "$@"
+    ```
+
+    注意把那个*myapp*替换成你自己程序的文件名。

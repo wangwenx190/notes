@@ -19,7 +19,7 @@
    a：添加文件到压缩包。例如：7z a test.7z ./data/*
    e：解压。例如：7z e ./test.7z
    l：显示压缩包内容。例如：7z l ./test.7z
-   -m：设置压缩选项。“-mx -myx -m0=LZMA2:d=1g:fb=273”为极限压缩，“-ms=on”为启用固实压缩（默认），“-mmt=on”为启用多线程压缩（默认）。例如：7z a test.7z ./data/* -mx -myx -ms=on -mmt=on -m0=LZMA2:d=1g:fb=273
+   -m：设置压缩选项。“-mx -myx -m0=LZMA2:d=1g:fb=273”为极限压缩，“-ms=on”为启用固实压缩（默认），“-mmt=on”为启用多线程压缩（默认）。例如：7z a test.7z ./data/ -mx -myx -ms=on -mmt=on -m0=LZMA2:d=1g:fb=273
    ```
 
 - 创建软链接：`ln ORIGINAL NEW`。`-s`参数意为创建软链接，`-f`参数意为删除已经存在的软链接（即覆盖同名的软链接）。例如：`sudo ln -sf /usr/bin/clang /usr/bin/x86_64-w64-mingw32-clang`
