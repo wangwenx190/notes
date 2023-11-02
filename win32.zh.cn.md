@@ -2893,7 +2893,7 @@
 - 使用系统自带功能安全清理C盘WinSxS文件夹
 
   管理员权限运行PowerShell：
-  
+
   ```powershell
   Dism.exe /Online /Cleanup-Image /AnalyzeComponentStore
   Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
@@ -2928,3 +2928,9 @@
   // TODO: 传入第二个和第三个参数以选中其中的item
   SHOpenFolderAndSelectItems(pidl, 0, nullptr, 0);
   ```
+
+- Windows 11 安装过程中跳过联网
+
+  同时按下 **SHIFT + F10** 调出命令提示符窗口，输入`oobe\bypassnro`然后回车，系统会立刻重启，这是正常的，等待其重启即可。然后会重新进入OOBE界面，此时选择网络连接的界面就多出了跳过的按钮。
+
+  注意：斜杠一定不能打错，是`\`而不是`/`！
