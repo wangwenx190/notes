@@ -43,6 +43,8 @@
    git config --global --unset https.proxy
    ```
 
+   注意：不带`--global`的话可以只对当前git仓库进行设置。
+
 - 设置全局用户名：`git config --global user.name "Your Name"`
 - 设置全局电子邮件：`git config --global user.email "me@example.com"`
 - 换行符设置：
@@ -77,10 +79,12 @@
    # To get nicely colored patches (from git diff, git log -p, git show, etc.), use this:
    git config --global color.ui auto
    git config --global core.pager "less -FRSX"
+   # Workaround long file names can't be cloned, mainly for Windows
+   git config --global core.longpaths true
    ```
 
 - 如何更新子模块：
-  1. 在仓库根目录执行`git submodule update --init --recursive --remote`，Git会尝试更新所有子模块
+  1. 在仓库根目录执行`git submodule update --init --recursive --remote`，Git会尝试更新所有子模块。但这个命令会把子模块更新到子模块远端最新的提交，如果只是想更新到本仓库所设置的提交，不要带额外参数即可：`git submodule update`。
   2. 更新完子模块以后记得commit后push到远端
 - 如何修改子模块的设置：
   - 修改子模块远端仓库网址：`git config submodule.子模块名.url 新URL`
