@@ -1,32 +1,49 @@
 ## WSL2 安装
 
-  0. 如果是从来没有安装过WSL2相关的东西，那么下面每一步都要走，如果只是为了安装一个新的发行版，只需要走下面的第四步。
-  1. 管理员权限运行*PowerShell*，输入以下指令，作用是启用Windows的Linux子系统功能：
+  0. 如果是从来没有安装过WSL2相关的东西，那么下面每一步都要走，如果只是为了安装一个新的发行版，只需要走下面的第七步。
+  1. **管理员权限**运行*PowerShell*，输入以下指令，此步作用是启用Windows的Linux子系统功能：
 
      ```ps
      dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
      ```
-  
-  2. 等待上面的指令运行完成后，再运行下面的指令，作用是启用Windows的虚拟机平台功能：
+
+  2. 等待上面的指令运行完成后，再运行下面的指令，此步作用是启用Windows的虚拟机平台功能：
 
      ```ps
      dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
      ```
 
-  3. 下载<https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi>这个 Linux 内核更新包并安装
-  4. 运行下面的指令安装需要的发行版，可以安装多个：
+  3. 等待上面的指令运行完成后，再运行下面的指令，此步作用是开启Hyper-V虚拟机：
+
+     ```ps
+     dism.exe /online /enable-feature /featurename:Microsoft-Hyper-V /all /norestart
+     ```
+
+  4. 重启电脑。重启过程中会显示正在安装系统更新，这是正常的，耐心等待即可。
+  5. 下载<https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi>这个 Linux 内核更新包并安装。
+  6. 再次进入*PowerShell*环境，注意此时就**不需要管理员权限**了。运行下面这个指令，作用是默认使用WSL2而不是1：
+
+     ```ps
+     wsl --set-default-version 2
+     ```
+
+  7. 运行下面的指令安装需要的发行版，可以安装多个：
 
      ```ps
      wsl --install -d ubuntu22.04
      ```
 
-  5. 运行下面这个指令，作用是默认使用WSL2而不是1：
-    
-     ```ps
-     wsl --set-default-version 2
-     ```
-  
-  6. 运行下面这个指令更新WSL自己的相关组件：
+     注意：这个命令是从 Microsoft Store 下载发行版，因此需要保证你本机的UWP微软商店客户端可以顺畅的连接微软的网络，如果你网络环境不行，这一步会报错，此时可以去微软的网站手动下载发行版的安装包进行安装：
+
+     | 发行版 | 链接 |
+     | ----- | ---- |
+     | Ubuntu 22.04 | <https://aka.ms/wslubuntu2204> |
+     | Ubuntu 20.04 | <https://aka.ms/wslubuntu2004> |
+     | Ubuntu 18.04 | <https://aka.ms/wsl-ubuntu-1804> |
+
+     下载完成后，使用`Add-AppxPackage .\app_name.appx`来手动安装。
+
+  8. 运行下面这个指令更新WSL自己的相关组件：
     
      ```ps
      wsl --update
