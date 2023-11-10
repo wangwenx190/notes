@@ -201,6 +201,8 @@ docker import mycontainer.tar
 docker stop aabbcc
 ```
 
+注意：如果想要强制结束容器的运行，要改用`docker kill`命令。
+
 ### 进入已经在运行中的容器
 
 ```bash
@@ -237,3 +239,39 @@ docker load myimage.tar
 导入后可以使用`docker images`命令查看
 
 注意：`load`命令只能导入`save`命令生成的文件，不能导入`export`命令生成的文件。
+
+### 删除容器
+
+```bash
+docker rm aabbcc
+```
+
+### 删除镜像
+
+```bash
+docker rmi myorganization/myimage:v1
+```
+
+### 查看某个容器的状态
+
+```bash
+docker stats aabbcc
+```
+
+### 查看某个容器正在运行中的进程
+
+```bash
+docker top aabbcc
+```
+
+### 查看某个镜像的提交历史
+
+```bash
+docker history myorganization/myimage:v1
+```
+
+### 查看某个容器的日志
+
+```bash
+docker logs aabbcc
+```
