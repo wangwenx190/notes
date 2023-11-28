@@ -1577,7 +1577,7 @@
                       .arg(ProgID);
               QSettings settings1(regKey1, QSettings::NativeFormat);
               if (!assocId.description.isEmpty()) {
-                  settings1.setValue(QStringLiteral("Default"), assocId.description);
+                  settings1.setValue(QStringLiteral(""), assocId.description);
               }
               if (!assocId.friendlyTypeName.isEmpty()) {
                   settings1.setValue(QStringLiteral("FriendlyTypeName"),
@@ -1587,11 +1587,14 @@
                   QSettings settings1_clsid(
                       QStringLiteral(R"(%1\CLSID)").arg(regKey1),
                       QSettings::NativeFormat);
-                  settings1_clsid.setValue(QStringLiteral("Default"),
+                  settings1_clsid.setValue(QStringLiteral(""),
                                            assocId.CLSID.toUpper());
               }
               if (!assocId.defaultIcon.isEmpty()) {
-                  settings1.setValue(QStringLiteral("DefaultIcon"),
+                  QSettings settings1_defaultIcon(
+                      QStringLiteral(R"(%1\DefaultIcon)").arg(regKey1),
+                      QSettings::NativeFormat);
+                  settings1_defaultIcon.setValue(QStringLiteral(""),
                                      QDir::toNativeSeparators(assocId.defaultIcon));
               }
               if (!assocId.operation.isEmpty()) {
@@ -1602,7 +1605,7 @@
                   const QString cmd = assocId.command.isEmpty()
                       ? (exePath + QStringLiteral(R"( "%1")"))
                       : QDir::toNativeSeparators(assocId.command);
-                  settings1_command.setValue(QStringLiteral("Default"), cmd);
+                  settings1_command.setValue(QStringLiteral(""), cmd);
               }
               const QString regKey2 =
                   QStringLiteral(R"(HKEY_CLASSES_ROOT\%1\OpenWithProgIDs)")

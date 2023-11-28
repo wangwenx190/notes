@@ -2,7 +2,6 @@
 
 - 使用`__TIME__`可以获取编译的时刻，`__DATE__`可以获取编译的日期，类型均为`const char *`。
 - 使用`__FUNCTION__`可以获取当前函数名，`__FILE__`可以获取当前源文件路径和文件名，`__LINE__`可以获取当前行号，类型均为`const char *`。
-- 在使用C语言风格的字符串时，尽量使用字符数组，即`const char []`，而不是指向字符数组的指针，即`const char *`，尽量少引入指针操作
 - 如何使用`pImpl`：
 
   ```cpp
@@ -76,9 +75,9 @@
 
   ```text
   // 编译
-  clang-cl /clang:-Oz -flto=thin /GR- /EHs-c- /Zc:inline /Gy /MD
+  clang-cl /clang:-Oz -flto=thin /GR- /EHs-c- /Zc:inline /Gw /Gy /MD
   // 链接
-  lld-link /OPT:REF
+  lld-link /OPT:REF /OPT:ICF /OPT:LBR
   // 以上都不是完整命令行，还缺少其他必要参数，此处展示的仅为所需的参数
   ```
 
@@ -87,7 +86,7 @@
     2. `-flto=thin`：开启链接时间代码生成（LTCG/LTO/IPO）。注意`-f`不能写为`/f`。后面的`=thin`是设置为`ThinLTO`模式，默认是`FullLTO`模式，耗时较长；
     3. `/GR-`：关闭RTTI（MSVC参数）；
     4. `/EHs-c-`：关闭异常处理（MSVC参数）；
-    5. `/Zc:inline /Gy` + `/OPT:REF`：消除重复代码（MSVC参数）；
+    5. `/Zc:inline /Gw /Gy` + `/OPT:REF /OPT:ICF /OPT:LBR`：消除重复代码（MSVC参数）；
     6. `/MD`：动态链接运行时（MSVC参数）；
 
   注：模板元编程会导致代码体积急剧膨胀，如果想要追求二进制文件的大小，一定要尽量减少使用。
@@ -98,4 +97,33 @@
   例如：
   using myFuncPtr1 = bool (__stdcall *) (int, bool, char *);
   using myFuncPtr2 = int (*) ();
+  ```
+
+- 重定向`std::cout`/`std::cerr`/`std::clog`到文件
+
+  ```cpp
+  std::streambuf* outBuf = std::cout.rdbuf();
+  std::streambuf* errBuf = std::cerr.rdbuf();
+  std::streambuf* logBuf = std::clog.rdbuf();
+  std::ofstream logFile("test.log", std::ios::out | std::ios::trunc);
+  if (logFile.is_open())
+  {
+      std::streambuf* fileBuf = logFile.rdbuf();
+      std::cout.rdbuf(fileBuf);
+      std::cerr.rdbuf(fileBuf);
+      std::clog.rdbuf(fileBuf);
+  }
+  else
+  {
+      std::cerr << "Failed to create the log file." << std::endl;
+  }
+  // output messages ...
+  if (logFile.is_open())
+  {
+      std::cout.rdbuf(outBuf);
+      std::cerr.rdbuf(errBuf);
+      std::clog.rdbuf(logBuf);
+      logFile.flush();
+      logFile.close();
+  }
   ```
