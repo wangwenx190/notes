@@ -226,3 +226,12 @@
 
 - Linux系统使用`libimobiledevice`实现对iOS设备的访问，常见发行版一般都自带此库，不用手动安装，将iOS设备连接至电脑后直接打开文件管理器即可
 - 如果是在*VMware Work Station/Player*的虚拟机中安装Ubuntu系统，可以安装`open-vm-tools`和`open-vm-tools-desktop`这两个软件包，不要再手动安装`VMware tools`了。
+- 命令行安装VSCode
+
+  ```bash
+  sudo apt update
+  sudo apt install software-properties-common apt-transport-https wget
+  wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+  sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+  sudo apt install code
+  ```

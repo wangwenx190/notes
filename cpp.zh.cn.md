@@ -127,3 +127,28 @@
       logFile.close();
   }
   ```
+
+- 现代化方法生成随机数
+
+  ```cpp
+  template<typename T>
+  [[nodiscard]] T getRandomNumber(const T min, const T max)
+  {
+      std::random_device rd{};
+      std::default_random_engine dre{ rd() };
+      if (std::is_same_v<T, std::int32_t>)
+      {
+          std::uniform_int_distribution<std::int32_t> uid{ static_cast<std::int32_t>(min), static_cast<std::int32_t>(max) };
+          return uid(dre);
+      }
+      else if (std::is_same_v<T, std::double_t>)
+      {
+          std::uniform_real_distribution<std::double_t> urd{ static_cast<std::double_t>(min), static_cast<std::double_t>(max) };
+          return urd(dre);
+      }
+      else
+      {
+          return T{};
+      }
+  }
+  ```
