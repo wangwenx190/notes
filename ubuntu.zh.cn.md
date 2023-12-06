@@ -235,3 +235,10 @@
   sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
   sudo apt install code
   ```
+
+- 查看动态库静态库的导出符号
+
+  ```bash
+  objdump -tT test1.a
+  objdump -tT test2.so
+  ```
