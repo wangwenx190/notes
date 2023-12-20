@@ -104,3 +104,48 @@
     ```bash
     sudo apt install -y libxcb* libxkbcommon-x11-0
     ```
+
+## WSL2 设置 CPU、内存 等硬件参数
+
+  创建一个名叫`.wslconfig`的文件，放在`C:\Users\<UserName>`文件夹下，例如`C:\Users\wangwenx190\.wslconfig`。下面是一个简单的用法示例：
+
+  ```bash
+  # Settings apply across all Linux distros running on WSL 2
+  [wsl2]
+
+  # Limits VM memory to use no more than 4 GB, this can be set as whole   numbers using GB or MB
+  memory=4GB 
+
+  # Sets the VM to use two virtual processors
+  processors=2
+
+  # Specify a custom Linux kernel to use with your installed distros.   The default kernel used can be found at https://github.com/microsoft/  WSL2-Linux-Kernel
+  kernel=C:\\temp\\myCustomKernel
+
+  # Sets additional kernel parameters, in this case enabling older Linux   base images such as Centos 6
+  kernelCommandLine = vsyscall=emulate
+
+  # Sets amount of swap storage space to 8GB, default is 25% of   available RAM
+  swap=8GB
+
+  # Sets swapfile path location, default is   %USERPROFILE%\AppData\Local\Temp\swap.vhdx
+  swapfile=C:\\temp\\wsl-swap.vhdx
+
+  # Disable page reporting so WSL retains all allocated memory claimed   from Windows and releases none back when free
+  pageReporting=false
+
+  # Turn on default connection to bind WSL 2 localhost to Windows   localhost
+  localhostforwarding=true
+
+  # Disables nested virtualization
+  nestedVirtualization=false
+
+  # Turns on output console showing contents of dmesg when opening a WSL   2 distro for debugging
+  debugConsole=true
+
+  # Enable experimental features
+  [experimental]
+  sparseVhd=true
+  ```
+
+  详细解释和更多用法请参考官方文档：<https://learn.microsoft.com/en-us/windows/wsl/wsl-config#configuration-settings-for-wslconfig>

@@ -167,15 +167,16 @@ docker import mycontainer.tar
 - 从一个已存在的镜像启动一个全新的容器：
 
   ```bash
-  docker run -it ubuntu:20.04 /bin/bash
-  docker run -it myorganization/myimage:v1 /bin/bash
-  docker run -it aabbcc /bin/bash # docker import 导入的容器
+  docker run -it --name=MyContainer1 ubuntu:20.04 /bin/bash
+  docker run -it --name=MyContainer2 myorganization/myimage:v1 /bin/bash
+  docker run -it --name=MyContainer3 aabbcc /bin/bash # docker import 导入的容器
   ```
 
   注意：
 
   - 如果本地找不到对应的镜像，Docker会自动从网上下载（如果有的话）
   - 执行`exit`命令后，容器会直接停止运行
+  - 最好使用`--name`参数指定一个容器名字，以后容器多了方便区分。但这个参数只有从镜像创建容器时才可用，也就是不能中途更改（待确认？）。
 - 继续运行已经停止运行的容器：
 
   ```bash
@@ -275,3 +276,21 @@ docker history myorganization/myimage:v1
 ```bash
 docker logs aabbcc
 ```
+
+### [Windows] 创建一个新的容器，并把当前文件夹映射到容器中
+
+批处理（非PowerShell！）：
+
+```bat
+docker run -itd --name=MyContainer -p 10022:22 -v %cd%:/home/wangwenx190/myproject ubuntu:20.04
+```
+
+解释：
+
+- `-it`：交互式启动容器并将日志输出到控制台（可以当作固定参数，无脑添加）
+- `-d`：启动容器后转移到后台运行
+- `-p`：设置端口转发，空格后面是端口绑定规则，格式为`容器端口:宿主机端口`（待确认？）
+- `-v`：设置挂载点，空格后面是挂载点参数，格式为`Windows中的路径:容器中的路径`
+- `%cd%`：批处理文件中代表当前文件夹路径
+- `/home/wangwenx190/myproject`：希望将当前文件夹挂载到容器什么位置
+- `ubuntu:20.04`：镜像，前面已经详细解释过了，故不再赘述
