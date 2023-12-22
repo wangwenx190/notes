@@ -83,9 +83,22 @@
    git config --global core.longpaths true
    ```
 
+- 如何拉取子模块的所有子模块：
+
+```bash
+git submodule update --init --recursive
+```
+
+注意：这个操作只适用于克隆子模块后发现子模块内部的子模块是空的情况，如果你已经成功克隆了所有子模块，只是想更新子模块，请用下面提到的命令代替。
+
 - 如何更新子模块：
-  1. 在仓库根目录执行`git submodule update --init --recursive --remote`，Git会尝试更新所有子模块。但这个命令会把子模块更新到子模块远端最新的提交，如果只是想更新到本仓库所设置的提交，不要带额外参数即可：`git submodule update`。
-  2. 更新完子模块以后记得commit后push到远端
+
+```bash
+git submodule update
+```
+
+注意：这个命令只是把子模块的提交定位到父项目所设置的提交，并不是更新到子模块对应仓库的最新提交。如果你是仓库的维护者，想把子模块更新到其对应仓库的最新提交，需要在命令后面加上`--remote`参数。
+
 - 如何修改子模块的设置：
   - 修改子模块远端仓库网址：`git config submodule.子模块名.url 新URL`
   - 修改子模块默认分支：`git config -f .gitmodules submodule.子模块名.branch 分支名`
