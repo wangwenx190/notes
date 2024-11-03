@@ -72,12 +72,16 @@
         <maxversiontested Id="10.0.19043.0"/>
         <!-- Windows 10 Version 21H2 (November 2021 Update) -->
         <maxversiontested Id="10.0.19044.0"/>
-        <!-- Windows 10 Version 22H2 (October 2022 Update) -->
+        <!-- Windows 10 Version 22H2 -->
         <maxversiontested Id="10.0.19045.0"/>
         <!-- Windows 11 Version 21H2 -->
         <maxversiontested Id="10.0.22000.0"/>
-        <!-- Windows 11 Version 22H2 (October 2022 Update) -->
+        <!-- Windows 11 Version 22H2 -->
         <maxversiontested Id="10.0.22621.0"/>
+        <!-- Windows 11 Version 23H2 -->
+        <maxversiontested Id="10.0.22631.0"/>
+        <!-- Windows 11 Version 24H2 -->
+        <maxversiontested Id="10.0.26100.0"/>
         <!-- 把不支持的系统从下面移除即可。注意下面的Id值都是固定的，不要改动。 -->
         <!-- 对于没有列举在此的系统，Windows会对你的程序使用的API进行特定的fallback，而不是让你的程序无法运行。 -->
         <!-- 这里最低只能填Vista，是不能填XP及以下的。 -->
@@ -187,26 +191,24 @@
   // 头文件：processthreadsapi.h (include Windows.h), securitybaseapi.h (include Windows.h)
   // 库文件：Advapi32.lib（Advapi32.dll）
 
-  bool IsCurrentProcessElevated()
+  bool IsManuallyElevatedViaUAC()
   {
-      static const auto result = []() -> bool {
-          bool elevated = false;
-          HANDLE hToken = nullptr;
-          if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_ALL_ACCESS, &hToken)) {
-              TOKEN_ELEVATION info = {};
-              DWORD dwSize = sizeof(TOKEN_ELEVATION);
-              if (::GetTokenInformation(hToken, TOKEN_INFORMATION_CLASS::TokenElevation, &info, dwSize, &dwSize)) {
-                  elevated = info.TokenIsElevated;
-              }
-              ::CloseHandle(hToken);
-          }
-          return elevated;
-      }();
-      return result;
+    TOKEN_ELEVATION_TYPE type;
+    DWORD actual;
+    if (!GetTokenInformation(
+            GetCurrentProcessToken(),
+            TokenElevationType,
+            &type,
+            sizeof(type),
+            &actual)) {
+        // insert your favorite error handling here
+        throw_error(GetLastError());
+    }
+    return type == TokenElevationTypeFull;
   }
   ```
 
-  摘自：<https://github.com/M2Team/NanaRun/blob/4fefc0151fa877d32ba8921c5863df163ee327c8/MinSudo/MinSudo.cpp#L287>
+  摘自：<https://devblogs.microsoft.com/oldnewthing/20241003-00/?p=110336>
 - 以管理员权限启动程序：
 
   ```cpp
@@ -1911,9 +1913,11 @@
   | 10.0.19042 | Windows 10 Version 20H2 (October 2020 Update) | 20H2 |
   | 10.0.19043 | Windows 10 Version 21H1 (May 2021 Update) | 21H1 |
   | 10.0.19044 | Windows 10 Version 21H2 (November 2021 Update) | 21H2 |
-  | 10.0.19045 | Windows 10 Version 22H2 (October 2022 Update) | 22H2 |
+  | 10.0.19045 | Windows 10 Version 22H2 | 22H2 |
   | 10.0.22000 | Windows 11 Version 21H2 | 21H2 |
-  | 10.0.22621 | Windows 11 Version 22H2 (October 2022 Update) | 22H2 |
+  | 10.0.22621 | Windows 11 Version 22H2 | 22H2 |
+  | 10.0.22631 | Windows 11 Version 23H2 | 23H2 |
+  | 10.0.26100 | Windows 11 Version 24H2 | 24H2 |
 
 - 使用Win32 API获取系统常见文件夹的路径
 
@@ -2945,3 +2949,26 @@
   ```
 
   最后一个参数指定哈希算法，目前不支持`CRC32`/`CRC64`和`SHA3`系列算法。
+
+- 系统设置里的`Make text bigger`/`文本大小`滑动条，怎么通过代码获取其值？
+
+  - 对于C++/WinRT而言：
+
+    ```cpp
+    #include <winrt/Windows.UI.ViewManagement.h>
+    double GetTextScaleFactor()
+    {
+        return winrt::Windows::UI::ViewManagement::UISettings().TextScaleFactor();
+    }
+    ```
+
+  - 对于C#而言：
+
+    ```csharp
+    double GetTextScaleFactor()
+    {
+        return (new Windows.UI.ViewManagement.UISettings()).TextScaleFactor;
+    }
+    ```
+
+  摘自：<https://devblogs.microsoft.com/oldnewthing/20230830-00/?p=108680>
