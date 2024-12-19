@@ -132,3 +132,23 @@ git submodule update
   ```
 
   制作补丁文件时，可以添加`-o`参数，设置补丁文件的输出文件夹。
+- 推送一个本地新创建的分支到远端
+
+  ```bash
+  git push --set-upstream origin new_branch_name_local:new_branch_name_remote
+  ```
+
+  备注：
+    - `--set-upstream`参数可以不加，但这样会导致本地分支没有绑定对应的远端分支，后面push时就要每次都带上分支名字，很不方便，所以最好在第一次push这个新建的分支的时候就带上这个参数。不过万一真的忘记了，还可以补救，多执行一次`git branch --set-upstream-to=origin/new_branch_name_remote`就行了。这个设置远端跟踪分支的操作执行一次就行，不需要多次执行。
+    - 由于git允许你创建的远端分支名字和本地的不同，所以语法是`本地分支名字:远端分支名字`，就算你打算本地和远端都用同一个名字，也要这样重复一遍，这是固定用法。
+    - 这里所有提到的`origin`都是你远端的名字，git一般默认都是`origin`，但如果你设置了别的名字，要自己对应的替换。
+
+- 本地通过命令删除远端的分支
+
+  ```bash
+  git push origin --delete branch_name_to_be_deleted
+  ```
+
+  和`git branch -dr origin/branch_name_to_be_deleted`有何区别？
+
+  `git branch -dr`命令只是删除你本地存储的远端分支信息，并不会把你这个删除分支的操作推送到你真正的远端仓库，你下次执行fetch或者pull之后这个信息就又会被恢复。而使用`git push --delete`删除分支是会推送到远端的，会真正把你的分支删除（所以也没法反悔，注意谨慎操作），这个命令隐含了`git branch -dr`这个操作，不需要再额外手动执行。`--delete`可以简写为`-d`。
