@@ -99,3 +99,34 @@
     // llvm-vs-code-extensions.vscode-clangd
   }
   ```
+
+- 使用项目设置覆盖全局设置
+
+    在项目顶层文件夹下创建`.vscode`文件夹，并创建`settings.json`
+
+    ```json
+    "cmake.configureSettings": {
+        "CMAKE_PREFIX_PATH": "C:/qt-sdk/build/qt_sdk_msvc_release_static",
+        "MY_OPTION_1": true,
+        "MY_OPTION_2": "123"
+    },
+    "cmake.configureArgs": [
+        "-DTESTaaa=ON",
+        "-Dbabababa=123",
+        "-GNinja"
+    ],
+    "cmake.debugConfig": {
+        "environment": [
+            {
+                "name": "PATH",
+                "value": "${env:PATH};C:/aaa/bin"
+            },
+            {
+                "name": "my_env_var",
+                "value": "aaa"
+            }
+        ]
+    }
+    ```
+
+    其中`cmake.configureSettings`和`cmake.configureArgs`作用是一样的，只是写法不同，可以只留着一个。
