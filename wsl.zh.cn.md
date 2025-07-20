@@ -19,15 +19,21 @@
      dism.exe /online /enable-feature /featurename:Microsoft-Hyper-V /all /norestart
      ```
 
-  4. 重启电脑。重启过程中会显示正在安装系统更新，这是正常的，耐心等待即可。
-  5. 下载<https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi>这个 Linux 内核更新包并安装。
-  6. 再次进入*PowerShell*环境，注意此时就**不需要管理员权限**了。运行下面这个指令，作用是默认使用WSL2而不是1：
+  4. 开启Hyper-V服务
+
+    ```ps
+    bcdedit /set hypervisorlaunchtype Auto
+    ```
+
+  5. 重启电脑。重启过程中会显示正在安装系统更新，这是正常的，耐心等待即可。
+  6. 下载<https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi>这个 Linux 内核更新包并安装。
+  7. 再次进入*PowerShell*环境，注意此时就**不需要管理员权限**了。运行下面这个指令，作用是默认使用WSL2而不是1：
 
      ```ps
      wsl --set-default-version 2
      ```
 
-  7. 运行下面的指令安装需要的发行版，可以安装多个：
+  8. 运行下面的指令安装需要的发行版，可以安装多个：
 
      ```ps
      wsl --install -d ubuntu22.04
@@ -43,7 +49,7 @@
 
      下载完成后，使用`Add-AppxPackage .\app_name.appx`来手动安装。
 
-  8. 运行下面这个指令更新WSL自己的相关组件：
+  9. 运行下面这个指令更新WSL自己的相关组件：
     
      ```ps
      wsl --update
